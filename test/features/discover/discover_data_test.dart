@@ -1,13 +1,13 @@
-import 'package:findx/app.dart';
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/location/location_service.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/discover/data/discover_repository.dart';
-import 'package:findx/features/discover/domain/companion_summary.dart';
-import 'package:findx/features/discover/presentation/discover_controller.dart';
-import 'package:findx/features/profile/presentation/my_profile_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/app.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/location/location_service.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/discover/data/discover_repository.dart';
+import 'package:vybe/features/discover/domain/companion_summary.dart';
+import 'package:vybe/features/discover/presentation/discover_controller.dart';
+import 'package:vybe/features/profile/presentation/my_profile_controller.dart';
 
 import '../../helpers/fake_tables.dart';
 import '../../helpers/fakes.dart';
@@ -98,21 +98,12 @@ void main() {
       return container;
     }
 
-    test('starts on coffee; changing plan clears skipped cards', () {
+    test('starts on coffee; a plan can be picked', () {
       final container = container0(readyBackend());
-      final controller = container.read(discoverControllerProvider.notifier)..skip('a');
+      final controller = container.read(discoverControllerProvider.notifier);
       expect(container.read(discoverControllerProvider).plan, PlanType.coffee);
       controller.selectPlan(PlanType.walk);
       expect(container.read(discoverControllerProvider), const DiscoverState(plan: PlanType.walk));
-    });
-
-    test('skipped companions drop out of the deck until start over', () {
-      final container = container0(readyBackend());
-      final controller = container.read(discoverControllerProvider.notifier)..skip('a');
-      final all = [testCompanion('a'), testCompanion('b')];
-      expect(controller.remaining(all).map((c) => c.uid), ['b']);
-      controller.startOver();
-      expect(controller.remaining(all), hasLength(2));
     });
 
     test('save and unsave go to the repository', () async {

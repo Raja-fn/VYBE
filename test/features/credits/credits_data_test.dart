@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:findx/app.dart';
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/credits/data/credits_repository.dart';
-import 'package:findx/features/credits/data/store_client.dart';
-import 'package:findx/features/credits/domain/credit_models.dart';
-import 'package:findx/features/credits/presentation/credits_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/app.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/credits/data/credits_repository.dart';
+import 'package:vybe/features/credits/data/store_client.dart';
+import 'package:vybe/features/credits/domain/credit_models.dart';
+import 'package:vybe/features/credits/presentation/credits_providers.dart';
 
 import '../../helpers/fake_tables.dart';
 import '../../helpers/fakes.dart';
@@ -103,11 +103,11 @@ void main() {
         'balance': 120,
         'tier': 'plus',
       };
-      final outcome = (await repository.verify(_paid('findx_plus_monthly'))).valueOrNull!;
+      final outcome = (await repository.verify(_paid('vybe_plus_monthly'))).valueOrNull!;
       expect(functions.calls.single.$1, 'verifyPurchase');
       expect(functions.calls.single.$2, {
         'platform': 'android',
-        'productId': 'findx_plus_monthly',
+        'productId': 'vybe_plus_monthly',
         'purchaseToken': 'fake-t1-abc',
       });
       expect(outcome.status, VerifyStatus.granted);
@@ -118,18 +118,18 @@ void main() {
 
     test('a receipt the store rejects becomes a purchase failure', () async {
       functions.error = const ServerException('failed-precondition', code: 'purchase_invalid', message: 'no');
-      expect((await repository.verify(_paid('findx_credits_10'))).failureOrNull?.kind, FailureKind.purchaseInvalid);
+      expect((await repository.verify(_paid('vybe_credits_10'))).failureOrNull?.kind, FailureKind.purchaseInvalid);
     });
   });
 
   test('the test store pays at once with a fake receipt and has no prices', () async {
     final store = TestStoreClient(now: () => DateTime.fromMillisecondsSinceEpoch(1700000000000));
     final next = store.purchases.first;
-    await store.buy('findx_credits_10', consumable: true);
+    await store.buy('vybe_credits_10', consumable: true);
     final purchase = await next;
     expect(purchase.status, StorePurchaseStatus.purchased);
     expect(purchase.purchaseToken, startsWith('fake-t1700000000000-'));
-    expect(await store.prices({'findx_credits_10'}), isEmpty);
+    expect(await store.prices({'vybe_credits_10'}), isEmpty);
     expect(store.isTestStore, isTrue);
   });
 
@@ -158,11 +158,11 @@ void main() {
     }
 
     test('a pack: store, then server, then the store is told it is done', () async {
-      await flow().buy('findx_credits_30', consumable: true);
-      expect(store.bought.single, ('findx_credits_30', true, null, true));
-      expect(state().busyProductId, 'findx_credits_30');
+      await flow().buy('vybe_credits_30', consumable: true);
+      expect(store.bought.single, ('vybe_credits_30', true, null, true));
+      expect(state().busyProductId, 'vybe_credits_30');
 
-      await push(_paid('findx_credits_30'));
+      await push(_paid('vybe_credits_30'));
       expect(backend.credits.balance.value, 50);
       expect(store.completed, hasLength(1));
       expect(state().notice, const PurchaseNotice.creditsAdded(30));
@@ -170,7 +170,7 @@ void main() {
     });
 
     test('a plan becomes active', () async {
-      await push(_paid('findx_plus_monthly'));
+      await push(_paid('vybe_plus_monthly'));
       expect(state().notice, const PurchaseNotice.planActive(PlanTier.plus, 100));
       expect(backend.purchases.subscription.value.tier, PlanTier.plus);
     });
@@ -178,19 +178,19 @@ void main() {
     test('a downgrade is announced for the renewal', () async {
       backend.purchases.subscription.value = SubscriptionInfo(tier: PlanTier.premium, renewsAt: DateTime(2026, 12, 12));
       await flow().buy(
-        'findx_plus_monthly',
+        'vybe_plus_monthly',
         consumable: false,
-        replacingProductId: 'findx_premium_monthly',
+        replacingProductId: 'vybe_premium_monthly',
         changeNow: false,
       );
-      expect(store.bought.single, ('findx_plus_monthly', false, 'findx_premium_monthly', false));
-      await push(_paid('findx_plus_monthly'));
+      expect(store.bought.single, ('vybe_plus_monthly', false, 'vybe_premium_monthly', false));
+      await push(_paid('vybe_plus_monthly'));
       expect(state().notice, const PurchaseNotice.planAtRenewal(PlanTier.plus));
     });
 
     test('a payment that has not cleared stays open in the store', () async {
       backend.purchases.pending = true;
-      await push(_paid('findx_credits_10'));
+      await push(_paid('vybe_credits_10'));
       expect(state().notice, const PurchaseNotice.pending());
       expect(store.completed, isEmpty);
     });
@@ -198,7 +198,7 @@ void main() {
     test('a store "pending" update says so', () async {
       await push(
         const StorePurchase(
-          productId: 'findx_credits_10',
+          productId: 'vybe_credits_10',
           status: StorePurchaseStatus.pending,
           platform: StorePlatform.android,
         ),
@@ -207,10 +207,10 @@ void main() {
     });
 
     test('cancelling clears the busy state', () async {
-      await flow().buy('findx_credits_10', consumable: true);
+      await flow().buy('vybe_credits_10', consumable: true);
       await push(
         const StorePurchase(
-          productId: 'findx_credits_10',
+          productId: 'vybe_credits_10',
           status: StorePurchaseStatus.canceled,
           platform: StorePlatform.android,
         ),
@@ -220,7 +220,7 @@ void main() {
 
     test('offline: the paid purchase is kept and Try again confirms it', () async {
       backend.purchases.failure = const AppFailure(FailureKind.network);
-      await push(_paid('findx_credits_10'));
+      await push(_paid('vybe_credits_10'));
       expect(state().failure?.kind, FailureKind.network);
       expect(state().unconfirmed, isNotNull);
       expect(store.completed, isEmpty);
@@ -236,7 +236,7 @@ void main() {
 
     test('a rejected receipt is not retried or finished', () async {
       backend.purchases.failure = const AppFailure(FailureKind.purchaseInvalid);
-      await push(_paid('findx_credits_10'));
+      await push(_paid('vybe_credits_10'));
       expect(state().failure?.kind, FailureKind.purchaseInvalid);
       expect(state().unconfirmed, isNull);
       expect(store.completed, isEmpty);
@@ -244,13 +244,13 @@ void main() {
 
     test('a store that cannot open its payment sheet is reported', () async {
       store.buyError = StateError('billing unavailable');
-      await flow().buy('findx_credits_10', consumable: true);
+      await flow().buy('vybe_credits_10', consumable: true);
       expect(state().failure?.kind, FailureKind.storeUnavailable);
       expect(state().busyProductId, isNull);
     });
 
     test('store prices, or a clear failure when the store is unavailable', () async {
-      expect(await container.read(storePricesProvider.future), containsPair('findx_plus_monthly', '₹99'));
+      expect(await container.read(storePricesProvider.future), containsPair('vybe_plus_monthly', '₹99'));
       store.available = false;
       container.invalidate(storePricesProvider);
       await expectLater(

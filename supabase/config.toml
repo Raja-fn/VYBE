@@ -1,4 +1,4 @@
-# Supabase CLI settings for FindX. Used by `supabase link`, `supabase db push`
+# Supabase CLI settings for VYBE. Used by `supabase link`, `supabase db push`
 # and `supabase functions deploy`. See docs/supabase-setup.md.
 project_id = "findx"
 
@@ -8,7 +8,7 @@ major_version = 17
 [auth]
 # Google is the only sign-in for members; it is switched on in the dashboard
 # (Authentication -> Sign In / Providers -> Google) with the Web client id.
-site_url = "com.findx.app://login"
+site_url = "com.vybe.app://login"
 
 [functions.api]
 # The function checks the caller itself (it asks Supabase Auth about the

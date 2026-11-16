@@ -1,7 +1,7 @@
 /**
  * Content classification for chat text (explicit content).
  *
- * Contact-detail blocking (phone numbers, emails, handles, links) is FindX's
+ * Contact-detail blocking (phone numbers, emails, handles, links) is VYBE's
  * own rule set and lives in the chat domain (Phase 5), not in a provider.
  */
 export type ModerationVerdict = { allowed: true } | { allowed: false; reason: 'explicit' };

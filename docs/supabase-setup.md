@@ -1,6 +1,6 @@
-# Setting up FindX on Supabase
+# Setting up VYBE on Supabase
 
-FindX runs on **Supabase** (database, sign-in, file storage and server code)
+VYBE runs on **Supabase** (database, sign-in, file storage and server code)
 on the free plan. No card is needed. Firebase is used only for crash reports
 (Crashlytics, also free).
 
@@ -38,14 +38,14 @@ inside the app, so they're safe to share.
 In https://console.cloud.google.com, choose or create a project:
 
 1. **APIs & Services → OAuth consent screen**: set it to External, app name
-   FindX, and add your support email.
+   VYBE, and add your support email.
 2. **Credentials → Create credentials → OAuth client ID → Web application**:
-   - Name it `FindX Supabase`.
+   - Name it `VYBE Supabase`.
    - Under **Authorized redirect URIs**, add
      `https://<your project ref>.supabase.co/auth/v1/callback`.
    - Copy the **Client ID** (public) and the **Client secret** (private).
 3. **Create credentials → OAuth client ID → Android**:
-   - Package name: `com.findx.app`
+   - Package name: `com.vybe.app`
    - SHA-1 of the computer that builds test APKs:
      `42:17:45:A2:CE:70:85:AE:2E:DE:09:B8:39:8C:F2:A6:4B:2A:86:9C`
    - For release builds, also add the SHA-1 of the release key, or of
@@ -141,7 +141,7 @@ flutter build apk --release -t lib/main_dev.dart --dart-define-from-file=config/
 #   -> build/app/outputs/flutter-apk/app-release.apk
 ```
 
-In VS Code, use the launch option **FindX (test project)**.
+In VS Code, use the launch option **VYBE (test project)**.
 
 All builds use the phone's real location. On an emulator without GPS, add
 `--dart-define=FIXED_LOCATION=true` to pretend to be in central Mumbai.

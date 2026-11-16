@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/utils/result.dart';
-import 'package:findx/core/utils/run_guarded.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' show ClientException;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/utils/result.dart';
+import 'package:vybe/core/utils/run_guarded.dart';
 
 void main() {
   group('Result', () {

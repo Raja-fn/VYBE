@@ -155,7 +155,7 @@ export async function addVenue(
     insert into venues (id, owner_uid, name, category, address_line, lat, lng, plan_types, verification_status, is_listed, perk)
     values (${v.id}, ${v.ownerUid}, ${v.name}, 'cafe', 'Somewhere, Mumbai', ${v.at.lat}, ${v.at.lng},
       ${v.planTypes ?? ['coffee', 'walk', 'event', 'movie', 'dinner']}, ${v.verified === false ? 'pending' : 'verified'},
-      ${v.listed ?? true}, ${sql.json({ text: '10% off for FindX meetups' })})`;
+      ${v.listed ?? true}, ${sql.json({ text: '10% off for VYBE meetups' })})`;
   for (const s of slots) {
     await sql`
       insert into venue_slots (venue_id, id, day_key, start_at, end_at, capacity, booked, status)

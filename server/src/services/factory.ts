@@ -11,7 +11,7 @@ import type { PlacesPopularityService, PopularityInput, PopularityScore } from '
 import { FakePurchaseVerificationService } from './purchases/fakePurchaseVerificationService';
 import { GooglePlayPurchaseVerificationService, type ServiceAccountKey } from './purchases/googlePlayPurchaseVerificationService';
 import type { PurchaseVerificationService } from './purchases/purchaseVerificationService';
-import { NoPublicPlaces, OpenStreetMapPlaces, type PublicPlacesSource } from './places/publicPlacesSource';
+import { NoPublicPlaces, type PublicPlacesSource } from './places/publicPlacesSource';
 import { fakeDateOfBirthFor, FAKE_MODERATION_TERMS, FAKE_REJECTED_UIDS } from './fakeFixtures';
 
 export interface Services {
@@ -82,7 +82,7 @@ function productIds(config: AppConfig) {
  * configured instead of silently approving users, granting credits or paying out:
  * - purchases: Google Play (needs GOOGLE_PLAY_PACKAGE and GOOGLE_PLAY_SERVICE_ACCOUNT_JSON);
  * - identity: automatic approval only with FINDX_IDENTITY_AUTO_APPROVE=true (owner decision);
- * - moderation: FindX's own rules (contact details are blocked in chat itself);
+ * - moderation: VYBE's own rules (contact details are blocked in chat itself);
  * - places: no popularity data yet (all quiet); payouts: not offered.
  */
 export function createServices(
@@ -102,7 +102,10 @@ export function createServices(
     moderation: new FakeModerationService([]),
     places: new NoPopularityData(),
     purchases: googlePlay(config, production),
-    publicPlaces: new OpenStreetMapPlaces({ timeoutSeconds: config.placesImportTimeoutSeconds }),
+    // Public places are imported in bulk from the OpenStreetMap India file (server/scripts/import-places.ts):
+    // the free public Overpass servers do not allow app traffic. A self-hosted Overpass can be
+    // plugged in here later with new OpenStreetMapPlaces({ endpoints: [...] }).
+    publicPlaces: new NoPublicPlaces(),
   };
 }
 

@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:findx/core/backend/tables.dart';
-import 'package:findx/core/config/app_config.dart';
-import 'package:findx/core/config/app_config_repository.dart';
-import 'package:findx/core/config/remote_config_source.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/utils/result.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/backend/tables.dart';
+import 'package:vybe/core/config/app_config.dart';
+import 'package:vybe/core/config/app_config_repository.dart';
+import 'package:vybe/core/config/remote_config_source.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/utils/result.dart';
 
 import '../../helpers/fake_tables.dart';
 
@@ -66,7 +66,7 @@ void main() {
           const Ok({
             'creditCostBookSpot': 7,
             'topUpPacks': [
-              {'productId': 'findx_credits_10', 'credits': 12},
+              {'productId': 'vybe_credits_10', 'credits': 12},
             ],
           }),
         ),

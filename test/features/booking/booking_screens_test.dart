@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:findx/core/router/app_router.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/widgets/app_pill_button.dart';
-import 'package:findx/features/booking/domain/booking_models.dart';
-import 'package:findx/features/booking/presentation/book_spot_screen.dart';
-import 'package:findx/features/booking/presentation/bookings_screen.dart';
-import 'package:findx/features/credits/presentation/credits_screen.dart';
-import 'package:findx/features/map/presentation/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/router/app_router.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/widgets/app_pill_button.dart';
+import 'package:vybe/features/booking/domain/booking_models.dart';
+import 'package:vybe/features/booking/presentation/book_spot_screen.dart';
+import 'package:vybe/features/booking/presentation/bookings_screen.dart';
+import 'package:vybe/features/credits/presentation/credits_screen.dart';
+import 'package:vybe/features/map/presentation/map_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';
@@ -76,14 +76,14 @@ void main() {
       expect(find.text('Pick'), findsNothing);
     });
 
-    testWidgets('the Discover Map button opens the map for the card on screen', (tester) async {
+    testWidgets('the Discover Map button shows the spots near me, for looking only', (tester) async {
       final backend = _world();
       await pumpFullApp(tester, backend: backend);
       await _tap(tester, find.byTooltip('Map'));
       expect(find.byType(MapScreen), findsOneWidget);
-      expect(backend.booking.venueQueries.last.companionUid, 'neha');
-      await _tap(tester, _pick('Venue cafe'));
-      expect(find.byType(BookSpotScreen), findsOneWidget);
+      expect(backend.booking.venueQueries.last.companionUid, isNull);
+      expect(find.text('Venue cafe'), findsOneWidget);
+      expect(_pick('Venue cafe'), findsNothing);
     });
 
     testWidgets('no spots shows the empty state', (tester) async {

@@ -19,12 +19,12 @@ Future<Result<T>> runGuarded<T>(Future<T> Function() body) async {
   } on Object catch (error, stack) {
     final failure = mapError(error);
     // Debug builds only: the real cause behind a friendly message.
-    if (kDebugMode) debugPrint('FindX failure: $failure | $error | $stack');
+    if (kDebugMode) debugPrint('VYBE failure: $failure | $error | $stack');
     return Err(failure);
   }
 }
 
-/// FindX's own reasons, sent by the server in the error body's `code`.
+/// VYBE's own reasons, sent by the server in the error body's `code`.
 /// Keep in sync with server/src/shared/errorCodes.ts.
 const _serverCodes = <String, FailureKind>{
   'not_verified': FailureKind.notVerified,

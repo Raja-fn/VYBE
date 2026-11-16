@@ -46,49 +46,49 @@ beforeEach(async () => {
 describe('top-up packs', () => {
   it('adds the pack credits once, with a ledger entry', async () => {
     const t = token('pack');
-    await expect(buy('aarav', 'findx_credits_30', t)).resolves.toEqual({ status: 'granted', creditsAdded: 30, balance: 50, tier: 'free' });
-    await expect(buy('aarav', 'findx_credits_30', t)).resolves.toMatchObject({ status: 'already_granted', creditsAdded: 0, balance: 50 });
+    await expect(buy('aarav', 'vybe_credits_30', t)).resolves.toEqual({ status: 'granted', creditsAdded: 30, balance: 50, tier: 'free' });
+    await expect(buy('aarav', 'vybe_credits_30', t)).resolves.toMatchObject({ status: 'already_granted', creditsAdded: 0, balance: 50 });
     expect(await balance('aarav')).toBe(50);
     expect(await ledger('aarav')).toEqual([expect.objectContaining({ delta: 30, balance_after: 50, reason: 'purchase', ref_type: 'purchase' })]);
   });
 
   it('the same receipt sent twice at once is granted once', async () => {
     const t = token('pack');
-    await Promise.all([buy('aarav', 'findx_credits_30', t), buy('aarav', 'findx_credits_30', t)]);
+    await Promise.all([buy('aarav', 'vybe_credits_30', t), buy('aarav', 'vybe_credits_30', t)]);
     expect(await balance('aarav')).toBe(50);
   });
 
   it('a receipt cannot be reused by another account', async () => {
     const t = token('shared');
-    await buy('aarav', 'findx_credits_10', t);
-    await expectAppError(buy('kiran', 'findx_credits_10', t), 'purchase_invalid');
+    await buy('aarav', 'vybe_credits_10', t);
+    await expectAppError(buy('kiran', 'vybe_credits_10', t), 'purchase_invalid');
     expect(await balance('kiran')).toBe(20);
   });
 
   it('forged receipts and unknown products are refused', async () => {
-    await expectAppError(buy('aarav', 'findx_credits_10', 'real-looking-token'), 'purchase_invalid');
-    await expectAppError(buy('aarav', 'findx_credits_999', token('x')), 'invalid_input');
+    await expectAppError(buy('aarav', 'vybe_credits_10', 'real-looking-token'), 'purchase_invalid');
+    await expectAppError(buy('aarav', 'vybe_credits_999', token('x')), 'invalid_input');
     expect(await balance('aarav')).toBe(20);
   });
 
   it('a pending payment adds nothing yet', async () => {
-    await expect(buy('aarav', 'findx_credits_10', `${token('slow')}-pending`)).resolves.toMatchObject({ status: 'pending', creditsAdded: 0, balance: 20 });
+    await expect(buy('aarav', 'vybe_credits_10', `${token('slow')}-pending`)).resolves.toMatchObject({ status: 'pending', creditsAdded: 0, balance: 20 });
     expect(await ledger('aarav')).toEqual([]);
   });
 });
 
 describe('plans', () => {
   it('Plus adds 100 credits and becomes the active plan', async () => {
-    await expect(buy('aarav', 'findx_plus_monthly', token('plus'))).resolves.toEqual({ status: 'granted', creditsAdded: 100, balance: 120, tier: 'plus' });
+    await expect(buy('aarav', 'vybe_plus_monthly', token('plus'))).resolves.toEqual({ status: 'granted', creditsAdded: 100, balance: 120, tier: 'plus' });
     const sub = await subscription('aarav');
-    expect(sub).toMatchObject({ tier: 'plus', product_id: 'findx_plus_monthly', status: 'active', auto_renew: true });
+    expect(sub).toMatchObject({ tier: 'plus', product_id: 'vybe_plus_monthly', status: 'active', auto_renew: true });
     expect(sub.current_period_end).toEqual(new Date(START.getTime() + 30 * DAY));
   });
 
   it('upgrading to Premium mid-month adds 200 right away', async () => {
-    await buy('aarav', 'findx_plus_monthly', token('plus'));
+    await buy('aarav', 'vybe_plus_monthly', token('plus'));
     now = new Date(START.getTime() + 10 * DAY);
-    await expect(buy('aarav', 'findx_premium_monthly', token('premium'))).resolves.toMatchObject({
+    await expect(buy('aarav', 'vybe_premium_monthly', token('premium'))).resolves.toMatchObject({
       status: 'granted',
       creditsAdded: 200,
       balance: 320,
@@ -97,11 +97,11 @@ describe('plans', () => {
   });
 
   it('downgrading waits for the renewal, then grants the lower plan', async () => {
-    await buy('aarav', 'findx_premium_monthly', token('premium'));
+    await buy('aarav', 'vybe_premium_monthly', token('premium'));
     now = new Date(START.getTime() + 10 * DAY);
     const plusToken = token('plus');
-    await expect(buy('aarav', 'findx_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0, balance: 220, tier: 'premium' });
-    await expect(buy('aarav', 'findx_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0 });
+    await expect(buy('aarav', 'vybe_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0, balance: 220, tier: 'premium' });
+    await expect(buy('aarav', 'vybe_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0 });
     expect(await subscription('aarav')).toMatchObject({ tier: 'premium', pending_tier: 'plus' });
 
     now = new Date(START.getTime() + 31 * DAY);
@@ -111,7 +111,7 @@ describe('plans', () => {
   });
 
   it('each renewal grants the month once; unused credits are kept', async () => {
-    await buy('aarav', 'findx_plus_monthly', token('plus'));
+    await buy('aarav', 'vybe_plus_monthly', token('plus'));
     now = new Date(START.getTime() + 31 * DAY);
     await renewSubscriptionsLogic(deps());
     await renewSubscriptionsLogic(deps());
@@ -121,7 +121,7 @@ describe('plans', () => {
   });
 
   it('a plan that was turned off goes back to Free and keeps the credits', async () => {
-    await buy('aarav', 'findx_plus_monthly', `${token('plus')}-norenew`);
+    await buy('aarav', 'vybe_plus_monthly', `${token('plus')}-norenew`);
     now = new Date(START.getTime() + 31 * DAY);
     await expect(renewSubscriptionsLogic(deps())).resolves.toEqual({ renewed: 0, ended: 1, failed: 0 });
     expect(await subscription('aarav')).toMatchObject({ tier: 'free', status: 'expired', current_period_end: null });
@@ -129,7 +129,7 @@ describe('plans', () => {
   });
 
   it('plans not yet due are left alone', async () => {
-    await buy('aarav', 'findx_plus_monthly', token('plus'));
+    await buy('aarav', 'vybe_plus_monthly', token('plus'));
     await expect(renewSubscriptionsLogic(deps())).resolves.toEqual({ renewed: 0, ended: 0, failed: 0 });
   });
 });
@@ -137,7 +137,7 @@ describe('plans', () => {
 describe('store refunds', () => {
   it('takes back a refunded pack, once', async () => {
     const t = token('pack');
-    await buy('aarav', 'findx_credits_30', t);
+    await buy('aarav', 'vybe_credits_30', t);
     const txn = `fake-txn-${t}`;
     await expect(refund(txn)).resolves.toBe('refunded');
     await expect(refund(txn)).resolves.toBe('ignored');
@@ -148,7 +148,7 @@ describe('store refunds', () => {
 
   it('never takes the balance below 0', async () => {
     const t = token('pack');
-    await buy('aarav', 'findx_credits_30', t);
+    await buy('aarav', 'vybe_credits_30', t);
     await sql`update credit_accounts set balance = 7 where uid = ${uid('aarav')}`;
     await refund(`fake-txn-${t}`);
     expect(await balance('aarav')).toBe(0);
@@ -156,7 +156,7 @@ describe('store refunds', () => {
 
   it('a refunded plan ends straight away', async () => {
     const t = token('plus');
-    await buy('aarav', 'findx_plus_monthly', t);
+    await buy('aarav', 'vybe_plus_monthly', t);
     await refund(`fake-txn-${t}-p0`);
     expect(await subscription('aarav')).toMatchObject({ tier: 'free', status: 'refunded' });
     expect(await balance('aarav')).toBe(20);

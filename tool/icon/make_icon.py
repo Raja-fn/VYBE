@@ -1,4 +1,4 @@
-"""Draws the FindX app icon: a dark map pin with a coral-and-white core on coral.
+"""Draws the VYBE app icon: a dark map pin with a coral-and-white core on coral.
 
     python tool/icon/make_icon.py
 

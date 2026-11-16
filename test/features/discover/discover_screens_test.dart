@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:findx/core/router/app_router.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/discover/presentation/companion_profile_screen.dart';
-import 'package:findx/features/discover/presentation/discover_screen.dart';
-import 'package:findx/features/discover/presentation/free_now_screen.dart';
-import 'package:findx/features/discover/presentation/saved_screen.dart';
-import 'package:findx/features/profile/presentation/my_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/router/app_router.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/discover/presentation/companion_profile_screen.dart';
+import 'package:vybe/features/discover/presentation/discover_screen.dart';
+import 'package:vybe/features/discover/presentation/free_now_screen.dart';
+import 'package:vybe/features/discover/presentation/saved_screen.dart';
+import 'package:vybe/features/profile/presentation/my_profile_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';
@@ -35,7 +35,7 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 
 void main() {
   group('Discover', () {
-    testWidgets('shows the first companion card with the screenshot details', (tester) async {
+    testWidgets('shows people as a feed of posts with their details', (tester) async {
       await pumpFullApp(tester, backend: _withCompanions());
       expect(find.byType(DiscoverScreen), findsOneWidget);
       expect(find.text('What is the plan?'), findsOneWidget);
@@ -44,8 +44,8 @@ void main() {
       expect(find.text('3 spots nearby'), findsOneWidget);
       expect(find.textContaining('About 2 km away · free until'), findsOneWidget);
       expect(find.text('Free now'), findsOneWidget);
-      expect(find.text('Verified'), findsOneWidget);
-      expect(find.text('MY IDEAL SUNDAY'), findsOneWidget);
+      expect(find.text('MY IDEAL SUNDAY'), findsWidgets);
+      expect(find.text('View full profile'), findsWidgets);
       expect(find.text('20'), findsOneWidget); // credits pill
     });
 
@@ -55,14 +55,35 @@ void main() {
       expect(backend.discover.locations, hasLength(1));
     });
 
-    testWidgets('Skip moves to the next card; the end offers start over', (tester) async {
+    testWidgets('scrolling down shows the next people, then the end of the feed', (tester) async {
       await pumpFullApp(tester, backend: _withCompanions());
-      await _tap(tester, find.bySemanticsLabel('Skip'));
+      final feed = find.byType(Scrollable).first;
+      await tester.scrollUntilVisible(find.text('Sam, 26'), 300, scrollable: feed);
       expect(find.text('Sam, 26'), findsOneWidget);
-      await _tap(tester, find.bySemanticsLabel('Skip'));
-      expect(find.text('You have seen everyone for now'), findsOneWidget);
-      await _tap(tester, find.text('Start over'));
-      expect(find.text('Neha, 24'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('You have seen everyone for now'), 300, scrollable: feed);
+      expect(find.text('Pull down to refresh, or try another plan.'), findsOneWidget);
+    });
+
+    testWidgets('swiping a post sideways shows the next photo', (tester) async {
+      final backend = _withCompanions();
+      backend.discover.companions = [
+        testCompanion(
+          'neha',
+          name: 'Neha',
+        ).copyWith(photoPaths: ['photos/neha/1.jpg', 'photos/neha/2.jpg', 'photos/neha/3.jpg']),
+      ];
+      await pumpFullApp(tester, backend: backend);
+      expect(find.text('1 / 3'), findsOneWidget);
+      await tester.drag(find.byType(PageView).first, const Offset(-400, 0));
+      await settle(tester);
+      expect(find.text('2 / 3'), findsOneWidget);
+    });
+
+    testWidgets('Message opens the chat with that person', (tester) async {
+      final backend = _withCompanions();
+      await pumpFullApp(tester, backend: backend);
+      await _tap(tester, find.text('Message'));
+      expect(find.textContaining('Neha'), findsWidgets);
     });
 
     testWidgets('plan chips filter the deck', (tester) async {
@@ -74,9 +95,9 @@ void main() {
     testWidgets('Save toggles and is announced', (tester) async {
       final backend = _withCompanions();
       await pumpFullApp(tester, backend: backend);
-      await _tap(tester, find.bySemanticsLabel('Save'));
+      await _tap(tester, find.byTooltip('Save'));
       expect(backend.discover.savedIds.value, {'neha'});
-      expect(find.bySemanticsLabel('Remove from saved'), findsOneWidget);
+      expect(find.byTooltip('Remove from saved'), findsOneWidget);
     });
 
     testWidgets('empty plan shows the empty state', (tester) async {
@@ -111,7 +132,7 @@ void main() {
       expect(find.byType(MyProfileScreen), findsOneWidget);
     });
 
-    testWidgets('tapping the card opens the full profile', (tester) async {
+    testWidgets("tapping a post's name opens the full profile", (tester) async {
       await pumpFullApp(tester, backend: _withCompanions());
       await _tap(tester, find.text('Neha, 24'));
       expect(find.byType(CompanionProfileScreen), findsOneWidget);

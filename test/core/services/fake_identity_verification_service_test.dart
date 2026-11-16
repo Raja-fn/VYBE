@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/services/identity_verification/fake_identity_verification_service.dart';
-import 'package:findx/core/services/identity_verification/functions_identity_verification_service.dart';
-import 'package:findx/core/services/identity_verification/identity_verification_service.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/utils/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/services/identity_verification/fake_identity_verification_service.dart';
+import 'package:vybe/core/services/identity_verification/functions_identity_verification_service.dart';
+import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/utils/clock.dart';
 
 import '../../helpers/fakes.dart';
 

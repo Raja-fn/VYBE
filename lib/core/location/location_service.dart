@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -30,6 +32,7 @@ class GeolocatorLocationService implements LocationService {
   const GeolocatorLocationService();
 
   static const _denied = AppFailure(FailureKind.locationDenied);
+  static const _fixTimeout = Duration(seconds: 15);
 
   @override
   Future<Result<DevicePosition>> current() async {
@@ -40,9 +43,17 @@ class GeolocatorLocationService implements LocationService {
       return const Err(_denied);
     }
     return runGuarded(() async {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
+      Position? position;
+      try {
+        // Distances are shown to about 1 km, so a quick, normal-accuracy fix is enough.
+        // Indoors a precise fix can take very long; give up after [_fixTimeout].
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: _fixTimeout),
+        );
+      } on TimeoutException {
+        position = await Geolocator.getLastKnownPosition();
+      }
+      if (position == null) throw const AppFailure(FailureKind.locationDenied);
       return DevicePosition(lat: position.latitude, lng: position.longitude, accuracyM: position.accuracy);
     });
   }

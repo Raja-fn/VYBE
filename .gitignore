@@ -44,7 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# ---- FindX ----
+# ---- VYBE ----
 # Secrets and per-machine config (see docs/phase-0-plan.md §12)
 /android/key.properties
 *.jks
@@ -73,3 +73,6 @@ pubsub-debug.log
 # Supabase CLI local state
 /supabase/.temp/
 /supabase/.branches//tool/screens/out/
+
+# Firebase Hosting deploy cache
+.firebase/

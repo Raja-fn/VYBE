@@ -1,16 +1,16 @@
 import 'dart:async';
 
-import 'package:findx/core/router/app_router.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/booking/domain/booking_models.dart';
-import 'package:findx/features/booking/presentation/book_spot_screen.dart';
-import 'package:findx/features/chat/domain/chat_models.dart';
-import 'package:findx/features/chat/presentation/chat_screen.dart';
-import 'package:findx/features/chat/presentation/chats_screen.dart';
-import 'package:findx/features/discover/presentation/discover_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/router/app_router.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/booking/domain/booking_models.dart';
+import 'package:vybe/features/booking/presentation/book_spot_screen.dart';
+import 'package:vybe/features/chat/domain/chat_models.dart';
+import 'package:vybe/features/chat/presentation/chat_screen.dart';
+import 'package:vybe/features/chat/presentation/chats_screen.dart';
+import 'package:vybe/features/discover/presentation/discover_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';

@@ -199,7 +199,7 @@ class SupabaseAuthRepository implements AuthRepository {
     try {
       await _google.signOut();
     } on Object {
-      // Already signed out of FindX; the picker simply shows the last account.
+      // Already signed out of VYBE; the picker simply shows the last account.
     }
   });
 }

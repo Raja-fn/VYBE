@@ -24,7 +24,7 @@ Future<void> bootstrap(AppEnv env) async {
 Future<void> _connect(AppEnv env) async {
   final backend = BackendConfig.forEnv(env);
   if (!backend.isComplete) {
-    debugPrint('FindX start-up failed: this production build has no Supabase settings.');
+    debugPrint('VYBE start-up failed: this production build has no Supabase settings.');
     runApp(BootstrapErrorApp(onRetry: () => _connect(env), notConfigured: true));
     return;
   }
@@ -34,7 +34,7 @@ Future<void> _connect(AppEnv env) async {
       _backendReady = true;
     }
   } on Object catch (error) {
-    debugPrint('FindX start-up failed: $error');
+    debugPrint('VYBE start-up failed: $error');
     runApp(BootstrapErrorApp(onRetry: () => _connect(env)));
     return;
   }
@@ -53,7 +53,7 @@ Future<void> _start(AppEnv env) async {
         ProviderScope(
           retry: noAutomaticRetry,
           overrides: [appEnvProvider.overrideWithValue(env), appConfigProvider.overrideWithValue(value)],
-          child: const FindXApp(),
+          child: const VybeApp(),
         ),
       );
     case Err():

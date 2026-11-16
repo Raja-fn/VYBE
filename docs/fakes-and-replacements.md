@@ -83,11 +83,11 @@ In `config/app_config_defaults.json`. These must match the ids you create in Pla
 
 | Product | Id | Credits |
 |---|---|---|
-| Plus plan (monthly) | `findx_plus_monthly` | 100 / month |
-| Premium plan (monthly) | `findx_premium_monthly` | 200 / month |
-| Top-up | `findx_credits_10` | 10 |
-| Top-up | `findx_credits_30` | 30 |
-| Top-up | `findx_credits_75` | 75 |
+| Plus plan (monthly) | `vybe_plus_monthly` | 100 / month |
+| Premium plan (monthly) | `vybe_premium_monthly` | 200 / month |
+| Top-up | `vybe_credits_10` | 10 |
+| Top-up | `vybe_credits_30` | 30 |
+| Top-up | `vybe_credits_75` | 75 |
 
 Prices are set in the stores, not in the app.
 
@@ -131,7 +131,7 @@ All are in `config/app_config_defaults.json` and can be changed later through Re
 |---|---|---|
 | Component gallery screen (design-system check) | `lib/core/dev/component_gallery_screen.dart`, route `/dev/components` | Emulator builds only. Never reachable in production. Can be deleted any time. |
 | Gallery sample text ("Name", "4.8", "32") | `lib/l10n/app_en.arb` (`devGallery*` keys) | Delete together with the gallery. |
-| App icon and splash screen | Flutter defaults in `android/app/src/main/res/` and `ios/Runner/Assets.xcassets/` | Your FindX icon and splash (Phase 10). |
+| App icon and splash screen | Flutter defaults in `android/app/src/main/res/` and `ios/Runner/Assets.xcassets/` | Your VYBE icon and splash (Phase 10). |
 | Release signing | Falls back to the **debug key** when `android/key.properties` is missing | Create an upload keystore and add `android/key.properties` (never committed). |
 | **Fixed location (opt-in)** | `lib/core/location/location_service.dart` (`FixedLocationService`) | All builds use real GPS. An emulator without GPS can pretend to be at the launch city centre with `--dart-define=FIXED_LOCATION=true` (test builds only). |
 | **Fakes on the real test project** | `functions/.env.dev` (`FINDX_FAKE_SERVICES=true`, `FINDX_ENFORCE_APP_CHECK=false`) | Only for the test project (alias `dev`). Never create `.env.prod`; a project id ending in `-prod` ignores the switch anyway. |

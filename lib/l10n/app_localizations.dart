@@ -97,7 +97,7 @@ abstract class AppLocalizations {
   /// App name. Not translated.
   ///
   /// In en, this message translates to:
-  /// **'FindX'**
+  /// **'VYBE'**
   String get appName;
 
   /// No description provided for @startTagline.
@@ -121,7 +121,7 @@ abstract class AppLocalizations {
   /// No description provided for @bootstrapErrorTitle.
   ///
   /// In en, this message translates to:
-  /// **'FindX could not start'**
+  /// **'VYBE could not start'**
   String get bootstrapErrorTitle;
 
   /// No description provided for @bootstrapNoConnection.
@@ -187,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @failureNetwork.
   ///
   /// In en, this message translates to:
-  /// **'We could not reach FindX. Check your connection and try again.'**
+  /// **'We could not reach VYBE. Check your connection and try again.'**
   String get failureNetwork;
 
   /// No description provided for @failureOffline.
@@ -703,13 +703,13 @@ abstract class AppLocalizations {
   /// No description provided for @verifyUnderageTitle.
   ///
   /// In en, this message translates to:
-  /// **'FindX is for adults only'**
+  /// **'VYBE is for adults only'**
   String get verifyUnderageTitle;
 
   /// No description provided for @verifyUnderageBody.
   ///
   /// In en, this message translates to:
-  /// **'Your ID shows you are under 18, so you cannot use FindX.'**
+  /// **'Your ID shows you are under 18, so you cannot use VYBE.'**
   String get verifyUnderageBody;
 
   /// No description provided for @prefsTitle.
@@ -841,7 +841,7 @@ abstract class AppLocalizations {
   /// No description provided for @suspendedBody.
   ///
   /// In en, this message translates to:
-  /// **'This account was suspended for breaking the FindX rules.'**
+  /// **'This account was suspended for breaking the VYBE rules.'**
   String get suspendedBody;
 
   /// No description provided for @creditsCount.
@@ -859,7 +859,7 @@ abstract class AppLocalizations {
   /// No description provided for @failureLocationDenied.
   ///
   /// In en, this message translates to:
-  /// **'Location is off or not allowed for FindX.'**
+  /// **'Location is off or not allowed for VYBE.'**
   String get failureLocationDenied;
 
   /// No description provided for @navDiscover.
@@ -927,18 +927,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have seen everyone for now'**
   String get discoverAllSeenTitle;
-
-  /// No description provided for @discoverStartOver.
-  ///
-  /// In en, this message translates to:
-  /// **'Start over'**
-  String get discoverStartOver;
-
-  /// No description provided for @discoverSkip.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip'**
-  String get discoverSkip;
 
   /// No description provided for @discoverMessage.
   ///
@@ -1045,7 +1033,7 @@ abstract class AppLocalizations {
   /// No description provided for @locationNeededBody.
   ///
   /// In en, this message translates to:
-  /// **'FindX uses your location to show verified companions and public spots within {km} km. Other people never see your exact location.'**
+  /// **'VYBE uses your location to show verified companions and public spots within {km} km. Other people never see your exact location.'**
   String locationNeededBody(int km);
 
   /// No description provided for @locationAllow.
@@ -1795,7 +1783,7 @@ abstract class AppLocalizations {
   /// No description provided for @blockBody.
   ///
   /// In en, this message translates to:
-  /// **'You will not see each other anywhere on FindX. Your chat closes and open bookings are cancelled. Credits are not refunded.'**
+  /// **'You will not see each other anywhere on VYBE. Your chat closes and open bookings are cancelled. Credits are not refunded.'**
   String get blockBody;
 
   /// No description provided for @blockConfirm.
@@ -2149,7 +2137,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifySignInBody.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with your Google account to create your FindX account. We never post anything to it.'**
+  /// **'Sign in with your Google account to create your VYBE account. We never post anything to it.'**
   String get verifySignInBody;
 
   /// No description provided for @verifyContinueWithGoogle.
@@ -2781,6 +2769,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theatre'**
   String get venueTheatre;
+
+  /// No description provided for @feedViewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View full profile'**
+  String get feedViewProfile;
+
+  /// No description provided for @feedPhotoOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {index} of {total} of {name}'**
+  String feedPhotoOf(String name, int index, int total);
+
+  /// No description provided for @feedEndBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down to refresh, or try another plan.'**
+  String get feedEndBody;
 }
 
 class _AppLocalizationsDelegate

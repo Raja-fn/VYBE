@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:findx/core/backend/tables.dart';
+import 'package:vybe/core/backend/tables.dart';
 
 /// In-memory [Tables]: rows per table, live `watch` streams, and a log of
 /// writes. Row-level security is not modelled (that is tested on the server);

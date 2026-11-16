@@ -183,7 +183,7 @@ export const venues: SeedVenue[] = [
     businessName: 'Harbour Bean Cafe LLP', name: 'Harbour Bean Cafe', category: 'cafe',
     addressLine: 'Hill Road, Bandra West, Mumbai 400050', lat: 19.0545, lng: 72.8340,
     planTypes: ['coffee'], verificationStatus: 'verified', isListed: true,
-    perk: '10% off any coffee for FindX meetups',
+    perk: '10% off any coffee for VYBE meetups',
     slotTemplate: { slotMinutes: 60, tablesPerSlot: 3, openingHours: everyDay('09:00', '22:00') },
   },
   {
@@ -207,7 +207,7 @@ export const venues: SeedVenue[] = [
     businessName: 'Reel House Cinemas', name: 'Reel House Cinema', category: 'cinema',
     addressLine: 'SV Road, Santacruz West, Mumbai 400054', lat: 19.0810, lng: 72.8400,
     planTypes: ['movie', 'event'], verificationStatus: 'verified', isListed: true,
-    perk: 'Priority seating for FindX bookings',
+    perk: 'Priority seating for VYBE bookings',
     slotTemplate: {
       slotMinutes: 120, tablesPerSlot: 2,
       openingHours: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ weekday, open: '12:00', close: '24:00' })),

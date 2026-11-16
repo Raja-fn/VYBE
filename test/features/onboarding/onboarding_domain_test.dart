@@ -1,11 +1,11 @@
-import 'package:findx/core/router/routes.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/onboarding/domain/account.dart';
-import 'package:findx/features/onboarding/domain/onboarding_redirect.dart';
-import 'package:findx/features/onboarding/domain/phone_number.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/router/routes.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/onboarding/domain/account.dart';
+import 'package:vybe/features/onboarding/domain/onboarding_redirect.dart';
+import 'package:vybe/features/onboarding/domain/phone_number.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
 
 import '../../helpers/fakes.dart';
 

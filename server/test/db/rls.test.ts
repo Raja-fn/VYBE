@@ -26,7 +26,7 @@ beforeEach(async () => {
   await sql`insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key)
     values ('l1', ${uid('alice')}, 20, 20, 'signup_bonus', 'user', ${uid('alice')}, 'l1')`;
   await sql`insert into purchases (id, uid, platform, product_id, kind, store_transaction_id, purchase_token, token_hash, status, verified_at)
-    values ('android_txn1', ${uid('alice')}, 'android', 'findx_credits_10', 'consumable', 'txn1', 'secret-token', 'h', 'granted', now())`;
+    values ('android_txn1', ${uid('alice')}, 'android', 'vybe_credits_10', 'consumable', 'txn1', 'secret-token', 'h', 'granted', now())`;
   await sql`insert into otp_challenges (phone, code_hash, salt, sent_at, expires_at) values ('+919800000001', 'h', 's', now(), now())`;
   await sql`insert into rate_limits (key, window_start, count) values (${`${uid('alice')}_discovery`}, now(), 1)`;
   await sql`insert into bookings (id, seeker_uid, companion_uid, venue_id, venue_name, venue_category, venue_owner_uid, slot_id,

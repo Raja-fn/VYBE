@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:findx/core/router/app_router.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/credits/domain/credit_models.dart';
-import 'package:findx/features/credits/presentation/credits_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/router/app_router.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/credits/domain/credit_models.dart';
+import 'package:vybe/features/credits/presentation/credits_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';

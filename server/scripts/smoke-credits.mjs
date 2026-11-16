@@ -42,29 +42,29 @@ check(Number.isFinite(start), `Kiran starts with ${start} credits on Free`);
 
 // Top-up pack.
 const packToken = token('pack');
-const pack = await buy(kiran, 'findx_credits_10', packToken);
+const pack = await buy(kiran, 'vybe_credits_10', packToken);
 check(pack.result?.status === 'granted' && pack.result.creditsAdded === 10 && pack.result.balance === start + 10, 'a 10-credit pack adds 10', pack);
-const again = await buy(kiran, 'findx_credits_10', packToken);
+const again = await buy(kiran, 'vybe_credits_10', packToken);
 check(again.result?.status === 'already_granted' && (await balanceOf('s_kiran')) === start + 10, 'sending the same receipt again adds nothing', again);
 
-const forged = await buy(kiran, 'findx_credits_75', 'not-a-store-receipt');
+const forged = await buy(kiran, 'vybe_credits_75', 'not-a-store-receipt');
 check(forged.error?.details?.code === 'purchase_invalid', 'a forged receipt is refused', forged);
-const unknown = await buy(kiran, 'findx_credits_9999', token('x'));
+const unknown = await buy(kiran, 'vybe_credits_9999', token('x'));
 check(unknown.error?.details?.code === 'invalid_input', 'an unknown product is refused', unknown);
 
 const alex = await signIn('alex@findx.test');
-const stolen = await buy(alex, 'findx_credits_10', packToken);
+const stolen = await buy(alex, 'vybe_credits_10', packToken);
 check(stolen.error?.details?.code === 'purchase_invalid', "someone else cannot use Kiran's receipt", stolen);
 
 // Plans.
-const plus = await buy(kiran, 'findx_plus_monthly', token('plus'));
+const plus = await buy(kiran, 'vybe_plus_monthly', token('plus'));
 check(plus.result?.status === 'granted' && plus.result.creditsAdded === 100 && plus.result.tier === 'plus', 'Plus adds 100 credits', plus);
 check((await tierOf('s_kiran')) === 'plus', 'Kiran is on Plus');
 
-const premium = await buy(kiran, 'findx_premium_monthly', token('premium'));
+const premium = await buy(kiran, 'vybe_premium_monthly', token('premium'));
 check(premium.result?.creditsAdded === 200 && premium.result.tier === 'premium', 'upgrading to Premium adds 200 straight away', premium);
 
-const down = await buy(kiran, 'findx_plus_monthly', token('down'));
+const down = await buy(kiran, 'vybe_plus_monthly', token('down'));
 check(down.result?.status === 'at_renewal' && down.result.creditsAdded === 0, 'going back to Plus waits for the renewal', down);
 const sub = await adminGet('subscriptions/s_kiran');
 check(sub.fields?.tier?.stringValue === 'premium' && sub.fields?.pendingTier?.stringValue === 'plus', 'Premium stays until then, Plus is waiting');

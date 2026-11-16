@@ -9,12 +9,13 @@ describe('OpenStreetMap places', () => {
     expect(query).not.toMatch(/bar|pub|nightclub/);
   });
 
-  it('turns OSM elements into meeting spots, dropping unnamed and private ones', () => {
+  it('turns OSM elements into meeting spots, dropping unnamed, generic and private ones', () => {
     const places = placesFromOsm([
       { type: 'node', id: 1, lat: 26.91, lon: 75.78, tags: { amenity: 'cafe', name: 'Tapri Central', 'addr:street': 'C Scheme', 'addr:city': 'Jaipur' } },
       { type: 'way', id: 2, center: { lat: 26.92, lon: 75.79 }, tags: { leisure: 'park', name: 'Central Park' } },
       { type: 'node', id: 3, lat: 26.9, lon: 75.7, tags: { amenity: 'cinema', name: 'Raj Mandir' } },
       { type: 'node', id: 4, lat: 26.9, lon: 75.7, tags: { amenity: 'cafe' } },
+      { type: 'node', id: 8, lat: 26.9, lon: 75.7, tags: { amenity: 'cafe', name: 'Café' } },
       { type: 'node', id: 5, lat: 26.9, lon: 75.7, tags: { leisure: 'park', name: 'Club lawn', access: 'private' } },
       { type: 'node', id: 6, lat: 26.9, lon: 75.7, tags: { amenity: 'bar', name: 'Somewhere' } },
       { type: 'relation', id: 7, tags: { shop: 'mall', name: 'No position' } },

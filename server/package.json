@@ -1,5 +1,5 @@
 {
-  "name": "findx-server",
+  "name": "vybe-server",
   "private": true,
   "engines": {
     "node": "22"

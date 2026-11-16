@@ -1,32 +1,32 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:findx/app.dart';
-import 'package:findx/core/backend/backend_providers.dart';
-import 'package:findx/core/config/app_config.dart';
-import 'package:findx/core/config/app_env.dart';
-import 'package:findx/core/connectivity/connectivity_service.dart';
-import 'package:findx/core/l10n/l10n.dart';
-import 'package:findx/core/location/location_service.dart';
-import 'package:findx/core/services/identity_verification/identity_verification_providers.dart';
-import 'package:findx/core/services/image_capture/image_capture_service.dart';
-import 'package:findx/core/services/image_capture/photo_picker_service.dart';
-import 'package:findx/core/theme/app_theme.dart';
-import 'package:findx/features/booking/presentation/booking_providers.dart';
-import 'package:findx/features/chat/presentation/chat_providers.dart';
-import 'package:findx/features/credits/data/store_client.dart';
-import 'package:findx/features/credits/domain/credit_models.dart';
-import 'package:findx/features/credits/presentation/credits_providers.dart';
-import 'package:findx/features/discover/presentation/discover_providers.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/onboarding/presentation/session_providers.dart';
-import 'package:findx/features/preferences/domain/preferences.dart';
-import 'package:findx/features/preferences/presentation/preferences_providers.dart';
-import 'package:findx/features/profile/presentation/my_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/app.dart';
+import 'package:vybe/core/backend/backend_providers.dart';
+import 'package:vybe/core/config/app_config.dart';
+import 'package:vybe/core/config/app_env.dart';
+import 'package:vybe/core/connectivity/connectivity_service.dart';
+import 'package:vybe/core/l10n/l10n.dart';
+import 'package:vybe/core/location/location_service.dart';
+import 'package:vybe/core/services/identity_verification/identity_verification_providers.dart';
+import 'package:vybe/core/services/image_capture/image_capture_service.dart';
+import 'package:vybe/core/services/image_capture/photo_picker_service.dart';
+import 'package:vybe/core/theme/app_theme.dart';
+import 'package:vybe/features/booking/presentation/booking_providers.dart';
+import 'package:vybe/features/chat/presentation/chat_providers.dart';
+import 'package:vybe/features/credits/data/store_client.dart';
+import 'package:vybe/features/credits/domain/credit_models.dart';
+import 'package:vybe/features/credits/presentation/credits_providers.dart';
+import 'package:vybe/features/discover/presentation/discover_providers.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/onboarding/presentation/session_providers.dart';
+import 'package:vybe/features/preferences/domain/preferences.dart';
+import 'package:vybe/features/preferences/presentation/preferences_providers.dart';
+import 'package:vybe/features/profile/presentation/my_profile_controller.dart';
 
 import 'fakes.dart';
 
@@ -168,7 +168,7 @@ Future<void> pumpFullApp(
     ProviderScope(
       retry: noAutomaticRetry,
       overrides: baseOverrides(env: env, online: online, backend: backend),
-      child: const FindXApp(),
+      child: const VybeApp(),
     ),
   );
   await settle(tester);

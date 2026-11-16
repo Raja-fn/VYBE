@@ -14,18 +14,18 @@ const earlier = new Date(NOW.getTime() - DAY);
 
 describe('productFor', () => {
   it('finds top-up packs and plans from AppConfig', () => {
-    expect(productFor(config, 'findx_credits_30')).toEqual({ kind: 'pack', productId: 'findx_credits_30', credits: 30 });
-    expect(productFor(config, 'findx_premium_monthly')).toEqual({
+    expect(productFor(config, 'vybe_credits_30')).toEqual({ kind: 'pack', productId: 'vybe_credits_30', credits: 30 });
+    expect(productFor(config, 'vybe_premium_monthly')).toEqual({
       kind: 'plan',
-      productId: 'findx_premium_monthly',
+      productId: 'vybe_premium_monthly',
       tier: 'premium',
       monthlyCredits: 200,
     });
-    expect(productFor(config, 'findx_plus_monthly')).toMatchObject({ monthlyCredits: 100 });
+    expect(productFor(config, 'vybe_plus_monthly')).toMatchObject({ monthlyCredits: 100 });
   });
 
   it('knows nothing else', () => {
-    expect(productFor(config, 'findx_credits_999')).toBeNull();
+    expect(productFor(config, 'vybe_credits_999')).toBeNull();
   });
 });
 
@@ -67,13 +67,13 @@ describe('refund take-back', () => {
 describe('fake store periods', () => {
   const fake = (now: Date) =>
     new FakePurchaseVerificationService({
-      consumableProductIds: ['findx_credits_10'],
-      subscriptionProductIds: ['findx_plus_monthly'],
+      consumableProductIds: ['vybe_credits_10'],
+      subscriptionProductIds: ['vybe_plus_monthly'],
       subscriptionPeriodDays: 30,
       now: () => now,
     });
   const bought = NOW.getTime();
-  const claim = (purchaseToken: string) => ({ platform: 'android' as const, productId: 'findx_plus_monthly', purchaseToken });
+  const claim = (purchaseToken: string) => ({ platform: 'android' as const, productId: 'vybe_plus_monthly', purchaseToken });
 
   it('each paid period has its own transaction id', async () => {
     const first = await fake(NOW).verify('u', claim(`fake-t${bought}-a`));
@@ -89,7 +89,7 @@ describe('fake store periods', () => {
   });
 
   it('pending payments are reported as pending', async () => {
-    const result = await fake(NOW).verify('u', { ...claim(`fake-t${bought}${FAKE_PENDING_MARKER}`), productId: 'findx_credits_10' });
+    const result = await fake(NOW).verify('u', { ...claim(`fake-t${bought}${FAKE_PENDING_MARKER}`), productId: 'vybe_credits_10' });
     expect(result.status).toBe('pending');
   });
 

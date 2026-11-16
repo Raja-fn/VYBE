@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'FindX';
+  String get appName => 'VYBE';
 
   @override
   String get startTagline => 'Meet new people, safely';
@@ -21,7 +21,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startLoading => 'Getting things ready';
 
   @override
-  String get bootstrapErrorTitle => 'FindX could not start';
+  String get bootstrapErrorTitle => 'VYBE could not start';
 
   @override
   String get bootstrapNoConnection =>
@@ -58,7 +58,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failureNetwork =>
-      'We could not reach FindX. Check your connection and try again.';
+      'We could not reach VYBE. Check your connection and try again.';
 
   @override
   String get failureOffline =>
@@ -369,11 +369,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyTryAgain => 'Try again';
 
   @override
-  String get verifyUnderageTitle => 'FindX is for adults only';
+  String get verifyUnderageTitle => 'VYBE is for adults only';
 
   @override
   String get verifyUnderageBody =>
-      'Your ID shows you are under 18, so you cannot use FindX.';
+      'Your ID shows you are under 18, so you cannot use VYBE.';
 
   @override
   String get prefsTitle => 'Who do you want to meet?';
@@ -450,7 +450,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suspendedBody =>
-      'This account was suspended for breaking the FindX rules.';
+      'This account was suspended for breaking the VYBE rules.';
 
   @override
   String creditsCount(int count) {
@@ -469,7 +469,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failureLocationDenied =>
-      'Location is off or not allowed for FindX.';
+      'Location is off or not allowed for VYBE.';
 
   @override
   String get navDiscover => 'Discover';
@@ -506,12 +506,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverAllSeenTitle => 'You have seen everyone for now';
-
-  @override
-  String get discoverStartOver => 'Start over';
-
-  @override
-  String get discoverSkip => 'Skip';
 
   @override
   String get discoverMessage => 'Message';
@@ -585,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String locationNeededBody(int km) {
-    return 'FindX uses your location to show verified companions and public spots within $km km. Other people never see your exact location.';
+    return 'VYBE uses your location to show verified companions and public spots within $km km. Other people never see your exact location.';
   }
 
   @override
@@ -1030,7 +1024,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockBody =>
-      'You will not see each other anywhere on FindX. Your chat closes and open bookings are cancelled. Credits are not refunded.';
+      'You will not see each other anywhere on VYBE. Your chat closes and open bookings are cancelled. Credits are not refunded.';
 
   @override
   String get blockConfirm => 'Block';
@@ -1277,7 +1271,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifySignInBody =>
-      'Sign in with your Google account to create your FindX account. We never post anything to it.';
+      'Sign in with your Google account to create your VYBE account. We never post anything to it.';
 
   @override
   String get verifyContinueWithGoogle => 'Continue with Google';
@@ -1601,4 +1595,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get venueTheatre => 'Theatre';
+
+  @override
+  String get feedViewProfile => 'View full profile';
+
+  @override
+  String feedPhotoOf(String name, int index, int total) {
+    return 'Photo $index of $total of $name';
+  }
+
+  @override
+  String get feedEndBody => 'Pull down to refresh, or try another plan.';
 }

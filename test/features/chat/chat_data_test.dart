@@ -1,11 +1,11 @@
-import 'package:findx/app.dart';
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/chat/data/chat_repository.dart';
-import 'package:findx/features/chat/domain/chat_models.dart';
-import 'package:findx/features/chat/presentation/chat_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/app.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/chat/data/chat_repository.dart';
+import 'package:vybe/features/chat/domain/chat_models.dart';
+import 'package:vybe/features/chat/presentation/chat_providers.dart';
 
 import '../../helpers/fake_tables.dart';
 import '../../helpers/fakes.dart';

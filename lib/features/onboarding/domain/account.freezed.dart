@@ -284,7 +284,7 @@ as StepStatus,
 /// @nodoc
 mixin _$Account {
 
- String get uid;@JsonKey(unknownEnumValue: AccountType.member) AccountType get accountType;@JsonKey(unknownEnumValue: VerificationStatus.pending) VerificationStatus get verificationStatus; VerificationSteps get verificationSteps;@JsonKey(unknownEnumValue: AccountStatus.active) AccountStatus get accountStatus; String? get verificationReason; String? get displayName; int? get ageYears;/// Profile photos as storage paths ("photos/<uid>/<id>.jpg"), main first.
+ String get uid;@JsonKey(unknownEnumValue: AccountType.member) AccountType get accountType;@JsonKey(unknownEnumValue: VerificationStatus.pending) VerificationStatus get verificationStatus; VerificationSteps get verificationSteps;@JsonKey(unknownEnumValue: AccountStatus.active) AccountStatus get accountStatus; String? get verificationReason; String? get displayName; int? get ageYears;/// Profile photos as storage paths (`photos/<uid>/<id>.jpg`), main first.
  List<String> get photoPaths;
 /// Create a copy of Account
 /// with the given fields replaced by the non-null parameter values.
@@ -507,9 +507,9 @@ class _Account extends Account {
 @override final  String? verificationReason;
 @override final  String? displayName;
 @override final  int? ageYears;
-/// Profile photos as storage paths ("photos/<uid>/<id>.jpg"), main first.
+/// Profile photos as storage paths (`photos/<uid>/<id>.jpg`), main first.
  final  List<String> _photoPaths;
-/// Profile photos as storage paths ("photos/<uid>/<id>.jpg"), main first.
+/// Profile photos as storage paths (`photos/<uid>/<id>.jpg`), main first.
 @override@JsonKey() List<String> get photoPaths {
   if (_photoPaths is EqualUnmodifiableListView) return _photoPaths;
   // ignore: implicit_dynamic_type

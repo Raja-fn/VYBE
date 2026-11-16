@@ -16,12 +16,10 @@ const appLocalizationsDelegates = <LocalizationsDelegate<Object>>[
   GlobalCupertinoLocalizations.delegate,
 ];
 
-/// Riverpod 3 retries failed providers automatically. FindX shows an explicit
-/// "Try again" on every error state instead, so automatic retry is off.
 Duration? noAutomaticRetry(int retryCount, Object error) => null;
 
-class FindXApp extends ConsumerWidget {
-  const FindXApp({super.key});
+class VybeApp extends ConsumerWidget {
+  const VybeApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,20 +34,24 @@ class FindXApp extends ConsumerWidget {
       localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      // Layouts are designed and tested up to this text scale.
-      builder: (context, child) =>
-          MediaQuery.withClampedTextScaling(maxScaleFactor: maxTextScale, child: child ?? const SizedBox.shrink()),
+
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        maxScaleFactor: maxTextScale,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }
 
-/// Shown if the app cannot finish starting (for example, bad bundled config).
 class BootstrapErrorApp extends StatelessWidget {
-  const BootstrapErrorApp({required this.onRetry, this.notConfigured = false, super.key});
+  const BootstrapErrorApp({
+    required this.onRetry,
+    this.notConfigured = false,
+    super.key,
+  });
 
   final VoidCallback onRetry;
 
-  /// The build has no server settings: retrying cannot help, so say what is wrong.
   final bool notConfigured;
 
   @override
@@ -62,7 +64,10 @@ class BootstrapErrorApp extends StatelessWidget {
       home: Builder(
         builder: (context) => Scaffold(
           body: SafeArea(
-            child: _BootstrapError(onRetry: onRetry, notConfigured: notConfigured),
+            child: _BootstrapError(
+              onRetry: onRetry,
+              notConfigured: notConfigured,
+            ),
           ),
         ),
       ),
@@ -83,17 +88,25 @@ class _BootstrapError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.bootstrapErrorTitle, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.bootstrapErrorTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: AppSpacing.screenPadding,
             child: Text(
-              notConfigured ? l10n.bootstrapNotConfigured : l10n.bootstrapNoConnection,
+              notConfigured
+                  ? l10n.bootstrapNotConfigured
+                  : l10n.bootstrapNoConnection,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
             ),
           ),
-          if (!notConfigured) TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
+          if (!notConfigured)
+            TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
         ],
       ),
     );

@@ -36,10 +36,10 @@ function fakeGoogle(replies: Record<string, Reply>) {
 function play(replies: Record<string, Reply>) {
   const google = fakeGoogle(replies);
   const service = new GooglePlayPurchaseVerificationService({
-    packageName: 'com.findx.app',
+    packageName: 'com.vybe.app',
     serviceAccount,
-    consumableProductIds: ['findx_credits_10'],
-    subscriptionProductIds: ['findx_plus_monthly'],
+    consumableProductIds: ['vybe_credits_10'],
+    subscriptionProductIds: ['vybe_plus_monthly'],
     notificationSecret: 'push-secret',
     fetchFn: google.fetchFn,
     now: () => NOW,
@@ -47,25 +47,25 @@ function play(replies: Record<string, Reply>) {
   return { service, calls: google.calls };
 }
 
-const pack = (token = 'tok1') => ({ platform: 'android' as const, productId: 'findx_credits_10', purchaseToken: token });
-const plan = (token = 'sub1') => ({ platform: 'android' as const, productId: 'findx_plus_monthly', purchaseToken: token });
+const pack = (token = 'tok1') => ({ platform: 'android' as const, productId: 'vybe_credits_10', purchaseToken: token });
+const plan = (token = 'sub1') => ({ platform: 'android' as const, productId: 'vybe_plus_monthly', purchaseToken: token });
 const subscription = (state: string, expiry: string, autoRenew = true) => ({
   status: 200,
   body: {
     subscriptionState: state,
     latestOrderId: 'GPA.3333-4444-5555-66666..1',
     startTime: '2026-10-14T10:00:00Z',
-    lineItems: [{ productId: 'findx_plus_monthly', expiryTime: expiry, autoRenewingPlan: { autoRenewEnabled: autoRenew } }],
+    lineItems: [{ productId: 'vybe_plus_monthly', expiryTime: expiry, autoRenewingPlan: { autoRenewEnabled: autoRenew } }],
   },
 });
 
 describe('Google Play receipts', () => {
   it('signs in once with the service account and accepts a paid credit pack', async () => {
-    const { service, calls } = play({ 'products/findx_credits_10/tokens/tok1': { status: 200, body: { purchaseState: 0, orderId: 'GPA.1111' } } });
+    const { service, calls } = play({ 'products/vybe_credits_10/tokens/tok1': { status: 200, body: { purchaseState: 0, orderId: 'GPA.1111' } } });
     await expect(service.verify('u1', pack())).resolves.toMatchObject({ status: 'valid', storeTransactionId: 'GPA.1111', kind: 'consumable' });
     await service.verify('u1', pack());
     expect(calls.filter((c) => c.includes('oauth2')).length).toBe(1);
-    expect(calls[1]).toContain('/applications/com.findx.app/purchases/products/findx_credits_10/tokens/tok1');
+    expect(calls[1]).toContain('/applications/com.vybe.app/purchases/products/vybe_credits_10/tokens/tok1');
   });
 
   it('a slow payment is pending, a cancelled or unknown token is refused', async () => {
@@ -78,7 +78,7 @@ describe('Google Play receipts', () => {
     await expect(service.verify('u1', pack('forged'))).resolves.toMatchObject({ status: 'invalid' });
   });
 
-  it('refuses other stores and products FindX does not sell, without asking Google', async () => {
+  it('refuses other stores and products VYBE does not sell, without asking Google', async () => {
     const { service, calls } = play({});
     await expect(service.verify('u1', { ...pack(), platform: 'ios' })).resolves.toMatchObject({ status: 'invalid' });
     await expect(service.verify('u1', { ...pack(), productId: 'something_else' })).resolves.toMatchObject({ status: 'invalid' });
@@ -115,7 +115,7 @@ describe('Google Play receipts', () => {
 
 describe('Google Play refund notices', () => {
   const push = (payload: unknown) => ({ message: { data: Buffer.from(JSON.stringify(payload)).toString('base64') } });
-  const voided = { packageName: 'com.findx.app', voidedPurchaseNotification: { purchaseToken: 't', orderId: 'GPA.1111' } };
+  const voided = { packageName: 'com.vybe.app', voidedPurchaseNotification: { purchaseToken: 't', orderId: 'GPA.1111' } };
 
   it('a refund with the right push token takes the credits back', async () => {
     const { service } = play({});
@@ -129,7 +129,7 @@ describe('Google Play refund notices', () => {
   it('other notices need no action; forged, foreign and malformed ones are rejected', async () => {
     const { service } = play({});
     const ok = { 'x-findx-query-token': 'push-secret' };
-    await expect(service.parseNotification('android', push({ packageName: 'com.findx.app', testNotification: {} }), ok)).resolves.toBeNull();
+    await expect(service.parseNotification('android', push({ packageName: 'com.vybe.app', testNotification: {} }), ok)).resolves.toBeNull();
     await expect(service.parseNotification('android', push(voided), { 'x-findx-query-token': 'wrong' })).rejects.toThrow();
     await expect(service.parseNotification('android', push(voided), {})).rejects.toThrow();
     await expect(service.parseNotification('android', push({ ...voided, packageName: 'other.app' }), ok)).rejects.toThrow();
@@ -140,7 +140,7 @@ describe('Google Play refund notices', () => {
 describe('production services', () => {
   const settings = {
     identityAutoApprove: true,
-    playPackageName: 'com.findx.app',
+    playPackageName: 'com.vybe.app',
     playServiceAccountJson: JSON.stringify(serviceAccount),
     playNotificationSecret: 'push-secret',
   };
@@ -161,7 +161,7 @@ describe('production services', () => {
   it('without Google Play keys, refuse every purchase but keep the rest working', async () => {
     for (const playServiceAccountJson of [undefined, 'not json']) {
       const services = createServices(defaultAppConfig, false, { ...settings, playServiceAccountJson });
-      await expect(services.purchases.verify('u', { platform: 'android', productId: 'findx_credits_10', purchaseToken: 't' })).rejects.toThrow(
+      await expect(services.purchases.verify('u', { platform: 'android', productId: 'vybe_credits_10', purchaseToken: 't' })).rejects.toThrow(
         ProviderNotConfiguredError,
       );
       await expect(services.purchases.parseNotification('android', {}, {})).rejects.toThrow(ProviderNotConfiguredError);

@@ -1,5 +1,6 @@
 import { localDay } from '../domain/availability';
 import type { LatLng } from '../domain/geo';
+import { NoPublicPlaces } from '../services/places/publicPlacesSource';
 import type { Sql } from '../shared/db';
 import type { Deps } from './deps';
 
@@ -25,6 +26,7 @@ export function placesCell(point: LatLng, degrees: number): { key: string; cente
 export async function ensurePlacesNear(deps: Deps, point: LatLng): Promise<void> {
   const { config } = deps;
   const cell = placesCell(point, config.placesCellDegrees);
+  if (deps.services.publicPlaces instanceof NoPublicPlaces) return; // bulk-imported instead
   const now = deps.now();
   const [done] = await deps.sql<{ fetched_at: Date }[]>`select fetched_at from place_imports where cell = ${cell.key}`;
   if (done && now.getTime() - done.fetched_at.getTime() < config.placesRefreshDays * 86_400_000) return;

@@ -1,12 +1,12 @@
-import 'package:findx/core/theme/app_colors.dart';
-import 'package:findx/core/widgets/app_button.dart';
-import 'package:findx/core/widgets/app_choice_chip.dart';
-import 'package:findx/core/widgets/app_pill_button.dart';
-import 'package:findx/core/widgets/badges.dart';
-import 'package:findx/core/widgets/content_rows.dart';
-import 'package:findx/core/widgets/photo_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/theme/app_colors.dart';
+import 'package:vybe/core/widgets/app_button.dart';
+import 'package:vybe/core/widgets/app_choice_chip.dart';
+import 'package:vybe/core/widgets/app_pill_button.dart';
+import 'package:vybe/core/widgets/badges.dart';
+import 'package:vybe/core/widgets/content_rows.dart';
+import 'package:vybe/core/widgets/photo_card.dart';
 
 import '../../helpers/test_app.dart';
 

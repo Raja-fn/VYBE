@@ -43,4 +43,4 @@ final class LocationServiceProvider extends $FunctionalProvider<LocationService,
   }
 }
 
-String _$locationServiceHash() => r'550b1ad33f6730cc6c8006b1c5118bed6f330eab';
+String _$locationServiceHash() => r'03e8a8992cc3a802c194a6c996e68630b7c5e75e';

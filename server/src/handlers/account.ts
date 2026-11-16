@@ -25,7 +25,7 @@ export async function deleteAccountLogic(deps: AccountDeps, caller: Caller): Pro
   const now = deps.now();
   const [user] = await sql<{ account_type: string }[]>`select account_type from users where id = ${caller.uid}`;
   if (user?.account_type === 'venue_partner') {
-    throw appError(ErrorCodes.invalidInput, 'Venue partner accounts are closed by FindX support.');
+    throw appError(ErrorCodes.invalidInput, 'Venue partner accounts are closed by VYBE support.');
   }
 
   await sql.begin(async (tx) => {

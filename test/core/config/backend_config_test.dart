@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:findx/core/backend/backend_config.dart';
-import 'package:findx/core/config/app_env.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/backend/backend_config.dart';
+import 'package:vybe/core/config/app_env.dart';
 
 void main() {
   test('test builds started without settings use the test project', () {

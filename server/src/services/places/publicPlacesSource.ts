@@ -52,7 +52,13 @@ export function overpassQuery(center: LatLng, radiusKm: number, timeoutSeconds: 
   return `[out:json][timeout:${Math.ceil(timeoutSeconds)}];\n${parts.join('\n')}`;
 }
 
-/** Turns Overpass elements into places (unnamed, unpositioned or private ones are dropped). */
+/** Names that only say what the place is ("Cafe", "Park"): not useful as a spot name. */
+const GENERIC_NAMES = new Set([
+  'cafe', 'café', 'coffee', 'coffee shop', 'restaurant', 'hotel', 'dhaba', 'food court', 'cinema', 'theatre', 'theater',
+  'mall', 'park', 'garden', 'playground', 'auditorium', 'arts centre', 'canteen', 'tea stall', 'tea shop',
+]);
+
+/** Turns Overpass elements into places (unnamed, generic, unpositioned or private ones are dropped). */
 export function placesFromOsm(elements: OsmElement[]): PublicPlace[] {
   const places = new Map<string, PublicPlace>();
   for (const el of elements) {
@@ -61,6 +67,7 @@ export function placesFromOsm(elements: OsmElement[]): PublicPlace[] {
     const lat = el.lat ?? el.center?.lat;
     const lng = el.lon ?? el.center?.lon;
     if (!name || lat === undefined || lng === undefined) continue;
+    if (GENERIC_NAMES.has(name.toLowerCase())) continue;
     if (tags.access === 'private' || tags.access === 'no') continue;
     const kind = KINDS.find((k) => matches(k.filter, tags));
     if (!kind) continue;
@@ -114,7 +121,7 @@ export class OpenStreetMapPlaces implements PublicPlacesSource {
       try {
         const response = await fetchFn(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'FindX-server/1.0' },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'VYBE-server/1.0' },
           body,
           signal: AbortSignal.timeout(this.options.timeoutSeconds * 1000),
         });

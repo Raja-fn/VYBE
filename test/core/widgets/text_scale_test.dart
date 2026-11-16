@@ -1,7 +1,7 @@
-import 'package:findx/core/dev/component_gallery_screen.dart';
-import 'package:findx/core/router/screens/start_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/dev/component_gallery_screen.dart';
+import 'package:vybe/core/router/screens/start_screen.dart';
 
 import '../../helpers/test_app.dart';
 

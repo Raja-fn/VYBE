@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A server action failed. [status] is the generic kind (for example
-/// `failed-precondition`); [code] is FindX's own reason (for example
+/// `failed-precondition`); [code] is VYBE's own reason (for example
 /// `insufficient_credits`) when the server gave one.
 class ServerException implements Exception {
   const ServerException(this.status, {this.code, this.message});

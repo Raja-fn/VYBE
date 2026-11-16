@@ -96,19 +96,19 @@ describe('fake purchase verification', () => {
   const token = `${FAKE_PURCHASE_TOKEN_PREFIX}abc`;
 
   it('accepts a known top-up pack', async () => {
-    const result = await services.purchases.verify('u', { platform: 'android', productId: 'findx_credits_10', purchaseToken: token });
+    const result = await services.purchases.verify('u', { platform: 'android', productId: 'vybe_credits_10', purchaseToken: token });
     expect(result).toMatchObject({ status: 'valid', kind: 'consumable' });
   });
 
   it('accepts a subscription and sets its expiry', async () => {
-    const result = await services.purchases.verify('u', { platform: 'ios', productId: 'findx_plus_monthly', purchaseToken: token });
+    const result = await services.purchases.verify('u', { platform: 'ios', productId: 'vybe_plus_monthly', purchaseToken: token });
     expect(result.kind).toBe('subscription');
     expect(result.expiresAt).toBeInstanceOf(Date);
   });
 
   it('rejects unknown products and forged tokens', async () => {
     expect((await services.purchases.verify('u', { platform: 'android', productId: 'other', purchaseToken: token })).status).toBe('invalid');
-    expect((await services.purchases.verify('u', { platform: 'android', productId: 'findx_credits_10', purchaseToken: 'real' })).status).toBe('invalid');
+    expect((await services.purchases.verify('u', { platform: 'android', productId: 'vybe_credits_10', purchaseToken: 'real' })).status).toBe('invalid');
   });
 });
 

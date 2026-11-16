@@ -62,7 +62,8 @@ abstract final class AppSizes {
   static const captureIcon = 44.0;
   static const otpFieldWidth = 220.0;
   static const actionButton = 56.0;
-  static const deckMinHeight = 340.0;
+  static const feedAvatar = 36.0;
+  static const feedDot = 6.0;
   static const stateViewHeight = 320.0;
   static const mapHeight = 300.0;
   static const mapPin = 34.0;
@@ -100,7 +101,8 @@ abstract final class AppRatios {
   static const disabledOpacity = 0.4;
 
   /// Share of the Discover page height given to the card deck.
-  static const deckShare = 0.62;
+  /// Feed photos are 4:5, like a post.
+  static const feedPhoto = 4 / 5;
 
   /// Share of the drawn map's half-size used by the 5 km ring.
   static const mapRingShare = 0.85;

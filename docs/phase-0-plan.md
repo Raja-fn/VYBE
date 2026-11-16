@@ -13,7 +13,7 @@ Status: **approved with the decisions below (2026-11-10).**
 | Q5 / Q8 / Q9 (Phase 4) | The seeker picks venue and time slot before sending any request, instant ones included. Requests **never expire**: a companion can accept any time before the slot starts; after that the request shows "Time passed" (status stays `requested`, no new status). The seeker can cancel while requested or accepted and before the start: the table is released, credits are not refunded. |
 | Q6 | Build minimal extra screens (tab lists, profile and companion editors, trusted contact, venue sign-up, rating, saved list) in the design system, each in the phase it belongs to. |
 | Q11 | Hard limits written as literals in security rules are OK, each with a comment naming its AppConfig key. |
-| Q12 | App name: **FindX**. Launch city: **Mumbai** (seed data around Bandra / Khar / Santacruz). Bundle id: **com.findx.app** on both platforms. |
+| Q12 | App name: **VYBE**. Launch city: **Mumbai** (seed data around Bandra / Khar / Santacruz). Bundle id: **com.vybe.app** on both platforms. |
 | Q13 | Screenshots received. Wording conflicts resolved with safe copy: "Coffee meetup" (not "Coffee date"), "Book a coffee meetup", "Pick a day", "Only used to decide who sees you", "Unlock chats and bookings". The chat booking card shows a credit cost, not Rs. |
 | Phase 1 | Riverpod pinned to **3.0.3** (with codegen): newer Riverpod generators need Dart 3.12, and this machine has Flutter 3.38.3 / Dart 3.10. Upgrade Flutter later to move up. Small accent text on the page background uses `accentText` (`#C82D59`), because `#D1325E` on `#FBF5F1` is 4.49:1, just under 4.5. Distances shown to other users are rounded to the **nearest** km, minimum "About 1 km". Credit ledger gains the reason `signup_bonus` (20 credits at signup). |
 | Phase 2 | Onboarding order follows the screenshots: rules (1), then verification (2: phone OTP, selfie, ID), then preferences (3). Consent is carried on the device until the phone is verified, then recorded on the server with the rules version. The 20 signup credits are granted when the account is created (`acceptRules`). Verification step statuses are `not_started`, `in_review`, `approved`, `rejected`. Under 18 (from the ID's date of birth) is a permanent rejection. Gender locks once verified. Age slider range 18 to 60 (`ageMaximum` = 60). The app always calls the real verification Functions; the server decides whether the fake or a real provider is used. |
@@ -27,7 +27,7 @@ Status: **approved with the decisions below (2026-11-10).**
 | Phase 4 | Map: Google Maps with a heat layer when a key is configured (`--dart-define=MAPS_ENABLED=true` plus `MAPS_API_KEY`), otherwise a drawn map in the screenshot style. "Best spots to meet" = verified, listed venues within 5 km of the seeker (and of the companion when one is chosen), ranked by popularity then distance. A booking needs: companion visible to the seeker, venue within 5 km of both, plan offered by both, slot open and in the future, companion free then ("free now" or weekly hours) and not booked at an overlapping time, seeker not booked at an overlapping time, enough credits. Charge, table and booking are one transaction; the client's request id makes retries safe. In Free right now, tap a person to choose them, then Pick spot (instant request). |
 | Design | The screenshots need a few extra colour tokens: avatar peach, avatar initial brown, photo overlay, track, soft chip fill, SOS halo. They will live in the theme only. Success green `#1E8A5A` is below 4.5:1 for small text on white/background, so text uses a darker `successText` token (`#18744B`, ≥ 5.3:1) and fills and icons keep `#1E8A5A`. |
 
-Working name: the folder is `FindX`. The app name is confirmed as **FindX** (Q12).
+Working name: the folder is `VYBE`. The app name is confirmed as **VYBE** (Q12).
 
 ---
 
@@ -129,7 +129,7 @@ The same rule decides who can see whom in "Free right now", who can start a chat
 ## 4. Folder structure
 
 ```
-FindX/
+VYBE/
 ├── lib/
 │   ├── main.dart                     # prod entry
 │   ├── main_emulator.dart            # emulator entry (fakes + emulators)

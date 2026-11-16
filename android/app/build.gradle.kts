@@ -3,10 +3,18 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Crash reports (Firebase) switch on once google-services.json lists this app id.
+// Without it the app still builds and runs; crash reports are simply off.
+val firebaseConfigured = file("google-services.json").let { it.exists() && it.readText().contains("\"com.vybe.app\"") }
+if (firebaseConfigured) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+} else {
+    logger.warn("google-services.json has no com.vybe.app entry: building without crash reports.")
 }
 
 // Release signing is read from android/key.properties, which is never committed.
@@ -26,7 +34,7 @@ val localProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.findx.app"
+    namespace = "com.vybe.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -36,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.findx.app"
+        applicationId = "com.vybe.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -21,7 +21,7 @@ enum FailureKind {
   /// The server has no location for this person yet.
   locationRequired,
 
-  /// Location is switched off or FindX is not allowed to use it.
+  /// Location is switched off or VYBE is not allowed to use it.
   locationDenied,
 
   /// The companion is not free (or already booked) at that time.

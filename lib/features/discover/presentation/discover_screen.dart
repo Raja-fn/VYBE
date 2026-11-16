@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,11 +21,12 @@ import '../../preferences/presentation/preferences_providers.dart';
 import '../domain/companion_summary.dart';
 import 'discover_controller.dart';
 import 'discover_providers.dart';
-import 'widgets/companion_card.dart';
 import 'widgets/discovery_state_view.dart';
+import 'widgets/feed_post.dart';
 import 'widgets/labels.dart';
 
-/// Screen 4: plan chips and a deck of companion cards (Skip / Message / Save).
+/// Screen 4: plan chips, then a scrolling feed of people (photos, details,
+/// Message / Save). Scrolling past someone is the skip.
 class DiscoverScreen extends ConsumerWidget {
   const DiscoverScreen({super.key});
 
@@ -44,7 +43,9 @@ class DiscoverScreen extends ConsumerWidget {
     final account = stage is Ready ? stage.account : null;
     final showMe = account == null ? null : ref.watch(preferencesProvider(account.uid)).value?.showMe;
     final needsName = account != null && (account.displayName?.trim().isEmpty ?? true);
-    final currentUid = controller.remaining(results.value ?? const []).firstOrNull?.uid;
+    final people = results.value;
+
+    const gutter = EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.md, AppSpacing.screenGutter, 0);
 
     return Scaffold(
       body: SafeArea(
@@ -53,19 +54,15 @@ class DiscoverScreen extends ConsumerWidget {
           children: [
             if (!online) const OfflineBanner(),
             Expanded(
-              // The page scrolls on small phones; the card keeps a usable height.
-              child: LayoutBuilder(
-                builder: (context, box) => SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.screenGutter,
-                          AppSpacing.md,
-                          AppSpacing.screenGutter,
-                          0,
-                        ),
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(discoverResultsProvider(state.plan).future),
+                child: CustomScrollView(
+                  // Photos of the next few people load before they scroll into view.
+                  cacheExtent: MediaQuery.sizeOf(context).height * 1.5,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: gutter,
                         // Wraps onto two lines on narrow phones with large text.
                         child: Wrap(
                           alignment: WrapAlignment.spaceBetween,
@@ -91,9 +88,7 @@ class DiscoverScreen extends ConsumerWidget {
                                 AppRoundIconButton(
                                   label: l10n.discoverMap,
                                   icon: Icons.place_outlined,
-                                  // With a card on screen, "Pick" on the map books that companion.
-                                  onPressed: () =>
-                                      context.go(AppRoutes.discoverMap(companionUid: currentUid, plan: state.plan)),
+                                  onPressed: () => context.go(AppRoutes.discoverMap(plan: state.plan)),
                                 ),
                                 CreditsPill(credits: credits, onPressed: () => context.push(AppRoutes.credits)),
                               ],
@@ -101,23 +96,17 @@ class DiscoverScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      if (needsName)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.screenGutter,
-                            AppSpacing.md,
-                            AppSpacing.screenGutter,
-                            0,
-                          ),
+                    ),
+                    if (needsName)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: gutter,
                           child: _NameBanner(onAdd: () => context.go(AppRoutes.profile)),
                         ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.screenGutter,
-                          AppSpacing.md,
-                          AppSpacing.screenGutter,
-                          0,
-                        ),
+                      ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: gutter,
                         child: Wrap(
                           alignment: WrapAlignment.spaceBetween,
                           runSpacing: AppSpacing.xxs,
@@ -134,9 +123,10 @@ class DiscoverScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      SizedBox(
-                        height: AppSizes.minTouchTarget + AppSpacing.xs,
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: AppSizes.minTouchTarget + AppSpacing.md,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           padding: AppSpacing.screenPadding,
@@ -154,26 +144,71 @@ class DiscoverScreen extends ConsumerWidget {
                           },
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      SizedBox(
-                        height: math.max(AppSizes.deckMinHeight, box.maxHeight * AppRatios.deckShare),
-                        child: DiscoveryStateView<List<CompanionSummary>>(
-                          value: results,
-                          onRetry: () => ref.invalidate(discoverResultsProvider(state.plan)),
-                          isEmpty: (all) => all.isEmpty,
-                          emptyTitle: l10n.discoverEmptyTitle,
-                          emptyMessage: l10n.discoverEmptyBody,
-                          builder: (context, all) => _Deck(remaining: controller.remaining(all)),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                          child: TextButton.icon(
+                            onPressed: () => context.go(AppRoutes.freeNow),
+                            icon: const Icon(Icons.bolt, size: AppSizes.iconSmall),
+                            label: Text(l10n.discoverFreeNowLink),
+                          ),
                         ),
                       ),
-                      Center(
-                        child: TextButton(
-                          onPressed: () => context.go(AppRoutes.freeNow),
-                          child: Text(l10n.discoverFreeNowLink),
+                    ),
+                    if (people != null && people.isNotEmpty) ...[
+                      SliverList.separated(
+                        itemCount: people.length,
+                        separatorBuilder: (_, _) => const Padding(
+                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          child: Divider(height: 1),
+                        ),
+                        itemBuilder: (context, i) => _Post(companion: people[i]),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.screenGutter,
+                            AppSpacing.xl,
+                            AppSpacing.screenGutter,
+                            AppSpacing.xxl,
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.done_all_outlined, color: AppColors.muted, size: AppSizes.iconLarge),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                l10n.discoverAllSeenTitle,
+                                style: textTheme.titleMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                l10n.feedEndBody,
+                                textAlign: TextAlign.center,
+                                style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ] else
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: AppSizes.stateViewHeight),
+                          child: DiscoveryStateView<List<CompanionSummary>>(
+                            value: results,
+                            onRetry: () => ref.invalidate(discoverResultsProvider(state.plan)),
+                            isEmpty: (all) => all.isEmpty,
+                            emptyTitle: l10n.discoverEmptyTitle,
+                            emptyMessage: l10n.discoverEmptyBody,
+                            builder: (context, _) => const SizedBox.shrink(),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -190,125 +225,32 @@ class DiscoverScreen extends ConsumerWidget {
   };
 }
 
-class _Deck extends ConsumerWidget {
-  const _Deck({required this.remaining});
+/// One feed post with its actions wired up.
+class _Post extends ConsumerWidget {
+  const _Post({required this.companion});
 
-  final List<CompanionSummary> remaining;
+  final CompanionSummary companion;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final controller = ref.read(discoverControllerProvider.notifier);
-
-    if (remaining.isEmpty) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          EmptyStateView(title: l10n.discoverAllSeenTitle, icon: Icons.done_all_outlined),
-          AppPillButton(label: l10n.discoverStartOver, onPressed: controller.startOver),
-        ],
-      );
-    }
-
-    final current = remaining.first;
-    final saved = ref.watch(savedIdsProvider).value?.contains(current.uid) ?? false;
+    final c = companion;
+    final saved = ref.watch(savedIdsProvider).value?.contains(c.uid) ?? false;
 
     Future<void> toggleSave() async {
-      final result = await controller.toggleSave(current.uid, saved: !saved);
+      final result = await ref.read(discoverControllerProvider.notifier).toggleSave(c.uid, saved: !saved);
       final failure = result.failureOrNull;
       if (failure != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failureMessage(l10n, failure))));
       }
     }
 
-    return Padding(
-      padding: AppSpacing.screenPadding,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            bottom: AppSizes.actionButton / 2,
-            child: Dismissible(
-              key: ValueKey(current.uid),
-              onDismissed: (_) => controller.skip(current.uid),
-              child: CompanionCard(companion: current, onOpen: () => context.push(AppRoutes.companion(current.uid))),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _RoundAction(
-                  icon: Icons.close,
-                  label: l10n.discoverSkip,
-                  tone: _RoundTone.light,
-                  onPressed: () => controller.skip(current.uid),
-                ),
-                const SizedBox(width: AppSpacing.xl),
-                _RoundAction(
-                  icon: Icons.chat_bubble_outline,
-                  label: l10n.discoverMessage,
-                  tone: _RoundTone.dark,
-                  onPressed: () => openChatWith(context, ref, companionUid: current.uid, name: current.displayName),
-                ),
-                const SizedBox(width: AppSpacing.xl),
-                _RoundAction(
-                  icon: saved ? Icons.bookmark : Icons.bookmark_border,
-                  label: saved ? l10n.discoverUnsave : l10n.discoverSave,
-                  tone: _RoundTone.accent,
-                  onPressed: toggleSave,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _RoundTone { light, dark, accent }
-
-class _RoundAction extends StatelessWidget {
-  const _RoundAction({required this.icon, required this.label, required this.tone, required this.onPressed});
-
-  final IconData icon;
-  final String label;
-  final _RoundTone tone;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onPressed != null;
-    final (fill, foreground) = switch (tone) {
-      _RoundTone.light => (AppColors.inkRaised, AppColors.ink),
-      _RoundTone.dark => (AppColors.inkRaised, AppColors.ink),
-      _RoundTone.accent => (AppColors.accent, AppColors.onAccent),
-    };
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: label,
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: enabled ? 1 : AppRatios.disabledOpacity,
-        child: Material(
-          color: fill,
-          shape: const CircleBorder(),
-          elevation: AppSizes.actionElevation,
-          shadowColor: AppColors.shadow,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onPressed,
-            child: SizedBox.square(
-              dimension: AppSizes.actionButton,
-              child: Icon(icon, color: foreground, size: AppSizes.iconLarge),
-            ),
-          ),
-        ),
-      ),
+    return FeedPost(
+      companion: c,
+      saved: saved,
+      onOpen: () => context.push(AppRoutes.companion(c.uid)),
+      onMessage: () => openChatWith(context, ref, companionUid: c.uid, name: c.displayName),
+      onToggleSave: toggleSave,
     );
   }
 }

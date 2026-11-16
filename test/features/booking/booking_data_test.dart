@@ -1,15 +1,15 @@
 import 'dart:math';
 
-import 'package:findx/app.dart';
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/utils/ids.dart';
-import 'package:findx/features/booking/data/booking_repository.dart';
-import 'package:findx/features/booking/domain/booking_models.dart';
-import 'package:findx/features/booking/presentation/booking_providers.dart';
-import 'package:findx/features/discover/domain/companion_summary.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/app.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/utils/ids.dart';
+import 'package:vybe/features/booking/data/booking_repository.dart';
+import 'package:vybe/features/booking/domain/booking_models.dart';
+import 'package:vybe/features/booking/presentation/booking_providers.dart';
+import 'package:vybe/features/discover/domain/companion_summary.dart';
 
 import '../../helpers/fake_tables.dart';
 import '../../helpers/fakes.dart';

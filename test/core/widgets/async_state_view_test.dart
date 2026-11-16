@@ -1,8 +1,8 @@
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/widgets/async_state_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/widgets/async_state_view.dart';
 
 import '../../helpers/test_app.dart';
 

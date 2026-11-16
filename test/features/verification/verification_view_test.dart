@@ -1,9 +1,9 @@
-import 'package:findx/core/services/identity_verification/identity_verification_service.dart';
-import 'package:findx/core/widgets/content_rows.dart';
-import 'package:findx/features/onboarding/domain/account.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/verification/domain/verification_view.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
+import 'package:vybe/core/widgets/content_rows.dart';
+import 'package:vybe/features/onboarding/domain/account.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/verification/domain/verification_view.dart';
 
 import '../../helpers/fakes.dart';
 

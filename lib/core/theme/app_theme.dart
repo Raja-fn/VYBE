@@ -6,7 +6,7 @@ import 'app_dimens.dart';
 import 'app_typography.dart';
 import 'outlined_range_thumb_shape.dart';
 
-/// The only theme: the dark FindX design language.
+/// The only theme: the dark VYBE design language.
 abstract final class AppTheme {
   static const _colorScheme = ColorScheme(
     brightness: Brightness.dark,

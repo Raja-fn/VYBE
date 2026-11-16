@@ -1,30 +1,30 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/backend/file_storage.dart';
-import 'package:findx/core/location/location_service.dart';
-import 'package:findx/core/services/identity_verification/identity_verification_service.dart';
-import 'package:findx/core/services/image_capture/image_capture_service.dart';
-import 'package:findx/core/services/image_capture/photo_picker_service.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/utils/result.dart';
-import 'package:findx/features/booking/data/booking_repository.dart';
-import 'package:findx/features/booking/domain/booking_models.dart';
-import 'package:findx/features/chat/data/chat_repository.dart';
-import 'package:findx/features/chat/domain/chat_models.dart';
-import 'package:findx/features/credits/data/credits_repository.dart';
-import 'package:findx/features/credits/domain/credit_models.dart';
-import 'package:findx/features/discover/data/discover_repository.dart';
-import 'package:findx/features/discover/domain/companion_summary.dart';
-import 'package:findx/features/onboarding/data/account_repository.dart';
-import 'package:findx/features/onboarding/data/auth_repository.dart';
-import 'package:findx/features/onboarding/domain/account.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/preferences/data/preferences_repository.dart';
-import 'package:findx/features/preferences/domain/preferences.dart';
-import 'package:findx/features/profile/data/profile_repository.dart';
-import 'package:findx/features/profile/domain/profile_details.dart';
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/backend/file_storage.dart';
+import 'package:vybe/core/location/location_service.dart';
+import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
+import 'package:vybe/core/services/image_capture/image_capture_service.dart';
+import 'package:vybe/core/services/image_capture/photo_picker_service.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/utils/result.dart';
+import 'package:vybe/features/booking/data/booking_repository.dart';
+import 'package:vybe/features/booking/domain/booking_models.dart';
+import 'package:vybe/features/chat/data/chat_repository.dart';
+import 'package:vybe/features/chat/domain/chat_models.dart';
+import 'package:vybe/features/credits/data/credits_repository.dart';
+import 'package:vybe/features/credits/domain/credit_models.dart';
+import 'package:vybe/features/discover/data/discover_repository.dart';
+import 'package:vybe/features/discover/domain/companion_summary.dart';
+import 'package:vybe/features/onboarding/data/account_repository.dart';
+import 'package:vybe/features/onboarding/data/auth_repository.dart';
+import 'package:vybe/features/onboarding/domain/account.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/preferences/data/preferences_repository.dart';
+import 'package:vybe/features/preferences/domain/preferences.dart';
+import 'package:vybe/features/profile/data/profile_repository.dart';
+import 'package:vybe/features/profile/domain/profile_details.dart';
 
 /// A value that streams its current state to every new listener, then updates.
 ///
@@ -391,8 +391,8 @@ class FakePurchaseRepository implements PurchaseRepository {
   /// Reports the payment as not cleared yet.
   bool pending = false;
 
-  static const packs = {'findx_credits_10': 10, 'findx_credits_30': 30, 'findx_credits_75': 75};
-  static const plans = {'findx_plus_monthly': (PlanTier.plus, 100), 'findx_premium_monthly': (PlanTier.premium, 200)};
+  static const packs = {'vybe_credits_10': 10, 'vybe_credits_30': 30, 'vybe_credits_75': 75};
+  static const plans = {'vybe_plus_monthly': (PlanTier.plus, 100), 'vybe_premium_monthly': (PlanTier.premium, 200)};
   static final renewsAt = DateTime(2026, 12, 12);
 
   @override

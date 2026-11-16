@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appName": "FindX",
+  "appName": "VYBE",
   "@appName": {
     "description": "App name. Not translated."
   },
@@ -10,7 +10,7 @@
     "description": "Tag on the decorative map on the first screen."
   },
   "startLoading": "Getting things ready",
-  "bootstrapErrorTitle": "FindX could not start",
+  "bootstrapErrorTitle": "VYBE could not start",
   "bootstrapNoConnection": "Check your internet connection and try again.",
   "bootstrapNotConfigured": "This copy of the app was built without its server settings. Install a new build.",
   "commonRetry": "Try again",
@@ -21,7 +21,7 @@
   "stateOfflineTitle": "You are offline",
   "stateOfflineMessage": "Check your connection. This screen updates when you are back online.",
   "offlineBanner": "You are offline. Some info may be out of date.",
-  "failureNetwork": "We could not reach FindX. Check your connection and try again.",
+  "failureNetwork": "We could not reach VYBE. Check your connection and try again.",
   "failureOffline": "You are offline. Connect to the internet and try again.",
   "failureUnauthenticated": "Please sign in again.",
   "failurePermissionDenied": "You do not have access to this.",
@@ -194,8 +194,8 @@
   "verifyRejectedTitle": "We could not verify this photo",
   "verifyRejectedBody": "Make sure it is clear, well lit and not cut off, then try again.",
   "verifyTryAgain": "Try again",
-  "verifyUnderageTitle": "FindX is for adults only",
-  "verifyUnderageBody": "Your ID shows you are under 18, so you cannot use FindX.",
+  "verifyUnderageTitle": "VYBE is for adults only",
+  "verifyUnderageBody": "Your ID shows you are under 18, so you cannot use VYBE.",
   "prefsTitle": "Who do you want to meet?",
   "prefsSubtitle": "Everyone is welcome here. You decide who you see.",
   "prefsIAm": "I am",
@@ -248,7 +248,7 @@
   "prefsShowGenderSubtitle": "Off by default. Only used to decide who sees you.",
   "prefsStart": "Start exploring",
   "suspendedTitle": "Your account is suspended",
-  "suspendedBody": "This account was suspended for breaking the FindX rules.",
+  "suspendedBody": "This account was suspended for breaking the VYBE rules.",
   "creditsCount": "{count, plural, =1{1 credit} other{{count} credits}}",
   "@creditsCount": {
     "placeholders": {
@@ -258,7 +258,7 @@
     }
   },
   "failureLocationRequired": "Share your location to see people near you.",
-  "failureLocationDenied": "Location is off or not allowed for FindX.",
+  "failureLocationDenied": "Location is off or not allowed for VYBE.",
   "navDiscover": "Discover",
   "navChats": "Chats",
   "navBookings": "Bookings",
@@ -277,8 +277,6 @@
   "discoverEmptyTitle": "No one nearby for this plan yet",
   "discoverEmptyBody": "Try another plan, or see who is free right now.",
   "discoverAllSeenTitle": "You have seen everyone for now",
-  "discoverStartOver": "Start over",
-  "discoverSkip": "Skip",
   "discoverMessage": "Message",
   "discoverSave": "Save",
   "discoverUnsave": "Remove from saved",
@@ -344,7 +342,7 @@
   "tagWalk": "Walk",
   "tagDinner": "Dinner",
   "locationNeededTitle": "Location is needed",
-  "locationNeededBody": "FindX uses your location to show verified companions and public spots within {km} km. Other people never see your exact location.",
+  "locationNeededBody": "VYBE uses your location to show verified companions and public spots within {km} km. Other people never see your exact location.",
   "@locationNeededBody": {
     "placeholders": {
       "km": {
@@ -659,7 +657,7 @@
       }
     }
   },
-  "blockBody": "You will not see each other anywhere on FindX. Your chat closes and open bookings are cancelled. Credits are not refunded.",
+  "blockBody": "You will not see each other anywhere on VYBE. Your chat closes and open bookings are cancelled. Credits are not refunded.",
   "blockConfirm": "Block",
   "blockDone": "{name} is blocked.",
   "@blockDone": {
@@ -828,7 +826,7 @@
   "verifySignInSubtitle": "With your Google account",
   "verifySignInSubtitleWithPhone": "With Google or your phone number",
   "verifySignInDone": "Signed in",
-  "verifySignInBody": "Sign in with your Google account to create your FindX account. We never post anything to it.",
+  "verifySignInBody": "Sign in with your Google account to create your VYBE account. We never post anything to it.",
   "verifyContinueWithGoogle": "Continue with Google",
   "verifyOrPhone": "Or use your phone number",
   "verifyTestAccount": "Use a test account",
@@ -957,5 +955,21 @@
   "profileInterestsTitle": "Loves",
   "profileLifestyleTitle": "Lifestyle",
   "venueMall": "Mall",
-  "venueTheatre": "Theatre"
+  "venueTheatre": "Theatre",
+  "feedViewProfile": "View full profile",
+  "feedPhotoOf": "Photo {index} of {total} of {name}",
+  "@feedPhotoOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "feedEndBody": "Pull down to refresh, or try another plan."
 }

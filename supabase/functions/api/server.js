@@ -325,6 +325,13 @@ var GooglePlayPurchaseVerificationService = class {
   }
 };
 
+// src/services/places/publicPlacesSource.ts
+var NoPublicPlaces = class {
+  async nearby() {
+    return [];
+  }
+};
+
 // src/services/seedIds.ts
 import { createHash } from "node:crypto";
 function seedUid(name) {
@@ -387,7 +394,11 @@ function createServices(config2, useFakes = fakeServicesAllowed(), production = 
     payout: new PayoutsNotAvailable(),
     moderation: new FakeModerationService([]),
     places: new NoPopularityData(),
-    purchases: googlePlay(config2, production)
+    purchases: googlePlay(config2, production),
+    // Public places are imported in bulk from the OpenStreetMap India file (server/scripts/import-places.ts):
+    // the free public Overpass servers do not allow app traffic. A self-hosted Overpass can be
+    // plugged in here later with new OpenStreetMapPlaces({ endpoints: [...] }).
+    publicPlaces: new NoPublicPlaces()
   };
 }
 function googlePlay(config2, production) {
@@ -428,7 +439,8 @@ function fakeServices(config2) {
     purchases: new FakePurchaseVerificationService({
       ...productIds(config2),
       subscriptionPeriodDays: config2.subscriptionPeriodDays
-    })
+    }),
+    publicPlaces: new NoPublicPlaces()
   };
 }
 
@@ -20251,26 +20263,26 @@ var app_config_defaults_default = {
     },
     {
       tier: "plus",
-      productId: "findx_plus_monthly",
+      productId: "vybe_plus_monthly",
       monthlyCredits: 100
     },
     {
       tier: "premium",
-      productId: "findx_premium_monthly",
+      productId: "vybe_premium_monthly",
       monthlyCredits: 200
     }
   ],
   topUpPacks: [
     {
-      productId: "findx_credits_10",
+      productId: "vybe_credits_10",
       credits: 10
     },
     {
-      productId: "findx_credits_30",
+      productId: "vybe_credits_30",
       credits: 30
     },
     {
-      productId: "findx_credits_75",
+      productId: "vybe_credits_75",
       credits: 75
     }
   ],
@@ -20305,7 +20317,14 @@ var app_config_defaults_default = {
   popularityBusyThreshold: 0.4,
   maxTextScale: 1.15,
   remoteConfigFetchTimeoutSeconds: 10,
-  remoteConfigMinimumFetchIntervalMinutes: 60
+  remoteConfigMinimumFetchIntervalMinutes: 60,
+  placesCellDegrees: 0.02,
+  placesRefreshDays: 30,
+  placesImportTimeoutSeconds: 12,
+  defaultSlotOpenHour: 10,
+  defaultSlotCloseHour: 22,
+  defaultSlotCapacity: 2,
+  venuesListLimit: 30
 };
 
 // src/config/appConfig.ts
@@ -20351,6 +20370,16 @@ var appConfigSchema = external_exports.object({
   subscriptionPeriodDays: external_exports.number().int().positive(),
   bookingDaysAhead: external_exports.number().int().positive(),
   slotMinutesDefault: external_exports.number().int().positive(),
+  /** OpenStreetMap places: area grid size (degrees), refresh age and request timeout. */
+  placesCellDegrees: external_exports.number().positive(),
+  placesRefreshDays: external_exports.number().int().positive(),
+  placesImportTimeoutSeconds: external_exports.number().positive(),
+  /** Default slots for places without a venue partner (local hours, people per slot). */
+  defaultSlotOpenHour: external_exports.number().int().min(0).max(23),
+  defaultSlotCloseHour: external_exports.number().int().min(1).max(24),
+  defaultSlotCapacity: external_exports.number().int().positive(),
+  /** At most this many spots in "Best spots to meet" and on the map. */
+  venuesListLimit: external_exports.number().int().positive(),
   freeNowMaxHours: external_exports.number().int().positive(),
   tonightStartHour: external_exports.number().int().min(0).max(23),
   checkInWindowMinutesBefore: external_exports.number().int().nonnegative(),
@@ -20718,6 +20747,93 @@ __export(discovery_exports, {
   updateMyLocationInput: () => updateMyLocationInput,
   updateMyLocationLogic: () => updateMyLocationLogic
 });
+
+// src/handlers/places.ts
+function placesCell(point, degrees) {
+  const row = Math.floor(point.lat / degrees);
+  const col = Math.floor(point.lng / degrees);
+  const center = { lat: (row + 0.5) * degrees, lng: (col + 0.5) * degrees };
+  const kmLat = degrees * 111.32;
+  const kmLng = degrees * 111.32 * Math.cos(center.lat * Math.PI / 180);
+  return { key: `${degrees}:${row}:${col}`, center, halfDiagonalKm: Math.hypot(kmLat, kmLng) / 2 };
+}
+async function ensurePlacesNear(deps, point) {
+  const { config: config2 } = deps;
+  const cell = placesCell(point, config2.placesCellDegrees);
+  if (deps.services.publicPlaces instanceof NoPublicPlaces) return;
+  const now = deps.now();
+  const [done] = await deps.sql`select fetched_at from place_imports where cell = ${cell.key}`;
+  if (done && now.getTime() - done.fetched_at.getTime() < config2.placesRefreshDays * 864e5) return;
+  let places;
+  try {
+    places = await deps.services.publicPlaces.nearby(cell.center, config2.discoveryRadiusKm + cell.halfDiagonalKm);
+  } catch (error62) {
+    console.warn(`Public places for ${cell.key} could not be fetched: ${String(error62)}`);
+    return;
+  }
+  await deps.sql.begin(async (tx) => {
+    if (places.length > 0) {
+      const rows = places.map((p) => ({
+        id: p.venueId,
+        owner_uid: null,
+        name: p.name,
+        category: p.category,
+        address_line: p.addressLine,
+        lat: p.lat,
+        lng: p.lng,
+        plan_types: p.planTypes,
+        verification_status: "verified",
+        is_listed: true,
+        source: "osm",
+        updated_at: now
+      }));
+      await tx`
+        insert into venues ${tx(rows)}
+        on conflict (id) do update set
+          name = excluded.name, category = excluded.category, address_line = excluded.address_line,
+          lat = excluded.lat, lng = excluded.lng, plan_types = excluded.plan_types, updated_at = excluded.updated_at
+        where venues.source = 'osm'`;
+    }
+    await tx`
+      insert into place_imports (cell, fetched_at, venue_count) values (${cell.key}, ${now}, ${places.length})
+      on conflict (cell) do update set fetched_at = excluded.fetched_at, venue_count = excluded.venue_count`;
+  });
+}
+async function ensureDefaultSlots(sql2, deps, venueId, dayKey) {
+  const { config: config2 } = deps;
+  const now = deps.now();
+  let day;
+  for (let offset = 0; offset <= config2.bookingDaysAhead; offset++) {
+    const candidate = localDay(now, offset, config2.launchCity.timezone);
+    if (candidate.dayKey === dayKey) day = candidate;
+  }
+  if (!day) return;
+  const step = config2.slotMinutesDefault;
+  const ids = [];
+  const starts = [];
+  const ends = [];
+  for (let minute = config2.defaultSlotOpenHour * 60; minute + step <= config2.defaultSlotCloseHour * 60; minute += step) {
+    ids.push(`d${dayKey.replace(/-/g, "")}-${String(Math.floor(minute / 60)).padStart(2, "0")}${String(minute % 60).padStart(2, "0")}`);
+    starts.push(day.at(minute).toISOString());
+    ends.push(day.at(minute + step).toISOString());
+  }
+  if (ids.length === 0) return;
+  await sql2`
+    insert into venue_slots (venue_id, id, day_key, start_at, end_at, capacity, booked, status)
+    select ${venueId}, s.id, ${dayKey}, s.start_at, s.end_at, ${config2.defaultSlotCapacity}, 0, 'open'
+    from unnest(${ids}::text[], ${starts}::timestamptz[], ${ends}::timestamptz[]) as s (id, start_at, end_at)
+    where exists (select 1 from venues v where v.id = ${venueId} and v.source = 'osm')
+      and not exists (select 1 from venue_slots x where x.venue_id = ${venueId} and x.day_key = ${dayKey})
+    on conflict do nothing`;
+}
+function defaultSlotsLeftToday(deps) {
+  const { config: config2 } = deps;
+  const today = localDay(deps.now(), 0, config2.launchCity.timezone);
+  const lastStart = config2.defaultSlotCloseHour * 60 - config2.slotMinutesDefault;
+  return today.at(lastStart).getTime() > deps.now().getTime();
+}
+
+// src/handlers/discovery.ts
 function boundingBox(center, radiusKm) {
   const latDelta = radiusKm / 111.32;
   const lngDelta = radiusKm / (111.32 * Math.max(Math.cos(center.lat * Math.PI / 180), 0.01));
@@ -20799,9 +20915,14 @@ async function venuesWithOpenSlotsToday(deps, center) {
     where v.verification_status = 'verified' and v.is_listed
       and v.lat between ${box.minLat} and ${box.maxLat}
       and v.lng between ${box.minLng} and ${box.maxLng}
-      and exists (
-        select 1 from venue_slots s
-        where s.venue_id = v.id and s.day_key = ${today} and s.status = 'open' and s.start_at > ${now}
+      and (
+        exists (
+          select 1 from venue_slots s
+          where s.venue_id = v.id and s.day_key = ${today} and s.status = 'open' and s.start_at > ${now}
+        )
+        -- Public places get default slots when first opened.
+        or (${defaultSlotsLeftToday(deps)} and v.source = 'osm'
+            and not exists (select 1 from venue_slots s where s.venue_id = v.id and s.day_key = ${today}))
       )`;
   return rows.map((r) => ({ venueId: r.id, lat: r.lat, lng: r.lng })).filter((v) => distanceKm(center, v) <= config2.discoveryRadiusKm);
 }
@@ -20860,6 +20981,7 @@ async function prepare(deps, caller) {
   const now = deps.now();
   await consumeRateLimit(deps.sql, `${caller.uid}_discovery`, deps.config.discoverCallsPerMinute, 6e4, now);
   const seeker = await loadSeeker(deps.sql, caller.uid);
+  await ensurePlacesNear(deps, seeker);
   const [blocked, venues] = await Promise.all([blockedUids(deps.sql, caller.uid), venuesWithOpenSlotsToday(deps, seeker)]);
   return { now, seeker, blocked, venues };
 }
@@ -21007,6 +21129,7 @@ async function nearbyVenuesLogic(deps, caller, input2) {
   const now = deps.now();
   await consumeRateLimit(deps.sql, `${caller.uid}_discovery`, deps.config.discoverCallsPerMinute, 6e4, now);
   const { seeker, companion } = input2.companionUid ? await visibleCompanion(deps, caller, input2.companionUid) : { seeker: await loadSeeker(deps.sql, caller.uid), companion: null };
+  await ensurePlacesNear(deps, seeker);
   const venues = await venuesNear(deps.sql, seeker, deps.config.discoveryRadiusKm);
   const scores = new Map((await deps.services.places.getPopularity(venues, now)).map((s) => [s.venueId, s.score]));
   const ranked = rankVenues({
@@ -21019,7 +21142,7 @@ async function nearbyVenuesLogic(deps, caller, input2) {
     thresholds: { hot: deps.config.popularityHotThreshold, busy: deps.config.popularityBusyThreshold }
   });
   return {
-    venues: ranked.map(({ venue, distanceKm: km, popularityScore, popularityLabel: popularityLabel2, rank: rank2 }) => ({
+    venues: ranked.slice(0, deps.config.venuesListLimit).map(({ venue, distanceKm: km, popularityScore, popularityLabel: popularityLabel2, rank: rank2 }) => ({
       venueId: venue.venueId,
       name: venue.name,
       category: venue.category,
@@ -21068,6 +21191,7 @@ async function venueSlotsLogic(deps, caller, input2) {
   const now = deps.now();
   const { seeker, companion } = await visibleCompanion(deps, caller, input2.companionUid);
   await loadReachableVenue(deps, input2.venueId, seeker, companion);
+  await ensureDefaultSlots(deps.sql, deps, input2.venueId, input2.dayKey);
   const [slots, availability, companionBusy] = await Promise.all([
     deps.sql`
       select id, day_key, start_at, end_at, capacity, booked, status from venue_slots
@@ -21219,7 +21343,7 @@ async function deleteAccountLogic(deps, caller) {
   const now = deps.now();
   const [user] = await sql2`select account_type from users where id = ${caller.uid}`;
   if (user?.account_type === "venue_partner") {
-    throw appError(ErrorCodes.invalidInput, "Venue partner accounts are closed by FindX support.");
+    throw appError(ErrorCodes.invalidInput, "Venue partner accounts are closed by VYBE support.");
   }
   await sql2.begin(async (tx) => {
     const open2 = await tx`

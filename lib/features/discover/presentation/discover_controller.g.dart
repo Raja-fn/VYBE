@@ -37,7 +37,7 @@ final class DiscoverControllerProvider extends $NotifierProvider<DiscoverControl
   }
 }
 
-String _$discoverControllerHash() => r'56dde03cdea863637d0a6c7a0246ad4bfc3a7c5d';
+String _$discoverControllerHash() => r'e9784013373897a528bef04bff53276769e788f0';
 
 abstract class _$DiscoverController extends $Notifier<DiscoverState> {
   DiscoverState build();

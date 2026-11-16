@@ -1,5 +1,5 @@
 /**
- * FindX's own rule set for keeping chats on the app: phone numbers, emails,
+ * VYBE's own rule set for keeping chats on the app: phone numbers, emails,
  * social handles and links are blocked before a message is stored.
  * Pure, so every rule is unit-tested. Explicit content is a separate check
  * (ModerationService).

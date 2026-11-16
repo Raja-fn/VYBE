@@ -1,8 +1,8 @@
 import 'dart:math';
 
-import 'package:findx/core/theme/app_colors.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/theme/app_colors.dart';
 
 double contrastRatio(Color a, Color b) {
   final la = a.computeLuminance();

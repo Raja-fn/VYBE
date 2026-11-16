@@ -1,17 +1,17 @@
-import 'package:findx/core/config/app_config.dart';
-import 'package:findx/core/config/app_env.dart';
-import 'package:findx/core/services/identity_verification/identity_verification_service.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/discover/presentation/discover_screen.dart';
-import 'package:findx/features/onboarding/domain/account.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/onboarding/presentation/rules_screen.dart';
-import 'package:findx/features/onboarding/presentation/status_screens.dart';
-import 'package:findx/features/preferences/domain/preferences.dart';
-import 'package:findx/features/preferences/presentation/preferences_screen.dart';
-import 'package:findx/features/verification/presentation/verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/config/app_config.dart';
+import 'package:vybe/core/config/app_env.dart';
+import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/discover/presentation/discover_screen.dart';
+import 'package:vybe/features/onboarding/domain/account.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/onboarding/presentation/rules_screen.dart';
+import 'package:vybe/features/onboarding/presentation/status_screens.dart';
+import 'package:vybe/features/preferences/domain/preferences.dart';
+import 'package:vybe/features/preferences/presentation/preferences_screen.dart';
+import 'package:vybe/features/verification/presentation/verification_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';
@@ -62,7 +62,7 @@ void main() {
       await settle(tester);
       await _tap(tester, find.byType(Checkbox));
       await _tapText(tester, 'I agree, continue');
-      expect(find.text('We could not reach FindX. Check your connection and try again.'), findsOneWidget);
+      expect(find.text('We could not reach VYBE. Check your connection and try again.'), findsOneWidget);
     });
   });
 
@@ -192,7 +192,7 @@ void main() {
         ),
       );
       await settle(tester);
-      expect(find.text('FindX is for adults only'), findsOneWidget);
+      expect(find.text('VYBE is for adults only'), findsOneWidget);
       expect(find.text('Try again'), findsNothing);
     });
 
@@ -201,7 +201,7 @@ void main() {
       await pumpInApp(tester, const VerificationScreen(), wrapInScaffold: false, backend: backend);
       await settle(tester);
       await _tapText(tester, 'Take selfie');
-      expect(find.text('We could not reach FindX. Check your connection and try again.'), findsOneWidget);
+      expect(find.text('We could not reach VYBE. Check your connection and try again.'), findsOneWidget);
     });
 
     testWidgets('finishing the account after a restart', (tester) async {
@@ -243,7 +243,7 @@ void main() {
       await settle(tester);
       await _tapText(tester, 'Woman');
       await _tapText(tester, 'Start exploring');
-      expect(find.text('We could not reach FindX. Check your connection and try again.'), findsOneWidget);
+      expect(find.text('We could not reach VYBE. Check your connection and try again.'), findsOneWidget);
     });
   });
 

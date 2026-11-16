@@ -15,7 +15,7 @@ export interface ServiceAccountKey {
 }
 
 export interface GooglePlayOptions {
-  /** Android application id, e.g. com.findx.app. */
+  /** Android application id, e.g. com.vybe.app. */
   packageName: string;
   serviceAccount: ServiceAccountKey;
   consumableProductIds: readonly string[];

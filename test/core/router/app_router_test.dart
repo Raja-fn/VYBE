@@ -1,16 +1,16 @@
-import 'package:findx/core/config/app_env.dart';
-import 'package:findx/core/dev/component_gallery_screen.dart';
-import 'package:findx/core/router/app_router.dart';
-import 'package:findx/core/router/screens/not_found_screen.dart';
-import 'package:findx/core/router/screens/start_screen.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/core/widgets/async_state_view.dart';
-import 'package:findx/features/discover/presentation/discover_screen.dart';
-import 'package:findx/features/onboarding/presentation/rules_screen.dart';
-import 'package:findx/features/onboarding/presentation/session_providers.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/config/app_env.dart';
+import 'package:vybe/core/dev/component_gallery_screen.dart';
+import 'package:vybe/core/router/app_router.dart';
+import 'package:vybe/core/router/screens/not_found_screen.dart';
+import 'package:vybe/core/router/screens/start_screen.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/core/widgets/async_state_view.dart';
+import 'package:vybe/features/discover/presentation/discover_screen.dart';
+import 'package:vybe/features/onboarding/presentation/rules_screen.dart';
+import 'package:vybe/features/onboarding/presentation/session_providers.dart';
 
 import '../../helpers/test_app.dart';
 

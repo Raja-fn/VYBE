@@ -14,8 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DiscoverState {
 
- PlanType get plan;/// Companions skipped in this session, per plan.
- Set<String> get skipped;
+ PlanType get plan;
 /// Create a copy of DiscoverState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +25,16 @@ $DiscoverStateCopyWith<DiscoverState> get copyWith => _$DiscoverStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoverState&&(identical(other.plan, plan) || other.plan == plan)&&const DeepCollectionEquality().equals(other.skipped, skipped));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiscoverState&&(identical(other.plan, plan) || other.plan == plan));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,plan,const DeepCollectionEquality().hash(skipped));
+int get hashCode => Object.hash(runtimeType,plan);
 
 @override
 String toString() {
-  return 'DiscoverState(plan: $plan, skipped: $skipped)';
+  return 'DiscoverState(plan: $plan)';
 }
 
 
@@ -46,7 +45,7 @@ abstract mixin class $DiscoverStateCopyWith<$Res>  {
   factory $DiscoverStateCopyWith(DiscoverState value, $Res Function(DiscoverState) _then) = _$DiscoverStateCopyWithImpl;
 @useResult
 $Res call({
- PlanType plan, Set<String> skipped
+ PlanType plan
 });
 
 
@@ -63,11 +62,10 @@ class _$DiscoverStateCopyWithImpl<$Res>
 
 /// Create a copy of DiscoverState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? plan = null,Object? skipped = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? plan = null,}) {
   return _then(_self.copyWith(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
-as PlanType,skipped: null == skipped ? _self.skipped : skipped // ignore: cast_nullable_to_non_nullable
-as Set<String>,
+as PlanType,
   ));
 }
 
@@ -152,10 +150,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlanType plan,  Set<String> skipped)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlanType plan)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiscoverState() when $default != null:
-return $default(_that.plan,_that.skipped);case _:
+return $default(_that.plan);case _:
   return orElse();
 
 }
@@ -173,10 +171,10 @@ return $default(_that.plan,_that.skipped);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlanType plan,  Set<String> skipped)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlanType plan)  $default,) {final _that = this;
 switch (_that) {
 case _DiscoverState():
-return $default(_that.plan,_that.skipped);case _:
+return $default(_that.plan);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -193,10 +191,10 @@ return $default(_that.plan,_that.skipped);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlanType plan,  Set<String> skipped)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlanType plan)?  $default,) {final _that = this;
 switch (_that) {
 case _DiscoverState() when $default != null:
-return $default(_that.plan,_that.skipped);case _:
+return $default(_that.plan);case _:
   return null;
 
 }
@@ -208,19 +206,10 @@ return $default(_that.plan,_that.skipped);case _:
 
 
 class _DiscoverState implements DiscoverState {
-  const _DiscoverState({this.plan = PlanType.coffee, final  Set<String> skipped = const <String>{}}): _skipped = skipped;
+  const _DiscoverState({this.plan = PlanType.coffee});
   
 
 @override@JsonKey() final  PlanType plan;
-/// Companions skipped in this session, per plan.
- final  Set<String> _skipped;
-/// Companions skipped in this session, per plan.
-@override@JsonKey() Set<String> get skipped {
-  if (_skipped is EqualUnmodifiableSetView) return _skipped;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_skipped);
-}
-
 
 /// Create a copy of DiscoverState
 /// with the given fields replaced by the non-null parameter values.
@@ -232,16 +221,16 @@ _$DiscoverStateCopyWith<_DiscoverState> get copyWith => __$DiscoverStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoverState&&(identical(other.plan, plan) || other.plan == plan)&&const DeepCollectionEquality().equals(other._skipped, _skipped));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiscoverState&&(identical(other.plan, plan) || other.plan == plan));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,plan,const DeepCollectionEquality().hash(_skipped));
+int get hashCode => Object.hash(runtimeType,plan);
 
 @override
 String toString() {
-  return 'DiscoverState(plan: $plan, skipped: $skipped)';
+  return 'DiscoverState(plan: $plan)';
 }
 
 
@@ -252,7 +241,7 @@ abstract mixin class _$DiscoverStateCopyWith<$Res> implements $DiscoverStateCopy
   factory _$DiscoverStateCopyWith(_DiscoverState value, $Res Function(_DiscoverState) _then) = __$DiscoverStateCopyWithImpl;
 @override @useResult
 $Res call({
- PlanType plan, Set<String> skipped
+ PlanType plan
 });
 
 
@@ -269,11 +258,10 @@ class __$DiscoverStateCopyWithImpl<$Res>
 
 /// Create a copy of DiscoverState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? plan = null,Object? skipped = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? plan = null,}) {
   return _then(_DiscoverState(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
-as PlanType,skipped: null == skipped ? _self._skipped : skipped // ignore: cast_nullable_to_non_nullable
-as Set<String>,
+as PlanType,
   ));
 }
 

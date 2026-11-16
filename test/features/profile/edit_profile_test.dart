@@ -1,9 +1,9 @@
-import 'package:findx/core/services/image_capture/photo_picker_service.dart';
-import 'package:findx/features/discover/presentation/companion_profile_screen.dart';
-import 'package:findx/features/profile/domain/profile_details.dart';
-import 'package:findx/features/profile/presentation/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vybe/core/services/image_capture/photo_picker_service.dart';
+import 'package:vybe/features/discover/presentation/companion_profile_screen.dart';
+import 'package:vybe/features/profile/domain/profile_details.dart';
+import 'package:vybe/features/profile/presentation/edit_profile_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_app.dart';

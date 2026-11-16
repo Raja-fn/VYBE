@@ -1,17 +1,17 @@
 import 'dart:convert';
 
-import 'package:findx/core/backend/callable_client.dart';
-import 'package:findx/core/utils/app_failure.dart';
-import 'package:findx/features/onboarding/data/account_repository.dart';
-import 'package:findx/features/onboarding/data/auth_repository.dart';
-import 'package:findx/features/onboarding/domain/account.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/preferences/data/preferences_repository.dart';
-import 'package:findx/features/preferences/domain/preferences.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
+import 'package:vybe/core/backend/callable_client.dart';
+import 'package:vybe/core/utils/app_failure.dart';
+import 'package:vybe/features/onboarding/data/account_repository.dart';
+import 'package:vybe/features/onboarding/data/auth_repository.dart';
+import 'package:vybe/features/onboarding/domain/account.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/preferences/data/preferences_repository.dart';
+import 'package:vybe/features/preferences/domain/preferences.dart';
 
 import '../../helpers/fake_tables.dart';
 import '../../helpers/fakes.dart';

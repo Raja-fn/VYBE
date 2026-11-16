@@ -72,7 +72,7 @@ describe('nearbyVenues', () => {
     const { venues } = await nearbyVenuesLogic(deps(), caller('aarav'), {});
     expect(venues.map((v) => v.venueId).sort()).toEqual(['cafe', 'park']);
     expect(venues.map((v) => v.rank)).toEqual([1, 2]);
-    expect(venues[0]).toEqual(expect.objectContaining({ lat: expect.any(Number), lng: expect.any(Number), perk: '10% off for FindX meetups' }));
+    expect(venues[0]).toEqual(expect.objectContaining({ lat: expect.any(Number), lng: expect.any(Number), perk: '10% off for VYBE meetups' }));
     expect(['hot', 'busy', 'quiet']).toContain(venues[0].popularityLabel);
   });
 

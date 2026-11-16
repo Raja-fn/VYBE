@@ -1,4 +1,4 @@
-package com.findx.app
+package com.vybe.app
 
 import io.flutter.embedding.android.FlutterActivity
 

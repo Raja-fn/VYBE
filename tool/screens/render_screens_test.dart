@@ -6,15 +6,15 @@
 // Images land in tool/screens/out/ (git-ignored).
 import 'dart:io';
 
-import 'package:findx/core/router/routes.dart';
-import 'package:findx/features/booking/domain/booking_models.dart';
-import 'package:findx/features/chat/domain/chat_models.dart';
-import 'package:findx/features/onboarding/domain/session_stage.dart';
-import 'package:findx/features/profile/domain/profile_details.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vybe/core/router/routes.dart';
+import 'package:vybe/features/booking/domain/booking_models.dart';
+import 'package:vybe/features/chat/domain/chat_models.dart';
+import 'package:vybe/features/onboarding/domain/session_stage.dart';
+import 'package:vybe/features/profile/domain/profile_details.dart';
 
 import '../../test/helpers/fakes.dart';
 import '../../test/helpers/test_app.dart';
@@ -36,7 +36,10 @@ TestBackend _ready() {
   final backend = readyBackend();
   final now = DateTime.now();
   backend.discover.companions = [
-    testCompanion('neha', name: 'Neha', freeNowUntil: now.add(const Duration(hours: 2)), ratingAvg: 4.8),
+    testCompanion('neha', name: 'Neha', freeNowUntil: now.add(const Duration(hours: 2)), ratingAvg: 4.8).copyWith(
+      photoPaths: const ['photos/neha/1.jpg', 'photos/neha/2.jpg', 'photos/neha/3.jpg'],
+      details: const ProfileDetails(city: 'Bandra', interests: ['coffee', 'books', 'music', 'travel']),
+    ),
     testCompanion('sam', name: 'Sam', age: 26, plans: const ['movie', 'dinner'], distanceKm: 3),
     testCompanion('ira', name: 'Ira', age: 23, plans: const ['coffee', 'event'], distanceKm: 1),
   ];

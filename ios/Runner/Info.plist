@@ -5,7 +5,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>FindX</string>
+		<string>VYBE</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>findx</string>
+		<string>VYBE</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -48,11 +48,11 @@
 		<key>GMSApiKey</key>
 		<string>$(MAPS_API_KEY)</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>FindX uses your location to show verified companions and public spots near you. Other people never see your exact location.</string>
+		<string>VYBE uses your location to show verified companions and public spots near you. Other people never see your exact location.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>FindX uses the camera for your selfie check and ID check.</string>
+		<string>VYBE uses the camera for your selfie check and ID check.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>FindX needs photo access only if you choose a photo for your profile.</string>
+		<string>VYBE needs photo access only if you choose a photo for your profile.</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsLocalNetworking</key>

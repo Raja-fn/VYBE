@@ -1,10 +1,10 @@
-# FindX launch checklist (Google Play, Android)
+# VYBE launch checklist (Google Play, Android)
 
 Everything in the code is ready for the first production release:
 - a separate production Supabase project;
 - real Google Play payments, checked by the server;
 - auto-approved ID checks (owner decision, see below);
-- a release signing key, a FindX icon and splash screen, and version 1.0.0.
+- a release signing key, a VYBE icon and splash screen, and version 1.0.0.
 
 What's left needs your accounts. Do the steps in order. Never paste secrets
 (keys, passwords, the service-account file) into chats or project files.
@@ -41,7 +41,7 @@ npx supabase functions deploy api --use-api --project-ref <prod ref>
 npx supabase secrets set --project-ref <prod ref> \
   FINDX_ENVIRONMENT=production \
   FINDX_IDENTITY_AUTO_APPROVE=true \
-  GOOGLE_PLAY_PACKAGE=com.findx.app \
+  GOOGLE_PLAY_PACKAGE=com.vybe.app \
   FINDX_CRON_SECRET=<long random text> \
   FINDX_PLAY_NOTIFICATION_SECRET=<another long random text>
 ```
@@ -56,14 +56,14 @@ npx supabase secrets set --project-ref <prod ref> \
 
 1. Create a developer account at https://play.google.com/console. It costs
    USD 25, one time.
-2. **Create app:** name FindX, app (not game), free.
+2. **Create app:** name VYBE, app (not game), free.
 3. **Products → In-app products**, all consumable:
-   - `findx_credits_10`
-   - `findx_credits_30`
-   - `findx_credits_75`
+   - `vybe_credits_10`
+   - `vybe_credits_30`
+   - `vybe_credits_75`
 4. **Products → Subscriptions**, each with a monthly base plan:
-   - `findx_plus_monthly`
-   - `findx_premium_monthly`
+   - `vybe_plus_monthly`
+   - `vybe_premium_monthly`
 
    The IDs must match exactly. Prices are set here; the app shows Play's
    prices.
@@ -74,7 +74,7 @@ npx supabase secrets set --project-ref <prod ref> \
 
 1. In the Google Cloud project linked to Play Console, enable the
    **Google Play Android Developer API**.
-2. Create a **service account**, for example `findx-play-checks`, and
+2. Create a **service account**, for example `vybe-play-checks`, and
    download a **JSON key**.
 3. In Play Console, go to **Users and permissions → Invite new users** and
    add the service account's email. Give it **View financial data** and
@@ -100,18 +100,31 @@ instead of granting credits it can't verify.
    developer notifications**, enter the topic and click **Send test
    notification**. The server accepts it and takes no action.
 
-## 5. Google sign-in for release builds
+## 5. Google sign-in and crash reports for the app id `com.vybe.app`
 
-In Google Cloud, go to **Credentials → the Android OAuth client** and add
-both release SHA-1 fingerprints. The client takes one fingerprint, so create
-a second Android client for the second one.
+The app id changed from `com.findx.app` to `com.vybe.app` with the VYBE
+rename. Until both steps below are done, Google sign-in fails on Android
+and crash reports are off (the app still builds and runs).
 
+**Google sign-in.** Google Cloud → **APIs & Services → Credentials →
+Create credentials → OAuth client ID → Android**. Create one client per
+fingerprint, each with package name `com.vybe.app`:
+
+- **Debug key** (the builds you install from this computer):
+  `42:17:45:A2:CE:70:85:AE:2E:DE:09:B8:39:8C:F2:A6:4B:2A:86:9C`
 - **Upload key** (on this computer):
   `8C:EB:E4:AC:32:68:2A:DF:71:91:DC:FA:71:C1:69:BD:CF:76:9B:10`
 - **Play app signing key:** Play Console → **Test and release → App
   integrity**, after your first upload.
 
 Without the Play key, Google sign-in fails for people who install from Play.
+Keep using the same **Web** client id (`GOOGLE_WEB_CLIENT_ID`); it does not
+change. The old `com.findx.app` Android clients can be deleted.
+
+**Crash reports.** Firebase console → your project → **Add app → Android**,
+package name `com.vybe.app`. Download the new `google-services.json` and
+replace `android/app/google-services.json`. The build picks it up
+automatically.
 
 ## 6. The upload key: back it up now
 
@@ -140,8 +153,9 @@ promote the build to **Production**.
 
 ## 8. Store listing and policies (Play Console)
 
-- **Privacy policy URL.** Required. The app uses location, camera, selfies
-  and ID photos, and payments.
+- **Privacy policy URL:** `https://findx-dev-b5f6b.firebaseapp.com/privacy`
+  (required; the app uses location, camera, selfies and ID photos, and
+  payments). Terms: `https://findx-dev-b5f6b.firebaseapp.com/terms`.
 - **Data safety form:**
   - **Collected:** location (approximate and precise), photos (selfie and
     ID), name, email, purchase history.
@@ -149,9 +163,10 @@ promote the build to **Production**.
   - **Account deletion:** in the app, **Profile → Delete account**. It
     deletes the account, photos, ID images, preferences and credits, and
     cancels open bookings. Play also asks for a **web link** where people can
-    request deletion without the app. A page on your website with a support
-    email works; deletions requested there are done by deleting the user in
-    **Supabase → Authentication → Users**.
+    request deletion without the app:
+    `https://findx-dev-b5f6b.firebaseapp.com/delete-account`. Requests sent
+    to the email there are done by deleting the user in
+    **Supabase → Authentication → Users** (within 7 days, as the page promises).
 - **Content rating questionnaire.** The app is for 18+ and enables meeting
   strangers in person.
 - **Target audience:** 18 and over.
@@ -164,3 +179,13 @@ promote the build to **Production**.
   safety screen with SOS yet. These are planned for later phases.
 - The Supabase free plan allows 500 MB of database storage and 1 GB of file
   storage. The dashboard shows usage; upgrade the plan before reaching it.
+
+## Website (privacy, terms, account deletion)
+
+The pages are in `site/`, published with Firebase Hosting at
+`https://findx-dev-b5f6b.firebaseapp.com` (also `findx-dev-b5f6b.web.app`).
+After editing them, publish with:
+
+```sh
+npx firebase-tools deploy --only hosting --project findx-dev-b5f6b
+```

@@ -162,7 +162,7 @@ async function main() {
 
     // --- purchases ---
     const t = `fake-t${Date.now()}-smoke`;
-    const bought = await call('verifyPurchase', { platform: 'android', productId: 'findx_credits_30', purchaseToken: t }, aarav);
+    const bought = await call('verifyPurchase', { platform: 'android', productId: 'vybe_credits_30', purchaseToken: t }, aarav);
     check('a test-store pack adds 30 credits', bought.json.status === 'granted' && bought.json.creditsAdded === 30, bought);
     const refund = await call('storeNotification', { fake: { type: 'refund', storeTransactionId: `fake-txn-${t}` } }, undefined, '?platform=android');
     check('a store refund takes the credits back', refund.status === 200 && refund.json.outcome === 'refunded', refund);

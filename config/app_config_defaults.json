@@ -33,26 +33,26 @@
     },
     {
       "tier": "plus",
-      "productId": "findx_plus_monthly",
+      "productId": "vybe_plus_monthly",
       "monthlyCredits": 100
     },
     {
       "tier": "premium",
-      "productId": "findx_premium_monthly",
+      "productId": "vybe_premium_monthly",
       "monthlyCredits": 200
     }
   ],
   "topUpPacks": [
     {
-      "productId": "findx_credits_10",
+      "productId": "vybe_credits_10",
       "credits": 10
     },
     {
-      "productId": "findx_credits_30",
+      "productId": "vybe_credits_30",
       "credits": 30
     },
     {
-      "productId": "findx_credits_75",
+      "productId": "vybe_credits_75",
       "credits": 75
     }
   ],
