@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug only: allows cleartext HTTP to the Firebase Emulator Suite, whether it
+     runs on this machine (10.0.2.2 from the Android emulator) or on a computer
+     on the same Wi-Fi (physical phone). Release builds never include this file. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

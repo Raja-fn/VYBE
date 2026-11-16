@@ -1,0 +1,75 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ---- FindX ----
+# Secrets and per-machine config (see docs/phase-0-plan.md §12)
+/android/key.properties
+*.jks
+*.keystore
+/ios/Flutter/Secrets.xcconfig
+# Real Firebase config (the demo one is android/app/google-services.demo.json)
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/lib/core/firebase/firebase_options_*.dart
+.env
+.env.*
+
+# Firebase
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+/emulator-data/
+
+# Server (Supabase Edge Function source and tests)
+/server/node_modules/
+/server/src/config/app_config_defaults.json
+/server/coverage/
+# Supabase CLI local state
+/supabase/.temp/
+/supabase/.branches//tool/screens/out/

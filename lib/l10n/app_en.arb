@@ -1,0 +1,961 @@
+{
+  "@@locale": "en",
+  "appName": "FindX",
+  "@appName": {
+    "description": "App name. Not translated."
+  },
+  "startTagline": "Meet new people, safely",
+  "mapHeroTag": "Verified public spots only",
+  "@mapHeroTag": {
+    "description": "Tag on the decorative map on the first screen."
+  },
+  "startLoading": "Getting things ready",
+  "bootstrapErrorTitle": "FindX could not start",
+  "bootstrapNoConnection": "Check your internet connection and try again.",
+  "bootstrapNotConfigured": "This copy of the app was built without its server settings. Install a new build.",
+  "commonRetry": "Try again",
+  "commonBack": "Back",
+  "commonLoading": "Loading",
+  "stateEmptyTitle": "Nothing here yet",
+  "stateErrorTitle": "Something went wrong",
+  "stateOfflineTitle": "You are offline",
+  "stateOfflineMessage": "Check your connection. This screen updates when you are back online.",
+  "offlineBanner": "You are offline. Some info may be out of date.",
+  "failureNetwork": "We could not reach FindX. Check your connection and try again.",
+  "failureOffline": "You are offline. Connect to the internet and try again.",
+  "failureUnauthenticated": "Please sign in again.",
+  "failurePermissionDenied": "You do not have access to this.",
+  "failureNotVerified": "Finish verification to do this.",
+  "failureInsufficientCredits": "You do not have enough credits for this.",
+  "failureSlotFull": "That time slot just filled up. Pick another one.",
+  "failureBlocked": "This person is not available.",
+  "failureModerationBlocked": "Phone numbers, emails, social handles and links cannot be shared in chat.",
+  "failureNotFound": "We could not find that.",
+  "failureRateLimited": "Too many tries. Please wait a moment and try again.",
+  "failureInvalidInput": "Please check what you entered.",
+  "failureUnknown": "Something went wrong. Please try again.",
+  "failureWrongCode": "That code is not right. Check the SMS and try again.",
+  "failureCodeExpired": "This code has expired. Tap Resend code to get a new one.",
+  "failurePurchaseInvalid": "The store could not confirm this purchase. You have not been charged credits.",
+  "failureStoreUnavailable": "Purchases are not available on this device right now.",
+  "notFoundTitle": "We could not find that page",
+  "notFoundAction": "Go to start",
+  "badgeVerified": "Verified",
+  "badgeFreeNow": "Free now",
+  "creditsPillUnit": "{count, plural, =1{credit} other{credits}}",
+  "@creditsPillUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPillSemantics": "{count, plural, =1{1 credit} other{{count} credits}}. Open credits and plans",
+  "@creditsPillSemantics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stepSemanticsDone": "Step {number}, done",
+  "@stepSemanticsDone": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "stepSemanticsCurrent": "Step {number}, in progress",
+  "@stepSemanticsCurrent": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "stepSemanticsUpcoming": "Step {number}, not started",
+  "@stepSemanticsUpcoming": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "planCoffee": "Coffee",
+  "planMovie": "Movie",
+  "planEvent": "Event",
+  "planWalk": "Walk",
+  "planDinner": "Dinner",
+  "statRating": "Rating",
+  "statMeetups": "Meetups",
+  "statAge": "Age",
+  "safetyNotePublicSpots": "Meet only at verified public spots within {km} km.",
+  "@safetyNotePublicSpots": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "signOut": "Sign out",
+  "deleteAccount": "Delete account",
+  "deleteAccountTitle": "Delete your account?",
+  "deleteAccountBody": "Your profile, photos, ID images, preferences, saved people and credits are deleted for good. Open bookings are cancelled and your chats close. This cannot be undone.\n\nTo stop a Plus or Premium plan from renewing, cancel it in Google Play too.",
+  "deleteAccountConfirm": "Delete for good",
+  "onboardingStep": "Step {current} of {total}",
+  "@onboardingStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "rulesSubtitle": "Book time with verified companions for everyday plans, always at public places.",
+  "rulesForTitle": "This app is for",
+  "rulesFor1": "Coffee, movies, walks, dinners and events",
+  "rulesFor2": "Meeting at verified public venues only",
+  "rulesFor3": "Respectful, friendly company",
+  "rulesNotForTitle": "Not for",
+  "rulesNotFor1": "Sexual services or any kind of solicitation",
+  "rulesNotFor2": "Meeting at private homes, hotels or rooms",
+  "rulesNotFor3": "Sharing phone numbers or taking chats off the app",
+  "rulesConsent": "I am 18 or older and I agree to these rules. Breaking them means a permanent ban.",
+  "rulesContinue": "I agree, continue",
+  "verifyTitle": "Verify it is you",
+  "verifySelfieTitle": "Selfie check",
+  "verifySelfieSubtitle": "Takes about 20 seconds",
+  "verifyIdTitle": "ID check",
+  "verifyIdSubtitle": "Aadhaar, passport or licence",
+  "verifyPhoneLabel": "Mobile number",
+  "verifyPhoneHint": "98765 43210",
+  "verifyPhoneInvalid": "Enter a valid {length}-digit mobile number.",
+  "@verifyPhoneInvalid": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "verifySendCode": "Send code",
+  "verifyOtpLabel": "{length}-digit code",
+  "@verifyOtpLabel": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyOtpSentTo": "We sent a code to {phone}.",
+  "@verifyOtpSentTo": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyOtpInvalid": "Enter the {length}-digit code.",
+  "@verifyOtpInvalid": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyConfirmCode": "Verify code",
+  "verifyResendIn": "Resend code in {seconds}s",
+  "@verifyResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyResend": "Resend code",
+  "verifyChangeNumber": "Change number",
+  "verifyUseDifferentNumber": "Use a different number",
+  "verifyFinishTitle": "Finish setting up your account",
+  "verifyFinishBody": "Your number is verified. Tap continue to create your account.",
+  "verifyContinue": "Continue",
+  "verifySelfieFrame": "Fit your face in the frame",
+  "verifyTakeSelfie": "Take selfie",
+  "verifyIdPrivacy": "Your ID is encrypted and is never shown to other users.",
+  "verifyChooseId": "Which ID will you use?",
+  "idAadhaar": "Aadhaar",
+  "idPassport": "Passport",
+  "idDrivingLicence": "Driving licence",
+  "verifyIdFrame": "Photograph the front of your ID in good light",
+  "verifyTakeIdPhoto": "Take ID photo",
+  "verifyReviewTitle": "We are checking your photo",
+  "verifyReviewBody": "This usually takes a few minutes. You can close the app and come back.",
+  "verifyRejectedTitle": "We could not verify this photo",
+  "verifyRejectedBody": "Make sure it is clear, well lit and not cut off, then try again.",
+  "verifyTryAgain": "Try again",
+  "verifyUnderageTitle": "FindX is for adults only",
+  "verifyUnderageBody": "Your ID shows you are under 18, so you cannot use FindX.",
+  "prefsTitle": "Who do you want to meet?",
+  "prefsSubtitle": "Everyone is welcome here. You decide who you see.",
+  "prefsIAm": "I am",
+  "genderWoman": "Woman",
+  "genderMan": "Man",
+  "genderNonBinary": "Non-binary",
+  "genderUndisclosed": "Prefer not to say",
+  "prefsShowMe": "Show me",
+  "showMeWomen": "Women",
+  "showMeMen": "Men",
+  "showMeEveryone": "Everyone",
+  "prefsAgeRange": "Age range",
+  "prefsAgeRangeValue": "{min} to {max}",
+  "@prefsAgeRangeValue": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "prefsAgeMin": "Youngest age, {age}",
+  "@prefsAgeMin": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "prefsAgeMax": "Oldest age, {age}",
+  "@prefsAgeMax": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "prefsDistance": "Distance",
+  "prefsDistanceValue": "Within {km} km",
+  "@prefsDistanceValue": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "prefsShowGender": "Show my gender on my profile",
+  "prefsShowGenderSubtitle": "Off by default. Only used to decide who sees you.",
+  "prefsStart": "Start exploring",
+  "suspendedTitle": "Your account is suspended",
+  "suspendedBody": "This account was suspended for breaking the FindX rules.",
+  "creditsCount": "{count, plural, =1{1 credit} other{{count} credits}}",
+  "@creditsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failureLocationRequired": "Share your location to see people near you.",
+  "failureLocationDenied": "Location is off or not allowed for FindX.",
+  "navDiscover": "Discover",
+  "navChats": "Chats",
+  "navBookings": "Bookings",
+  "navProfile": "Profile",
+  "discoverPlanQuestion": "What is the plan?",
+  "discoverShowing": "Showing: {who}",
+  "@discoverShowing": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverMap": "Map",
+  "discoverFreeNowLink": "See who is free right now",
+  "discoverEmptyTitle": "No one nearby for this plan yet",
+  "discoverEmptyBody": "Try another plan, or see who is free right now.",
+  "discoverAllSeenTitle": "You have seen everyone for now",
+  "discoverStartOver": "Start over",
+  "discoverSkip": "Skip",
+  "discoverMessage": "Message",
+  "discoverSave": "Save",
+  "discoverUnsave": "Remove from saved",
+  "cardNameAge": "{name}, {age}",
+  "@cardNameAge": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "cardAboutKmAway": "About {km} km away",
+  "@cardAboutKmAway": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "cardFreeUntil": "free until {time}",
+  "@cardFreeUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cardSpotsNearby": "{count, plural, =0{No spots nearby} =1{1 spot nearby} other{{count} spots nearby}}",
+  "@cardSpotsNearby": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceIntroPlay": "Play voice intro, {seconds} seconds",
+  "@voiceIntroPlay": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceIntroStop": "Stop voice intro",
+  "voiceDuration": "{minutes}:{seconds}",
+  "@voiceDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "promptIdealSunday": "My ideal Sunday",
+  "tagCoffee": "Coffee meetup",
+  "tagMovie": "Movie",
+  "tagEvent": "Event plus-one",
+  "tagWalk": "Walk",
+  "tagDinner": "Dinner",
+  "locationNeededTitle": "Location is needed",
+  "locationNeededBody": "FindX uses your location to show verified companions and public spots within {km} km. Other people never see your exact location.",
+  "@locationNeededBody": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "locationAllow": "Allow location",
+  "locationOpenSettings": "Open settings",
+  "nameBannerTitle": "Add your first name",
+  "nameBannerBody": "Companions see your first name when you ask to meet.",
+  "nameBannerAction": "Add name",
+  "freeNowTitle": "Free right now",
+  "freeNowSubtitle": "Verified companions within {km} km.",
+  "@freeNowSubtitle": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "freeNowNext2h": "Next 2 hrs",
+  "freeNowTonight": "Tonight",
+  "freeNowTomorrow": "Tomorrow",
+  "freeUntil": "Free until {time}",
+  "@freeUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "freeBetween": "Free {from} to {until}",
+  "@freeBetween": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutKm": "About {km} km",
+  "@aboutKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "freeNowEmptyTitle": "No one is free in this window",
+  "freeNowEmptyBody": "Try tonight or tomorrow.",
+  "instantTitle": "Request instantly",
+  "instantBody": "Costs {credits} credits",
+  "@instantBody": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "instantPickSpot": "Pick spot",
+  "profileNewRating": "New",
+  "profileChat": "Chat",
+  "profileBookSpot": "Book your spot",
+  "profileVerifiedAge": "Verified age",
+  "myProfileTitle": "Your profile",
+  "myProfileName": "First name",
+  "myProfileNameHint": "How companions will see you",
+  "myProfileSaveName": "Save name",
+  "myProfileNameSaved": "Name saved",
+  "myProfileNameInvalid": "Enter your first name, up to {max} characters.",
+  "@myProfileNameInvalid": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "myProfilePhone": "Phone",
+  "myProfileSaved": "Saved companions",
+  "savedTitle": "Saved companions",
+  "savedEmptyTitle": "No saved companions yet",
+  "savedEmptyBody": "Tap Save on a profile to keep it here.",
+  "chatsTitle": "Chats",
+  "chatsEmptyTitle": "No chats yet",
+  "chatsEmptyBody": "Your chats with companions will show here.",
+  "bookingsTitle": "Bookings",
+  "bookingsEmptyTitle": "No bookings yet",
+  "bookingsEmptyBody": "Your booked spots will show here.",
+  "failureCompanionUnavailable": "They are not free at that time. Pick another time.",
+  "mapWithinKm": "Within {km} km",
+  "@mapWithinKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mapSemantics": "Map of verified spots within {km} km of you",
+  "@mapSemantics": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "mapLegendHot": "Hot, most meetups",
+  "mapLegendBusy": "Busy",
+  "mapLegendQuiet": "Quiet",
+  "mapBestSpots": "Best spots to meet",
+  "mapToday": "Today",
+  "mapPick": "Pick",
+  "mapPickSemantics": "Pick {venue}",
+  "@mapPickSemantics": {
+    "placeholders": {
+      "venue": {
+        "type": "String"
+      }
+    }
+  },
+  "mapNoVenuesTitle": "No verified spots nearby yet",
+  "mapNoVenuesBody": "Try another plan.",
+  "venueLine": "{category} · {km} km · {busy}",
+  "@venueLine": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "km": {
+        "type": "String"
+      },
+      "busy": {
+        "type": "String"
+      }
+    }
+  },
+  "venueCafe": "Cafe",
+  "venueFoodCourt": "Food court",
+  "venueOpenPark": "Open park",
+  "venueCinema": "Cinema",
+  "venueRestaurant": "Restaurant",
+  "venueOther": "Public venue",
+  "busyHotNow": "Hot now",
+  "busyBusy": "Busy",
+  "busyQuiet": "Quiet",
+  "bookTitle": "Book your spot",
+  "bookVenueLine": "{km} km · Verified public venue",
+  "@bookVenueLine": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "bookChange": "Change",
+  "bookDay": "Day",
+  "bookToday": "Today",
+  "bookPickDay": "Pick a day",
+  "bookTimeSlot": "Time slot",
+  "bookNoSlots": "No times left on this day. Try another day.",
+  "bookSlotUnavailableSemantics": "{time}, not available",
+  "@bookSlotUnavailableSemantics": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSafety": "Both of you get a reminder and live location sharing on the day.",
+  "bookCostLabel": "Spot booking",
+  "bookInstantCostLabel": "Instant request",
+  "bookNoRefund": "Credits are not refunded if the request is declined or cancelled.",
+  "bookConfirm": "Confirm spot",
+  "bookSent": "Request sent to {name}.",
+  "@bookSent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bookNoVenue": "There are no verified spots you can both reach for this plan.",
+  "bookingsStatusRequested": "Waiting for reply",
+  "bookingsStatusAccepted": "Confirmed",
+  "bookingsStatusDeclined": "Declined",
+  "bookingsStatusCancelled": "Cancelled",
+  "bookingsStatusCheckedIn": "Checked in",
+  "bookingsStatusCompleted": "Completed",
+  "bookingsStatusDisputed": "Under review",
+  "bookingsStatusTimePassed": "Time passed",
+  "bookingsWith": "{plan} with {name}",
+  "@bookingsWith": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingsCancel": "Cancel",
+  "bookingsCancelTitle": "Cancel this booking?",
+  "bookingsCancelBody": "Your table is released. Credits are not refunded.",
+  "bookingsCancelConfirm": "Cancel booking",
+  "bookingsKeep": "Keep it",
+  "bookingsCancelled": "Booking cancelled.",
+  "freeNowSelectHint": "Tap someone to choose them, then pick a spot.",
+  "freeNowViewProfile": "View profile",
+  "commonCancel": "Cancel",
+  "chatNotice": "Chat is for planning your meetup. Phone numbers and off-app contact are blocked.",
+  "chatStartedCredits": "{credits, plural, =1{1 credit used to start this chat} other{{credits} credits used to start this chat}}",
+  "@chatStartedCredits": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "chatInputHint": "Type a message",
+  "chatSend": "Send message",
+  "chatReport": "Report",
+  "chatClosed": "This chat is closed.",
+  "chatBookTitle": "Book your spot with {name}",
+  "@chatBookTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBook": "Book",
+  "chatBookingCardTitle": "{plan} meetup",
+  "@chatBookingCardTitle": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "chatBookingCardLine": "{when} · {venue}",
+  "@chatBookingCardLine": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "venue": {
+        "type": "String"
+      }
+    }
+  },
+  "chatPreviewBooking": "Booking request",
+  "chatPreviewStarted": "Chat started",
+  "chatStartTitle": "Start a chat with {name}?",
+  "@chatStartTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStartBody": "This uses {cost}. Credits are not refunded.",
+  "@chatStartBody": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "chatStartConfirm": "Start chat",
+  "chatsUnread": "{count, plural, =1{1 unread message} other{{count} unread messages}}",
+  "@chatsUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportOrBlock": "Report or block",
+  "reportTitle": "Report {name}",
+  "@reportTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reportReasonInappropriate": "Inappropriate messages",
+  "reportReasonContact": "Asked for my number or other contact",
+  "reportReasonHarassment": "Harassment or pressure",
+  "reportReasonFake": "Fake profile",
+  "reportReasonSafety": "I felt unsafe",
+  "reportReasonOther": "Something else",
+  "reportDetailsHint": "Anything else we should know (optional)",
+  "reportSubmit": "Send report",
+  "reportSent": "Thanks. Our safety team will review this.",
+  "blockAction": "Block {name}",
+  "@blockAction": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockTitle": "Block {name}?",
+  "@blockTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockBody": "You will not see each other anywhere on FindX. Your chat closes and open bookings are cancelled. Credits are not refunded.",
+  "blockConfirm": "Block",
+  "blockDone": "{name} is blocked.",
+  "@blockDone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devGalleryTitle": "Component gallery",
+  "devGalleryOpen": "Open component gallery",
+  "devGallerySectionButtons": "Buttons",
+  "devGallerySectionChips": "Chips and tags",
+  "devGallerySectionCards": "Cards",
+  "devGallerySectionBadges": "Badges and stats",
+  "devGallerySectionSteps": "Steps",
+  "devGallerySectionStates": "Screen states",
+  "devGalleryPrimary": "Primary action",
+  "devGalleryOutline": "Secondary action",
+  "devGalleryGold": "Gold action",
+  "devGallerySuccess": "Success action",
+  "devGalleryDisabled": "Disabled action",
+  "devGalleryCardTitle": "Card title",
+  "devGalleryCardBody": "Cards use a 22 radius and a 1px border.",
+  "devGalleryDarkCardBody": "Dark cards highlight one key action.",
+  "devGallerySampleName": "Name",
+  "devGallerySampleRating": "4.8",
+  "devGallerySampleCount": "32",
+  "devGallerySwitchTitle": "Switch row",
+  "devGallerySwitchSubtitle": "Used for settings that turn on or off.",
+  "creditsTitle": "Get more credits",
+  "creditsSubtitle": "Unlock chats and bookings.",
+  "planFree": "Free",
+  "planPlus": "Plus",
+  "planPremium": "Premium",
+  "creditsFreePrice": "₹0",
+  "creditsFreeDetail": "{count, plural, =1{1 credit} other{{count} credits}} when you join",
+  "@creditsFreeDetail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPlanDetail": "{count, plural, =1{1 credit} other{{count} credits}} a month · unused credits stay",
+  "@creditsPlanDetail": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPopular": "Popular",
+  "creditsYourPlan": "Your plan",
+  "creditsRenews": "Renews {date}",
+  "@creditsRenews": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsMovesTo": "Moves to {plan} on {date}",
+  "@creditsMovesTo": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsPerMonth": "{price}/mo",
+  "@creditsPerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsTestPrice": "Test",
+  "creditsPriceMissing": "Not available",
+  "creditsTopUpTitle": "Or top up credits",
+  "creditsPackSemantics": "{count, plural, =1{1 credit} other{{count} credits}}, {price}",
+  "@creditsPackSemantics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsPlanSemantics": "{plan} plan, {price}",
+  "@creditsPlanSemantics": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsTestStoreNote": "Test store: nothing is charged. These purchases only work on test servers.",
+  "creditsContinueWith": "Continue with {plan}",
+  "@creditsContinueWith": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsSwitchAtRenewal": "Switch to {plan} at renewal",
+  "@creditsSwitchAtRenewal": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsBuyPack": "Buy {count, plural, =1{1 credit} other{{count} credits}}",
+  "@creditsBuyPack": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsCurrentPlan": "This is your plan",
+  "creditsAdded": "{count, plural, =1{1 credit added.} other{{count} credits added.}}",
+  "@creditsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPlanActive": "{plan} is active. {count, plural, =1{1 credit added.} other{{count} credits added.}}",
+  "@creditsPlanActive": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "creditsPlanAtRenewal": "You will move to {plan} when your current plan renews.",
+  "@creditsPlanAtRenewal": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "creditsAlreadyAdded": "This purchase was already added.",
+  "creditsPending": "Payment pending. Credits are added once it clears.",
+  "creditsRetry": "Try again",
+  "getCredits": "Get credits",
+  "failureOtpSendFailed": "We could not send the SMS. Try again in a moment.",
+  "verifySignInTitle": "Sign in",
+  "verifySignInSubtitle": "With your Google account",
+  "verifySignInSubtitleWithPhone": "With Google or your phone number",
+  "verifySignInDone": "Signed in",
+  "verifySignInBody": "Sign in with your Google account to create your FindX account. We never post anything to it.",
+  "verifyContinueWithGoogle": "Continue with Google",
+  "verifyOrPhone": "Or use your phone number",
+  "verifyTestAccount": "Use a test account",
+  "verifyTestAccountEmail": "Test account email",
+  "verifyTestAccountHint": "aarav@findx.test",
+  "verifyTestAccountSignIn": "Sign in",
+  "failureSignInCanceled": "Sign-in was cancelled.",
+  "failureGoogleSignInUnavailable": "Google sign-in is not set up on this build yet. Use a test account or try again later.",
+  "myProfileEmail": "Signed in as",
+  "optLanguageEnglish": "English",
+  "optLanguageHindi": "Hindi",
+  "optLanguageMarathi": "Marathi",
+  "optLanguageGujarati": "Gujarati",
+  "optLanguageTamil": "Tamil",
+  "optLanguageTelugu": "Telugu",
+  "optLanguageKannada": "Kannada",
+  "optLanguageMalayalam": "Malayalam",
+  "optLanguageBengali": "Bengali",
+  "optLanguagePunjabi": "Punjabi",
+  "optLanguageUrdu": "Urdu",
+  "optLanguageOdia": "Odia",
+  "optEducationHighSchool": "High school",
+  "optEducationDiploma": "Diploma",
+  "optEducationBachelors": "Bachelor's degree",
+  "optEducationMasters": "Master's degree",
+  "optEducationDoctorate": "Doctorate",
+  "optEducationOther": "Other",
+  "optInterestMusic": "Music",
+  "optInterestMovies": "Movies",
+  "optInterestTravel": "Travel",
+  "optInterestFood": "Food",
+  "optInterestCoffee": "Coffee",
+  "optInterestBooks": "Books",
+  "optInterestFitness": "Fitness",
+  "optInterestArt": "Art",
+  "optInterestPhotography": "Photography",
+  "optInterestGaming": "Gaming",
+  "optInterestCricket": "Cricket",
+  "optInterestFootball": "Football",
+  "optInterestDance": "Dance",
+  "optInterestTheatre": "Theatre",
+  "optInterestTech": "Tech",
+  "optInterestNature": "Nature",
+  "optInterestCooking": "Cooking",
+  "optInterestFashion": "Fashion",
+  "optPersonalityCalm": "Calm",
+  "optPersonalityCheerful": "Cheerful",
+  "optPersonalityCurious": "Curious",
+  "optPersonalityAdventurous": "Adventurous",
+  "optPersonalityThoughtful": "Thoughtful",
+  "optPersonalityWitty": "Witty",
+  "optPersonalityEasygoing": "Easygoing",
+  "optPersonalityAmbitious": "Ambitious",
+  "optSocialEnergyIntrovert": "Introvert",
+  "optSocialEnergyAmbivert": "Somewhere in between",
+  "optSocialEnergyExtrovert": "Extrovert",
+  "optHabitNever": "Never",
+  "optHabitSocially": "Socially",
+  "optHabitRegularly": "Regularly",
+  "optFitnessRarely": "Rarely",
+  "optFitnessSometimes": "Sometimes",
+  "optFitnessActive": "Active",
+  "optFitnessVeryActive": "Very active",
+  "editProfile": "Edit profile",
+  "editProfilePhotos": "Photos",
+  "editProfilePhotosHint": "Add up to {count} photos. Clear photos of your face get more meetups.",
+  "@editProfilePhotosHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editProfileMainPhoto": "Main",
+  "editProfileAddPhoto": "Add photo",
+  "editProfileFromGallery": "Choose from gallery",
+  "editProfileTakePhoto": "Take a photo",
+  "editProfileMakeMain": "Make main photo",
+  "editProfileRemovePhoto": "Remove photo",
+  "editProfileUploading": "Uploading",
+  "editProfileBasics": "Basics",
+  "editProfileName": "First name",
+  "editProfileAge": "Age",
+  "editProfileAgeFromId": "From your ID check",
+  "editProfileGender": "Gender",
+  "editProfileAboutMe": "About me",
+  "editProfileCity": "City",
+  "editProfileLanguages": "Languages I speak",
+  "editProfileWork": "What I do",
+  "editProfileEducation": "Education",
+  "editProfileProfession": "Profession",
+  "editProfileStory": "My story",
+  "editProfileBioHint": "A few lines about you and the plans you enjoy",
+  "editProfilePersonality": "My personality",
+  "editProfileHowIAm": "How I am",
+  "editProfileSocialEnergy": "Social energy",
+  "editProfileLifestyle": "Lifestyle",
+  "editProfileDrinking": "Drinking",
+  "editProfileSmoking": "Smoking",
+  "editProfileFitness": "Fitness",
+  "editProfileThingsILove": "Things I love",
+  "editProfileNotSet": "Add",
+  "editProfilePickUpTo": "Pick up to {count}",
+  "@editProfilePickUpTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editProfileSave": "Save",
+  "editProfileSaved": "Saved",
+  "editProfileClear": "Clear",
+  "editProfileSelectedMore": "{first} + {count} more",
+  "@editProfileSelectedMore": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileLanguagesTitle": "Speaks",
+  "profileInterestsTitle": "Loves",
+  "profileLifestyleTitle": "Lifestyle",
+  "venueMall": "Mall",
+  "venueTheatre": "Theatre"
+}

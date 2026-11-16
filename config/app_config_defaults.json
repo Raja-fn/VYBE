@@ -1,0 +1,98 @@
+{
+  "discoveryRadiusKm": 5,
+  "companionLocationSnapMeters": 500,
+  "distanceLabelStepKm": 1,
+  "discoverCallsPerMinute": 20,
+  "discoverPageSize": 20,
+  "maxPlausibleSpeedKmh": 300,
+  "launchCity": {
+    "name": "Mumbai",
+    "lat": 19.0596,
+    "lng": 72.8295,
+    "timezone": "Asia/Kolkata"
+  },
+  "phoneCountryCode": "+91",
+  "phoneNationalNumberLength": 10,
+  "otpResendSeconds": 30,
+  "phoneLoginEnabled": false,
+  "otpLength": 4,
+  "otpValiditySeconds": 300,
+  "otpMaxAttempts": 3,
+  "otpRequestsPerPhonePerDay": 10,
+  "otpRequestsPerIpPerHour": 20,
+  "rulesVersion": 1,
+  "signupBonusCredits": 20,
+  "creditCostStartChat": 1,
+  "creditCostBookSpot": 5,
+  "creditCostInstantRequest": 5,
+  "plans": [
+    {
+      "tier": "free",
+      "productId": null,
+      "monthlyCredits": 0
+    },
+    {
+      "tier": "plus",
+      "productId": "findx_plus_monthly",
+      "monthlyCredits": 100
+    },
+    {
+      "tier": "premium",
+      "productId": "findx_premium_monthly",
+      "monthlyCredits": 200
+    }
+  ],
+  "topUpPacks": [
+    {
+      "productId": "findx_credits_10",
+      "credits": 10
+    },
+    {
+      "productId": "findx_credits_30",
+      "credits": 30
+    },
+    {
+      "productId": "findx_credits_75",
+      "credits": 75
+    }
+  ],
+  "subscriptionPeriodDays": 30,
+  "bookingDaysAhead": 7,
+  "slotMinutesDefault": 60,
+  "freeNowMaxHours": 2,
+  "tonightStartHour": 18,
+  "checkInWindowMinutesBefore": 15,
+  "checkInWindowMinutesAfter": 30,
+  "safetyCheckIntervalMinutes": 30,
+  "safetyMissedCheckInsToEscalate": 1,
+  "sosHoldSeconds": 3,
+  "autoCompleteGraceMinutes": 30,
+  "moderationStrikesForReport": 3,
+  "moderationStrikeWindowHours": 24,
+  "chatMessageMaxLength": 500,
+  "chatMessagesPageSize": 200,
+  "reportsPerDay": 10,
+  "reportDetailsMaxLength": 1000,
+  "verificationSessionMinutes": 15,
+  "captureMaxDimension": 1600,
+  "captureJpegQuality": 85,
+  "voiceIntroMaxSec": 15,
+  "maxProfilePhotos": 6,
+  "displayNameMaxLength": 40,
+  "ageMinimum": 18,
+  "ageMaximum": 60,
+  "defaultAgeRangeMin": 21,
+  "defaultAgeRangeMax": 35,
+  "popularityHotThreshold": 0.7,
+  "popularityBusyThreshold": 0.4,
+  "maxTextScale": 1.15,
+  "remoteConfigFetchTimeoutSeconds": 10,
+  "remoteConfigMinimumFetchIntervalMinutes": 60,
+  "placesCellDegrees": 0.02,
+  "placesRefreshDays": 30,
+  "placesImportTimeoutSeconds": 12,
+  "defaultSlotOpenHour": 10,
+  "defaultSlotCloseHour": 22,
+  "defaultSlotCapacity": 2,
+  "venuesListLimit": 30
+}

@@ -1,0 +1,204 @@
+import { cancelBookingLogic, nearbyVenuesLogic, requestBookingLogic, venueSlotsLogic } from '../../src/handlers/booking';
+import { AppError } from '../../src/shared/errorCodes';
+import { addPerson, addVenue, connect, expectAppError, googleCaller, makeDeps, People, reset } from './helpers';
+
+// Tuesday 2026-11-10, 15:30 IST.
+const NOW = new Date('2026-11-10T10:00:00Z');
+const BANDRA = { lat: 19.0596, lng: 72.8295 };
+const ist = (hm: string) => new Date(`2026-11-10T${hm}:00+05:30`);
+
+const sql = connect();
+let people: People;
+
+const deps = () => makeDeps(sql, { discoverCallsPerMinute: 1000 }, NOW);
+const uid = (name: string) => people.uid(name);
+const caller = (name: string) => googleCaller(uid(name));
+
+async function member(name: string, opts: { gender: string; at: { lat: number; lng: number }; companion?: boolean; whoCanRequest?: string }) {
+  await addPerson(sql, {
+    uid: uid(name),
+    name,
+    gender: opts.gender,
+    at: opts.at,
+    locatedAt: NOW,
+    whoCanRequest: opts.whoCanRequest,
+    companion: opts.companion ? { planTypes: ['coffee', 'walk'], weekly: [{ weekday: 2, start: '16:00', end: '20:00' }] } : undefined,
+  });
+}
+
+async function venue(id: string, at: { lat: number; lng: number }, opts: { planTypes?: string[]; verified?: boolean; listed?: boolean } = {}) {
+  await addVenue(
+    sql,
+    { id, ownerUid: uid(`${id}_owner`), name: `Venue ${id}`, at, planTypes: opts.planTypes ?? ['coffee'], verified: opts.verified, listed: opts.listed },
+    [
+      ['15:00', '16:00'],
+      ['17:00', '18:00'],
+      ['19:30', '20:30'],
+    ].map(([start, end]) => ({ id: `20261110_${start.replace(':', '')}`, dayKey: '2026-11-10', startAt: ist(start), endAt: ist(end) })),
+  );
+}
+
+const request = (seeker: string, overrides: Record<string, string> = {}) =>
+  requestBookingLogic(deps(), caller(seeker), {
+    requestId: `req${seeker}${Object.values(overrides).join('')}xx`.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40),
+    companionUid: uid('neha'),
+    venueId: 'cafe',
+    slotId: '20261110_1700',
+    planType: 'coffee',
+    kind: 'scheduled',
+    ...overrides,
+  } as Parameters<typeof requestBookingLogic>[2]);
+
+const slot = async (venueId = 'cafe', id = '20261110_1700') =>
+  (await sql<{ booked: number; status: string; capacity: number }[]>`
+    select booked, status, capacity from venue_slots where venue_id = ${venueId} and id = ${id}`)[0];
+const balance = async (name: string) => (await sql<{ balance: number }[]>`select balance from credit_accounts where uid = ${uid(name)}`)[0].balance;
+
+beforeEach(async () => {
+  await reset(sql);
+  people = new People();
+  await member('aarav', { gender: 'man', at: BANDRA });
+  await member('kabir', { gender: 'man', at: { lat: 19.061, lng: 72.831 } });
+  await member('neha', { gender: 'woman', at: { lat: 19.062, lng: 72.833 }, companion: true });
+  await member('riya', { gender: 'woman', at: { lat: 19.055, lng: 72.827 }, companion: true, whoCanRequest: 'women' });
+  await venue('cafe', { lat: 19.0545, lng: 72.834 });
+  await venue('park', { lat: 19.065, lng: 72.823 }, { planTypes: ['walk'] });
+  await venue('pending', { lat: 19.06, lng: 72.83 }, { verified: false, listed: false });
+  await venue('powai', { lat: 19.119, lng: 72.907 });
+});
+
+describe('nearbyVenues', () => {
+  it('lists verified, listed venues within 5 km, ranked, with public coordinates', async () => {
+    const { venues } = await nearbyVenuesLogic(deps(), caller('aarav'), {});
+    expect(venues.map((v) => v.venueId).sort()).toEqual(['cafe', 'park']);
+    expect(venues.map((v) => v.rank)).toEqual([1, 2]);
+    expect(venues[0]).toEqual(expect.objectContaining({ lat: expect.any(Number), lng: expect.any(Number), perk: '10% off for FindX meetups' }));
+    expect(['hot', 'busy', 'quiet']).toContain(venues[0].popularityLabel);
+  });
+
+  it('filters by plan', async () => {
+    const { venues } = await nearbyVenuesLogic(deps(), caller('aarav'), { planType: 'walk' });
+    expect(venues.map((v) => v.venueId)).toEqual(['park']);
+  });
+
+  it('refuses a companion the seeker cannot see', async () => {
+    await expectAppError(nearbyVenuesLogic(deps(), caller('aarav'), { companionUid: uid('riya') }), 'not_found');
+  });
+});
+
+describe('venueSlots', () => {
+  it('marks past, outside-hours and available slots', async () => {
+    const { slots } = await venueSlotsLogic(deps(), caller('aarav'), { venueId: 'cafe', dayKey: '2026-11-10', companionUid: uid('neha') });
+    expect(slots.map((s) => [s.slotId, s.state])).toEqual([
+      ['20261110_1500', 'past'],
+      ['20261110_1700', 'available'],
+      ['20261110_1930', 'companion_unavailable'],
+    ]);
+  });
+
+  it('shows the companion as busy once someone books them', async () => {
+    await request('kabir');
+    const { slots } = await venueSlotsLogic(deps(), caller('aarav'), { venueId: 'cafe', dayKey: '2026-11-10', companionUid: uid('neha') });
+    expect(slots[1].state).toBe('companion_unavailable');
+  });
+
+  it('refuses venues beyond 5 km', async () => {
+    await expectAppError(venueSlotsLogic(deps(), caller('aarav'), { venueId: 'powai', dayKey: '2026-11-10', companionUid: uid('neha') }), 'not_found');
+  });
+});
+
+describe('requestBooking', () => {
+  it('charges 5 credits, reserves a table and creates the request', async () => {
+    const result = await request('aarav');
+    expect(result.balance).toBe(15);
+    const [booking] = await sql`select * from bookings where id = ${result.bookingId}`;
+    expect(booking).toMatchObject({
+      seeker_uid: uid('aarav'),
+      companion_uid: uid('neha'),
+      companion_name: 'neha',
+      venue_name: 'Venue cafe',
+      status: 'requested',
+      credit_cost: 5,
+      kind: 'scheduled',
+      participants: [uid('aarav'), uid('neha')],
+      day_key: '2026-11-10',
+    });
+    expect((await slot()).booked).toBe(1);
+    const [ledger] = await sql`select * from credit_ledger where id = ${`${result.bookingId}_charge`}`;
+    expect(ledger).toMatchObject({ uid: uid('aarav'), delta: -5, balance_after: 15, reason: 'booking' });
+  });
+
+  it('instant requests are recorded as such', async () => {
+    const result = await request('aarav', { kind: 'instant' });
+    const [ledger] = await sql`select reason from credit_ledger where id = ${`${result.bookingId}_charge`}`;
+    expect(ledger.reason).toBe('instant_request');
+  });
+
+  it('a retry with the same request id never charges twice', async () => {
+    const first = await request('aarav');
+    const second = await request('aarav');
+    expect(second).toEqual(first);
+    expect(await balance('aarav')).toBe(15);
+    expect((await slot()).booked).toBe(1);
+  });
+
+  it('two retries at the same moment still charge once', async () => {
+    const results = await Promise.all([request('aarav'), request('aarav')]);
+    expect(results[0].bookingId).toBe(results[1].bookingId);
+    expect(await balance('aarav')).toBe(15);
+    expect((await slot()).booked).toBe(1);
+  });
+
+  it('refuses when credits are short', async () => {
+    await sql`update credit_accounts set balance = 4 where uid = ${uid('aarav')}`;
+    await expectAppError(request('aarav'), 'insufficient_credits');
+    expect((await slot()).booked).toBe(0);
+  });
+
+  it('never double-books the last table, even when two people race for it', async () => {
+    await sql`update venue_slots set capacity = 1 where venue_id = 'cafe' and id = '20261110_1700'`;
+    await member('sam', { gender: 'non_binary', at: { lat: 19.063, lng: 72.832 }, companion: true });
+    const results = await Promise.allSettled([request('aarav'), request('kabir', { companionUid: uid('sam') })]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+    expect((rejected.reason as AppError).code).toBe('slot_full');
+    expect(await slot()).toMatchObject({ booked: 1, status: 'full' });
+  });
+
+  it('a companion cannot be booked twice for the same time, even in a race', async () => {
+    await sql`update venues set plan_types = '{coffee}' where id = 'park'`;
+    const results = await Promise.allSettled([request('kabir'), request('aarav', { venueId: 'park' })]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    await expectAppError(request('aarav'), 'companion_unavailable');
+  });
+
+  it("refuses outside the companion's hours, plans the venue does not offer, hidden companions and far venues", async () => {
+    await expectAppError(request('aarav', { slotId: '20261110_1930' }), 'companion_unavailable');
+    await expectAppError(request('aarav', { planType: 'walk' }), 'invalid_input');
+    await expectAppError(request('aarav', { companionUid: uid('riya') }), 'not_found');
+    await expectAppError(request('aarav', { venueId: 'powai' }), 'not_found');
+    await expectAppError(request('aarav', { venueId: 'pending' }), 'not_found');
+    await expectAppError(request('aarav', { slotId: '20261110_1500' }), 'invalid_input');
+  });
+});
+
+describe('cancelBooking', () => {
+  it('frees the table and does not refund credits', async () => {
+    await sql`update venue_slots set capacity = 1 where venue_id = 'cafe' and id = '20261110_1700'`;
+    const { bookingId } = await request('aarav');
+    expect((await slot()).status).toBe('full');
+
+    await cancelBookingLogic(deps(), caller('aarav'), { bookingId });
+    const [booking] = await sql`select status, status_reason, cancelled_by from bookings where id = ${bookingId}`;
+    expect(booking).toEqual({ status: 'cancelled', status_reason: 'seeker_cancelled', cancelled_by: uid('aarav') });
+    expect(await slot()).toMatchObject({ booked: 0, status: 'open' });
+    expect(await balance('aarav')).toBe(15);
+  });
+
+  it('only the seeker can cancel, and only once', async () => {
+    const { bookingId } = await request('aarav');
+    await expectAppError(cancelBookingLogic(deps(), caller('kabir'), { bookingId }), 'not_found');
+    await cancelBookingLogic(deps(), caller('aarav'), { bookingId });
+    await expectAppError(cancelBookingLogic(deps(), caller('aarav'), { bookingId }), 'invalid_input');
+  });
+});

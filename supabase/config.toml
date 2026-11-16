@@ -1,0 +1,17 @@
+# Supabase CLI settings for FindX. Used by `supabase link`, `supabase db push`
+# and `supabase functions deploy`. See docs/supabase-setup.md.
+project_id = "findx"
+
+[db]
+major_version = 17
+
+[auth]
+# Google is the only sign-in for members; it is switched on in the dashboard
+# (Authentication -> Sign In / Providers -> Google) with the Web client id.
+site_url = "com.findx.app://login"
+
+[functions.api]
+# The function checks the caller itself (it asks Supabase Auth about the
+# access token), so phone login can be called before sign-in.
+verify_jwt = false
+entrypoint = "./functions/api/index.ts"
