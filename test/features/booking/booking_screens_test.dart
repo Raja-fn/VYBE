@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vybe/core/router/app_router.dart';
@@ -58,16 +59,42 @@ Future<void> _go(WidgetTester tester, String location) async {
 
 void main() {
   group('Map (screen 5)', () {
-    testWidgets('lists the best spots with rank, line and legend', (tester) async {
+    testWidgets('lists the best spots with rank and line', (tester) async {
       await pumpFullApp(tester, backend: _world());
       await _go(tester, '/discover/map');
       expect(find.byType(MapScreen), findsOneWidget);
       expect(find.text('Within 5 km'), findsOneWidget);
-      expect(find.text('Hot, most meetups'), findsOneWidget);
+      expect(find.byType(FlutterMap), findsOneWidget);
       expect(find.text('Best spots to meet'), findsOneWidget);
       expect(find.text('Venue cafe'), findsOneWidget);
       expect(find.text('Cafe · 1.2 km · Hot now'), findsOneWidget);
       expect(find.text('Cafe · 3.1 km · Busy'), findsOneWidget);
+    });
+
+    testWidgets('tapping a pin shows that spot on the map; tapping the map clears it', (tester) async {
+      await pumpFullApp(tester, backend: _world());
+      await _go(tester, '/discover/map');
+      expect(find.text('Venue cafe'), findsOneWidget);
+      await tester.tapAt(tester.getCenter(find.bySemanticsLabel('1. Venue cafe')));
+      await settle(tester);
+      // Once in the selected card on the map, once in the list.
+      expect(find.text('Venue cafe'), findsNWidgets(2));
+      expect(find.bySemanticsLabel('Back to my location'), findsNothing);
+    });
+
+    testWidgets('tapping a spot in the list selects it and moves the map there', (tester) async {
+      await pumpFullApp(tester, backend: _world());
+      await _go(tester, '/discover/map');
+      await tester.tap(find.bySemanticsLabel('Back to my location'));
+      await settle(tester);
+      await tester.tap(find.text('Venue mall'));
+      await settle(tester);
+      expect(find.text('Venue mall'), findsNWidgets(2));
+      // The card on the map is only as tall as its content.
+      expect(tester.getSize(find.byType(VenueRow).first).height, lessThan(200));
+      final camera = MapCamera.of(tester.element(find.byType(MarkerLayer)));
+      expect(camera.center.latitude, closeTo(19.0596 + 2 * 0.004, 0.0001));
+      expect(camera.zoom, greaterThanOrEqualTo(14));
     });
 
     testWidgets('without a companion there is nothing to pick', (tester) async {

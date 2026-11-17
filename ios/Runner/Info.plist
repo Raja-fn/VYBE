@@ -45,8 +45,6 @@
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<key>GMSApiKey</key>
-		<string>$(MAPS_API_KEY)</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>VYBE uses your location to show verified companions and public spots near you. Other people never see your exact location.</string>
 		<key>NSCameraUsageDescription</key>

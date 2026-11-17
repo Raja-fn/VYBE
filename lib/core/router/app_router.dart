@@ -23,8 +23,6 @@ import '../../features/preferences/presentation/preferences_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/my_profile_screen.dart';
 import '../../features/verification/presentation/verification_screen.dart';
-import '../config/app_env.dart';
-import '../dev/component_gallery_screen.dart';
 import 'routes.dart';
 import 'screens/not_found_screen.dart';
 import 'screens/start_screen.dart';
@@ -33,8 +31,6 @@ part 'app_router.g.dart';
 
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
-  final env = ref.watch(appEnvProvider);
-
   // Re-run redirects whenever the session stage or consent changes.
   final refresh = ValueNotifier<int>(0);
   ref
@@ -128,8 +124,6 @@ GoRouter appRouter(Ref ref) {
           );
         },
       ),
-      if (env.isDev)
-        GoRoute(path: AppRoutes.devComponents, builder: (context, state) => const ComponentGalleryScreen()),
     ],
     errorBuilder: (context, state) => const NotFoundScreen(),
   );

@@ -1,5 +1,3 @@
-import { distanceBetween, geohashForLocation } from 'geofire-common';
-
 export interface LatLng {
   lat: number;
   lng: number;
@@ -23,9 +21,15 @@ export function snapToGrid(point: LatLng, meters: number): LatLng {
   return { lat: round6(lat), lng: round6(lng) };
 }
 
-/** Great-circle distance in km. */
+const EARTH_RADIUS_KM = 6371;
+const toRad = (degrees: number) => (degrees * Math.PI) / 180;
+
+/** Great-circle distance in km (haversine). */
 export function distanceKm(a: LatLng, b: LatLng): number {
-  return distanceBetween([a.lat, a.lng], [b.lat, b.lng]);
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
 /**
@@ -34,10 +38,6 @@ export function distanceKm(a: LatLng, b: LatLng): number {
  */
 export function roundedDistanceKm(km: number, stepKm: number): number {
   return Math.max(stepKm, Math.round(km / stepKm) * stepKm);
-}
-
-export function geohashFor(point: LatLng): string {
-  return geohashForLocation([point.lat, point.lng]);
 }
 
 function round6(value: number): number {

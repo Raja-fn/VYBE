@@ -26,6 +26,9 @@ export const appConfigSchema = z.object({
   distanceLabelStepKm: z.number().int().positive(),
   discoverCallsPerMinute: z.number().int().positive(),
   discoverPageSize: z.number().int().positive(),
+  /** Adds the made-up sample profiles to Discover. Turn off before the public launch. */
+  showSampleProfiles: z.boolean(),
+  samplePhotoBaseUrl: z.string().url(),
   maxPlausibleSpeedKmh: z.number().positive(),
   launchCity: z.object({
     name: z.string(),

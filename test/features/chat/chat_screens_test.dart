@@ -81,14 +81,16 @@ void main() {
     testWidgets('Message on Discover asks before spending a credit, then opens the chat', (tester) async {
       final backend = _world();
       await pumpFullApp(tester, backend: backend);
-      await _tap(tester, find.bySemanticsLabel('Message'));
+      await tester.tap(find.bySemanticsLabel('Message'));
+      await settle(tester);
       expect(find.text('Start a chat with Neha?'), findsOneWidget);
       expect(find.text('This uses 1 credit. Credits are not refunded.'), findsOneWidget);
 
       await _tap(tester, find.text('Cancel'));
       expect(backend.chat.started, isEmpty);
 
-      await _tap(tester, find.bySemanticsLabel('Message'));
+      await tester.tap(find.bySemanticsLabel('Message'));
+      await settle(tester);
       await _tap(tester, find.text('Start chat'));
       expect(backend.chat.started, ['neha']);
       expect(find.byType(ChatScreen), findsOneWidget);
@@ -98,7 +100,8 @@ void main() {
     testWidgets('an existing chat opens straight away without a charge', (tester) async {
       final backend = _world(withChat: true);
       await pumpFullApp(tester, backend: backend);
-      await _tap(tester, find.bySemanticsLabel('Message'));
+      await tester.tap(find.bySemanticsLabel('Message'));
+      await settle(tester);
       expect(find.text('Start a chat with Neha?'), findsNothing);
       expect(find.byType(ChatScreen), findsOneWidget);
       expect(backend.chat.started, isEmpty);
@@ -107,7 +110,8 @@ void main() {
     testWidgets('not enough credits is explained', (tester) async {
       final backend = _world()..chat.startFailure = const AppFailure(FailureKind.insufficientCredits);
       await pumpFullApp(tester, backend: backend);
-      await _tap(tester, find.bySemanticsLabel('Message'));
+      await tester.tap(find.bySemanticsLabel('Message'));
+      await settle(tester);
       await _tap(tester, find.text('Start chat'));
       expect(find.text('You do not have enough credits for this.'), findsOneWidget);
       expect(find.byType(DiscoverScreen), findsOneWidget);

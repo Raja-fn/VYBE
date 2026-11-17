@@ -19,10 +19,8 @@ class SupabaseConfigSource implements RemoteConfigSource {
 
   @override
   Future<Result<Map<String, Object?>>> fetchOverrides(Map<String, Object?> defaults) => runGuarded(() async {
-    final rows = await _tables
-        .watch('app_config', primaryKey: const ['id'], where: (column: 'id', value: 1))
-        .first
-        .timeout(timeout);
+    // One plain read: much faster at start-up than opening a live subscription.
+    final rows = await _tables.select('app_config', where: (column: 'id', value: 1)).timeout(timeout);
     final overrides = rows.isEmpty ? null : rows.first['overrides'];
     if (overrides is! Map) return const <String, Object?>{};
     return {

@@ -28,14 +28,27 @@ abstract interface class LocationService {
   Future<void> openSettings();
 }
 
+/// Reads the phone's position as fast as possible. Distances are shown to
+/// about 1 km, so a recent or coarse reading is good enough:
+/// 1. a reading from the last [_memory] (screens share it);
+/// 2. the phone's last known position, if it is recent;
+/// 3. a quick network-based fix, giving up after [_fixTimeout].
 class GeolocatorLocationService implements LocationService {
-  const GeolocatorLocationService();
+  GeolocatorLocationService({DateTime Function()? now}) : _now = now ?? DateTime.now;
 
   static const _denied = AppFailure(FailureKind.locationDenied);
-  static const _fixTimeout = Duration(seconds: 15);
+  static const _fixTimeout = Duration(seconds: 8);
+  static const _memory = Duration(minutes: 2);
+  static const _lastKnownMaxAge = Duration(minutes: 15);
+
+  final DateTime Function() _now;
+  ({DevicePosition position, DateTime at})? _latest;
 
   @override
   Future<Result<DevicePosition>> current() async {
+    final latest = _latest;
+    if (latest != null && _now().difference(latest.at) < _memory) return Ok(latest.position);
+
     if (!await Geolocator.isLocationServiceEnabled()) return const Err(_denied);
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
@@ -43,18 +56,20 @@ class GeolocatorLocationService implements LocationService {
       return const Err(_denied);
     }
     return runGuarded(() async {
-      Position? position;
-      try {
-        // Distances are shown to about 1 km, so a quick, normal-accuracy fix is enough.
-        // Indoors a precise fix can take very long; give up after [_fixTimeout].
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: _fixTimeout),
-        );
-      } on TimeoutException {
-        position = await Geolocator.getLastKnownPosition();
+      var position = await Geolocator.getLastKnownPosition();
+      if (position == null || _now().difference(position.timestamp) > _lastKnownMaxAge) {
+        try {
+          position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(accuracy: LocationAccuracy.low, timeLimit: _fixTimeout),
+          );
+        } on TimeoutException {
+          // Keep whatever older reading the phone has, if any.
+        }
       }
       if (position == null) throw const AppFailure(FailureKind.locationDenied);
-      return DevicePosition(lat: position.latitude, lng: position.longitude, accuracyM: position.accuracy);
+      final result = DevicePosition(lat: position.latitude, lng: position.longitude, accuracyM: position.accuracy);
+      _latest = (position: result, at: _now());
+      return result;
     });
   }
 
@@ -88,5 +103,5 @@ LocationService locationService(Ref ref) {
     final city = ref.watch(appConfigProvider).launchCity;
     return FixedLocationService(DevicePosition(lat: city.lat, lng: city.lng, accuracyM: 0));
   }
-  return const GeolocatorLocationService();
+  return GeolocatorLocationService();
 }

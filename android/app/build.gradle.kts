@@ -25,14 +25,6 @@ val keystoreProperties = Properties().apply {
 }
 val hasReleaseKeystore = keystoreProperties.getProperty("storeFile") != null
 
-// Google Maps key from android/local.properties (never committed):
-//   MAPS_API_KEY=AIza...
-// Without it the app draws its own simple map instead of Google Maps.
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
-}
-
 android {
     namespace = "com.vybe.app"
     compileSdk = flutter.compileSdkVersion
@@ -49,7 +41,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
     }
 
     signingConfigs {

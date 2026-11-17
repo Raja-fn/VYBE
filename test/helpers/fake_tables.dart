@@ -22,6 +22,12 @@ class FakeTables implements Tables {
   }
 
   @override
+  Future<List<Map<String, Object?>>> select(String table, {Where? where}) async => [
+    for (final row in this.table(table))
+      if (where == null || row[where.column] == where.value) Map.of(row),
+  ];
+
+  @override
   Stream<List<Map<String, Object?>>> watch(
     String table, {
     required List<String> primaryKey,

@@ -12,7 +12,6 @@
   "startLoading": "Getting things ready",
   "bootstrapErrorTitle": "VYBE could not start",
   "bootstrapNoConnection": "Check your internet connection and try again.",
-  "bootstrapNotConfigured": "This copy of the app was built without its server settings. Install a new build.",
   "commonRetry": "Try again",
   "commonBack": "Back",
   "commonLoading": "Loading",
@@ -42,14 +41,6 @@
   "notFoundAction": "Go to start",
   "badgeVerified": "Verified",
   "badgeFreeNow": "Free now",
-  "creditsPillUnit": "{count, plural, =1{credit} other{credits}}",
-  "@creditsPillUnit": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "creditsPillSemantics": "{count, plural, =1{1 credit} other{{count} credits}}. Open credits and plans",
   "@creditsPillSemantics": {
     "placeholders": {
@@ -114,7 +105,6 @@
       }
     }
   },
-  "rulesSubtitle": "Book time with verified companions for everyday plans, always at public places.",
   "rulesForTitle": "This app is for",
   "rulesFor1": "Coffee, movies, walks, dinners and events",
   "rulesFor2": "Meeting at verified public venues only",
@@ -263,7 +253,6 @@
   "navChats": "Chats",
   "navBookings": "Bookings",
   "navProfile": "Profile",
-  "discoverPlanQuestion": "What is the plan?",
   "discoverShowing": "Showing: {who}",
   "@discoverShowing": {
     "placeholders": {
@@ -409,7 +398,6 @@
   "profileNewRating": "New",
   "profileChat": "Chat",
   "profileBookSpot": "Book your spot",
-  "profileVerifiedAge": "Verified age",
   "myProfileTitle": "Your profile",
   "myProfileName": "First name",
   "myProfileNameHint": "How companions will see you",
@@ -451,9 +439,6 @@
       }
     }
   },
-  "mapLegendHot": "Hot, most meetups",
-  "mapLegendBusy": "Busy",
-  "mapLegendQuiet": "Quiet",
   "mapBestSpots": "Best spots to meet",
   "mapToday": "Today",
   "mapPick": "Pick",
@@ -667,27 +652,6 @@
       }
     }
   },
-  "devGalleryTitle": "Component gallery",
-  "devGalleryOpen": "Open component gallery",
-  "devGallerySectionButtons": "Buttons",
-  "devGallerySectionChips": "Chips and tags",
-  "devGallerySectionCards": "Cards",
-  "devGallerySectionBadges": "Badges and stats",
-  "devGallerySectionSteps": "Steps",
-  "devGallerySectionStates": "Screen states",
-  "devGalleryPrimary": "Primary action",
-  "devGalleryOutline": "Secondary action",
-  "devGalleryGold": "Gold action",
-  "devGallerySuccess": "Success action",
-  "devGalleryDisabled": "Disabled action",
-  "devGalleryCardTitle": "Card title",
-  "devGalleryCardBody": "Cards use a 22 radius and a 1px border.",
-  "devGalleryDarkCardBody": "Dark cards highlight one key action.",
-  "devGallerySampleName": "Name",
-  "devGallerySampleRating": "4.8",
-  "devGallerySampleCount": "32",
-  "devGallerySwitchTitle": "Switch row",
-  "devGallerySwitchSubtitle": "Used for settings that turn on or off.",
   "creditsTitle": "Get more credits",
   "creditsSubtitle": "Unlock chats and bookings.",
   "planFree": "Free",
@@ -938,7 +902,6 @@
     }
   },
   "editProfileSave": "Save",
-  "editProfileSaved": "Saved",
   "editProfileClear": "Clear",
   "editProfileSelectedMore": "{first} + {count} more",
   "@editProfileSelectedMore": {
@@ -971,5 +934,11 @@
       }
     }
   },
-  "feedEndBody": "Pull down to refresh, or try another plan."
+  "feedEndBody": "New people join every day. Try another plan or check back soon.",
+  "mapRecenter": "Back to my location",
+  "sampleProfileTag": "Sample",
+  "sampleProfileNotice": "This is a sample profile. Real members near you will appear here as people join.",
+  "reelProfile": "Profile",
+  "reelSaved": "Saved",
+  "reelStartAgain": "Start again"
 }

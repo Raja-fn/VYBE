@@ -11,23 +11,23 @@ import 'core/config/app_config.dart';
 import 'core/config/app_config_repository.dart';
 import 'core/config/app_env.dart';
 import 'core/config/remote_config_source.dart';
+import 'core/splash/splash_gate.dart';
 import 'core/utils/result.dart';
 
-/// Shared start-up for every entry point.
+/// Shared start-up for every entry point: the animated splash plays while
+/// the app connects, then opens onto the app (or the error screen).
 Future<void> bootstrap(AppEnv env) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _connect(env);
+  _show(env);
 }
 
-/// Never leaves the person on the splash screen: any start-up failure shows
+void _show(AppEnv env) => runApp(SplashGate(app: _prepare(env)));
+
+/// Never leaves the person on the splash screen: any start-up failure gives
 /// the error screen with "Try again".
-Future<void> _connect(AppEnv env) async {
+Future<Widget> _prepare(AppEnv env) async {
+  void retry() => _show(env);
   final backend = BackendConfig.forEnv(env);
-  if (!backend.isComplete) {
-    debugPrint('VYBE start-up failed: this production build has no Supabase settings.');
-    runApp(BootstrapErrorApp(onRetry: () => _connect(env), notConfigured: true));
-    return;
-  }
   try {
     if (!_backendReady) {
       await initBackend(backend).timeout(const Duration(seconds: 20));
@@ -35,28 +35,19 @@ Future<void> _connect(AppEnv env) async {
     }
   } on Object catch (error) {
     debugPrint('VYBE start-up failed: $error');
-    runApp(BootstrapErrorApp(onRetry: () => _connect(env)));
-    return;
+    return BootstrapErrorApp(onRetry: retry);
   }
-  await _start(env);
+
+  final remote = SupabaseConfigSource(SupabaseTables(Supabase.instance.client));
+  final config = await AppConfigRepository(bundle: rootBundle, remote: remote).load();
+  return switch (config) {
+    Ok(:final value) => ProviderScope(
+      retry: noAutomaticRetry,
+      overrides: [appEnvProvider.overrideWithValue(env), appConfigProvider.overrideWithValue(value)],
+      child: const VybeApp(),
+    ),
+    Err() => BootstrapErrorApp(onRetry: retry),
+  };
 }
 
 bool _backendReady = false;
-
-Future<void> _start(AppEnv env) async {
-  final remote = SupabaseConfigSource(SupabaseTables(Supabase.instance.client));
-  final config = await AppConfigRepository(bundle: rootBundle, remote: remote).load();
-
-  switch (config) {
-    case Ok(:final value):
-      runApp(
-        ProviderScope(
-          retry: noAutomaticRetry,
-          overrides: [appEnvProvider.overrideWithValue(env), appConfigProvider.overrideWithValue(value)],
-          child: const VybeApp(),
-        ),
-      );
-    case Err():
-      runApp(BootstrapErrorApp(onRetry: () => _start(env)));
-  }
-}

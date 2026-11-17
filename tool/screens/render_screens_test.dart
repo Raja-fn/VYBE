@@ -4,6 +4,7 @@
 //   flutter test tool/screens/render_screens_test.dart --update-goldens
 //
 // Images land in tool/screens/out/ (git-ignored).
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vybe/core/router/routes.dart';
+import 'package:vybe/core/splash/splash_gate.dart';
 import 'package:vybe/features/booking/domain/booking_models.dart';
 import 'package:vybe/features/chat/domain/chat_models.dart';
 import 'package:vybe/features/onboarding/domain/session_stage.dart';
@@ -87,6 +89,25 @@ Future<void> _shoot(WidgetTester tester, String name, TestBackend backend, {Stri
 
 void main() {
   setUpAll(_loadFonts);
+
+  testWidgets('splash frames', (tester) async {
+    tester.view.physicalSize = phoneSize * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    final app = Completer<Widget>();
+    await tester.pumpWidget(SplashGate(app: app.future));
+    var elapsed = 0;
+    for (final (ms, name) in [(150, 'a_settle'), (500, 'b_slide'), (850, 'c_letters'), (1550, 'd_lockup')]) {
+      await tester.pump(Duration(milliseconds: ms - elapsed));
+      elapsed = ms;
+      await expectLater(find.byType(SplashGate), matchesGoldenFile('out/00_splash_$name.png'));
+    }
+    app.complete(const ColoredBox(color: Color(0xFF26262E)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await expectLater(find.byType(Directionality).first, matchesGoldenFile('out/00_splash_e_reveal.png'));
+    await tester.pump(const Duration(seconds: 1));
+  });
 
   testWidgets('rules', (tester) async {
     await _shoot(tester, '01_rules', TestBackend(auth: FakeAuthRepository()));

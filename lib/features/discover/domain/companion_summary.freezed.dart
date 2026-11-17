@@ -550,7 +550,9 @@ mixin _$CompanionSummary {
  String get uid; String get displayName; int get ageYears; List<String> get photoPaths; String get about; List<String> get activityTags; List<String> get planTypes; int get ratingCount; int get meetupCount; int get distanceKm; int get spotsNearby;/// Only when the companion chose to show it.
  String? get gender; PromptAnswer? get prompt; VoiceIntro? get voiceIntro; double? get ratingAvg; DateTime? get freeNowUntil;/// The free window for "Tonight" / "Tomorrow" in Free right now.
  DateTime? get freeFrom; DateTime? get freeUntil;/// City, languages, interests, lifestyle and personality, when filled in.
- ProfileDetails get details;
+ ProfileDetails get details;/// A made-up sample profile shown while VYBE has few members. Not a real
+/// person: it cannot be messaged, saved or booked.
+ bool get isSample;
 /// Create a copy of CompanionSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -563,16 +565,16 @@ $CompanionSummaryCopyWith<CompanionSummary> get copyWith => _$CompanionSummaryCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompanionSummary&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.ageYears, ageYears) || other.ageYears == ageYears)&&const DeepCollectionEquality().equals(other.photoPaths, photoPaths)&&(identical(other.about, about) || other.about == about)&&const DeepCollectionEquality().equals(other.activityTags, activityTags)&&const DeepCollectionEquality().equals(other.planTypes, planTypes)&&(identical(other.ratingCount, ratingCount) || other.ratingCount == ratingCount)&&(identical(other.meetupCount, meetupCount) || other.meetupCount == meetupCount)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.spotsNearby, spotsNearby) || other.spotsNearby == spotsNearby)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.prompt, prompt) || other.prompt == prompt)&&(identical(other.voiceIntro, voiceIntro) || other.voiceIntro == voiceIntro)&&(identical(other.ratingAvg, ratingAvg) || other.ratingAvg == ratingAvg)&&(identical(other.freeNowUntil, freeNowUntil) || other.freeNowUntil == freeNowUntil)&&(identical(other.freeFrom, freeFrom) || other.freeFrom == freeFrom)&&(identical(other.freeUntil, freeUntil) || other.freeUntil == freeUntil)&&(identical(other.details, details) || other.details == details));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompanionSummary&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.ageYears, ageYears) || other.ageYears == ageYears)&&const DeepCollectionEquality().equals(other.photoPaths, photoPaths)&&(identical(other.about, about) || other.about == about)&&const DeepCollectionEquality().equals(other.activityTags, activityTags)&&const DeepCollectionEquality().equals(other.planTypes, planTypes)&&(identical(other.ratingCount, ratingCount) || other.ratingCount == ratingCount)&&(identical(other.meetupCount, meetupCount) || other.meetupCount == meetupCount)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.spotsNearby, spotsNearby) || other.spotsNearby == spotsNearby)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.prompt, prompt) || other.prompt == prompt)&&(identical(other.voiceIntro, voiceIntro) || other.voiceIntro == voiceIntro)&&(identical(other.ratingAvg, ratingAvg) || other.ratingAvg == ratingAvg)&&(identical(other.freeNowUntil, freeNowUntil) || other.freeNowUntil == freeNowUntil)&&(identical(other.freeFrom, freeFrom) || other.freeFrom == freeFrom)&&(identical(other.freeUntil, freeUntil) || other.freeUntil == freeUntil)&&(identical(other.details, details) || other.details == details)&&(identical(other.isSample, isSample) || other.isSample == isSample));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,uid,displayName,ageYears,const DeepCollectionEquality().hash(photoPaths),about,const DeepCollectionEquality().hash(activityTags),const DeepCollectionEquality().hash(planTypes),ratingCount,meetupCount,distanceKm,spotsNearby,gender,prompt,voiceIntro,ratingAvg,freeNowUntil,freeFrom,freeUntil,details]);
+int get hashCode => Object.hashAll([runtimeType,uid,displayName,ageYears,const DeepCollectionEquality().hash(photoPaths),about,const DeepCollectionEquality().hash(activityTags),const DeepCollectionEquality().hash(planTypes),ratingCount,meetupCount,distanceKm,spotsNearby,gender,prompt,voiceIntro,ratingAvg,freeNowUntil,freeFrom,freeUntil,details,isSample]);
 
 @override
 String toString() {
-  return 'CompanionSummary(uid: $uid, displayName: $displayName, ageYears: $ageYears, photoPaths: $photoPaths, about: $about, activityTags: $activityTags, planTypes: $planTypes, ratingCount: $ratingCount, meetupCount: $meetupCount, distanceKm: $distanceKm, spotsNearby: $spotsNearby, gender: $gender, prompt: $prompt, voiceIntro: $voiceIntro, ratingAvg: $ratingAvg, freeNowUntil: $freeNowUntil, freeFrom: $freeFrom, freeUntil: $freeUntil, details: $details)';
+  return 'CompanionSummary(uid: $uid, displayName: $displayName, ageYears: $ageYears, photoPaths: $photoPaths, about: $about, activityTags: $activityTags, planTypes: $planTypes, ratingCount: $ratingCount, meetupCount: $meetupCount, distanceKm: $distanceKm, spotsNearby: $spotsNearby, gender: $gender, prompt: $prompt, voiceIntro: $voiceIntro, ratingAvg: $ratingAvg, freeNowUntil: $freeNowUntil, freeFrom: $freeFrom, freeUntil: $freeUntil, details: $details, isSample: $isSample)';
 }
 
 
@@ -583,7 +585,7 @@ abstract mixin class $CompanionSummaryCopyWith<$Res>  {
   factory $CompanionSummaryCopyWith(CompanionSummary value, $Res Function(CompanionSummary) _then) = _$CompanionSummaryCopyWithImpl;
 @useResult
 $Res call({
- String uid, String displayName, int ageYears, List<String> photoPaths, String about, List<String> activityTags, List<String> planTypes, int ratingCount, int meetupCount, int distanceKm, int spotsNearby, String? gender, PromptAnswer? prompt, VoiceIntro? voiceIntro, double? ratingAvg, DateTime? freeNowUntil, DateTime? freeFrom, DateTime? freeUntil, ProfileDetails details
+ String uid, String displayName, int ageYears, List<String> photoPaths, String about, List<String> activityTags, List<String> planTypes, int ratingCount, int meetupCount, int distanceKm, int spotsNearby, String? gender, PromptAnswer? prompt, VoiceIntro? voiceIntro, double? ratingAvg, DateTime? freeNowUntil, DateTime? freeFrom, DateTime? freeUntil, ProfileDetails details, bool isSample
 });
 
 
@@ -600,7 +602,7 @@ class _$CompanionSummaryCopyWithImpl<$Res>
 
 /// Create a copy of CompanionSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? displayName = null,Object? ageYears = null,Object? photoPaths = null,Object? about = null,Object? activityTags = null,Object? planTypes = null,Object? ratingCount = null,Object? meetupCount = null,Object? distanceKm = null,Object? spotsNearby = null,Object? gender = freezed,Object? prompt = freezed,Object? voiceIntro = freezed,Object? ratingAvg = freezed,Object? freeNowUntil = freezed,Object? freeFrom = freezed,Object? freeUntil = freezed,Object? details = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? uid = null,Object? displayName = null,Object? ageYears = null,Object? photoPaths = null,Object? about = null,Object? activityTags = null,Object? planTypes = null,Object? ratingCount = null,Object? meetupCount = null,Object? distanceKm = null,Object? spotsNearby = null,Object? gender = freezed,Object? prompt = freezed,Object? voiceIntro = freezed,Object? ratingAvg = freezed,Object? freeNowUntil = freezed,Object? freeFrom = freezed,Object? freeUntil = freezed,Object? details = null,Object? isSample = null,}) {
   return _then(_self.copyWith(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -621,7 +623,8 @@ as double?,freeNowUntil: freezed == freeNowUntil ? _self.freeNowUntil : freeNowU
 as DateTime?,freeFrom: freezed == freeFrom ? _self.freeFrom : freeFrom // ignore: cast_nullable_to_non_nullable
 as DateTime?,freeUntil: freezed == freeUntil ? _self.freeUntil : freeUntil // ignore: cast_nullable_to_non_nullable
 as DateTime?,details: null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
-as ProfileDetails,
+as ProfileDetails,isSample: null == isSample ? _self.isSample : isSample // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of CompanionSummary
@@ -739,10 +742,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details,  bool isSample)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CompanionSummary() when $default != null:
-return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details);case _:
+return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details,_that.isSample);case _:
   return orElse();
 
 }
@@ -760,10 +763,10 @@ return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details,  bool isSample)  $default,) {final _that = this;
 switch (_that) {
 case _CompanionSummary():
-return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details);case _:
+return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details,_that.isSample);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -780,10 +783,10 @@ return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String uid,  String displayName,  int ageYears,  List<String> photoPaths,  String about,  List<String> activityTags,  List<String> planTypes,  int ratingCount,  int meetupCount,  int distanceKm,  int spotsNearby,  String? gender,  PromptAnswer? prompt,  VoiceIntro? voiceIntro,  double? ratingAvg,  DateTime? freeNowUntil,  DateTime? freeFrom,  DateTime? freeUntil,  ProfileDetails details,  bool isSample)?  $default,) {final _that = this;
 switch (_that) {
 case _CompanionSummary() when $default != null:
-return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details);case _:
+return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_that.about,_that.activityTags,_that.planTypes,_that.ratingCount,_that.meetupCount,_that.distanceKm,_that.spotsNearby,_that.gender,_that.prompt,_that.voiceIntro,_that.ratingAvg,_that.freeNowUntil,_that.freeFrom,_that.freeUntil,_that.details,_that.isSample);case _:
   return null;
 
 }
@@ -795,7 +798,7 @@ return $default(_that.uid,_that.displayName,_that.ageYears,_that.photoPaths,_tha
 @JsonSerializable()
 
 class _CompanionSummary implements CompanionSummary {
-  const _CompanionSummary({required this.uid, required this.displayName, required this.ageYears, required final  List<String> photoPaths, required this.about, required final  List<String> activityTags, required final  List<String> planTypes, required this.ratingCount, required this.meetupCount, required this.distanceKm, required this.spotsNearby, this.gender, this.prompt, this.voiceIntro, this.ratingAvg, this.freeNowUntil, this.freeFrom, this.freeUntil, this.details = ProfileDetails.empty}): _photoPaths = photoPaths,_activityTags = activityTags,_planTypes = planTypes;
+  const _CompanionSummary({required this.uid, required this.displayName, required this.ageYears, required final  List<String> photoPaths, required this.about, required final  List<String> activityTags, required final  List<String> planTypes, required this.ratingCount, required this.meetupCount, required this.distanceKm, required this.spotsNearby, this.gender, this.prompt, this.voiceIntro, this.ratingAvg, this.freeNowUntil, this.freeFrom, this.freeUntil, this.details = ProfileDetails.empty, this.isSample = false}): _photoPaths = photoPaths,_activityTags = activityTags,_planTypes = planTypes;
   factory _CompanionSummary.fromJson(Map<String, dynamic> json) => _$CompanionSummaryFromJson(json);
 
 @override final  String uid;
@@ -838,6 +841,9 @@ class _CompanionSummary implements CompanionSummary {
 @override final  DateTime? freeUntil;
 /// City, languages, interests, lifestyle and personality, when filled in.
 @override@JsonKey() final  ProfileDetails details;
+/// A made-up sample profile shown while VYBE has few members. Not a real
+/// person: it cannot be messaged, saved or booked.
+@override@JsonKey() final  bool isSample;
 
 /// Create a copy of CompanionSummary
 /// with the given fields replaced by the non-null parameter values.
@@ -852,16 +858,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompanionSummary&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.ageYears, ageYears) || other.ageYears == ageYears)&&const DeepCollectionEquality().equals(other._photoPaths, _photoPaths)&&(identical(other.about, about) || other.about == about)&&const DeepCollectionEquality().equals(other._activityTags, _activityTags)&&const DeepCollectionEquality().equals(other._planTypes, _planTypes)&&(identical(other.ratingCount, ratingCount) || other.ratingCount == ratingCount)&&(identical(other.meetupCount, meetupCount) || other.meetupCount == meetupCount)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.spotsNearby, spotsNearby) || other.spotsNearby == spotsNearby)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.prompt, prompt) || other.prompt == prompt)&&(identical(other.voiceIntro, voiceIntro) || other.voiceIntro == voiceIntro)&&(identical(other.ratingAvg, ratingAvg) || other.ratingAvg == ratingAvg)&&(identical(other.freeNowUntil, freeNowUntil) || other.freeNowUntil == freeNowUntil)&&(identical(other.freeFrom, freeFrom) || other.freeFrom == freeFrom)&&(identical(other.freeUntil, freeUntil) || other.freeUntil == freeUntil)&&(identical(other.details, details) || other.details == details));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompanionSummary&&(identical(other.uid, uid) || other.uid == uid)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.ageYears, ageYears) || other.ageYears == ageYears)&&const DeepCollectionEquality().equals(other._photoPaths, _photoPaths)&&(identical(other.about, about) || other.about == about)&&const DeepCollectionEquality().equals(other._activityTags, _activityTags)&&const DeepCollectionEquality().equals(other._planTypes, _planTypes)&&(identical(other.ratingCount, ratingCount) || other.ratingCount == ratingCount)&&(identical(other.meetupCount, meetupCount) || other.meetupCount == meetupCount)&&(identical(other.distanceKm, distanceKm) || other.distanceKm == distanceKm)&&(identical(other.spotsNearby, spotsNearby) || other.spotsNearby == spotsNearby)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.prompt, prompt) || other.prompt == prompt)&&(identical(other.voiceIntro, voiceIntro) || other.voiceIntro == voiceIntro)&&(identical(other.ratingAvg, ratingAvg) || other.ratingAvg == ratingAvg)&&(identical(other.freeNowUntil, freeNowUntil) || other.freeNowUntil == freeNowUntil)&&(identical(other.freeFrom, freeFrom) || other.freeFrom == freeFrom)&&(identical(other.freeUntil, freeUntil) || other.freeUntil == freeUntil)&&(identical(other.details, details) || other.details == details)&&(identical(other.isSample, isSample) || other.isSample == isSample));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,uid,displayName,ageYears,const DeepCollectionEquality().hash(_photoPaths),about,const DeepCollectionEquality().hash(_activityTags),const DeepCollectionEquality().hash(_planTypes),ratingCount,meetupCount,distanceKm,spotsNearby,gender,prompt,voiceIntro,ratingAvg,freeNowUntil,freeFrom,freeUntil,details]);
+int get hashCode => Object.hashAll([runtimeType,uid,displayName,ageYears,const DeepCollectionEquality().hash(_photoPaths),about,const DeepCollectionEquality().hash(_activityTags),const DeepCollectionEquality().hash(_planTypes),ratingCount,meetupCount,distanceKm,spotsNearby,gender,prompt,voiceIntro,ratingAvg,freeNowUntil,freeFrom,freeUntil,details,isSample]);
 
 @override
 String toString() {
-  return 'CompanionSummary(uid: $uid, displayName: $displayName, ageYears: $ageYears, photoPaths: $photoPaths, about: $about, activityTags: $activityTags, planTypes: $planTypes, ratingCount: $ratingCount, meetupCount: $meetupCount, distanceKm: $distanceKm, spotsNearby: $spotsNearby, gender: $gender, prompt: $prompt, voiceIntro: $voiceIntro, ratingAvg: $ratingAvg, freeNowUntil: $freeNowUntil, freeFrom: $freeFrom, freeUntil: $freeUntil, details: $details)';
+  return 'CompanionSummary(uid: $uid, displayName: $displayName, ageYears: $ageYears, photoPaths: $photoPaths, about: $about, activityTags: $activityTags, planTypes: $planTypes, ratingCount: $ratingCount, meetupCount: $meetupCount, distanceKm: $distanceKm, spotsNearby: $spotsNearby, gender: $gender, prompt: $prompt, voiceIntro: $voiceIntro, ratingAvg: $ratingAvg, freeNowUntil: $freeNowUntil, freeFrom: $freeFrom, freeUntil: $freeUntil, details: $details, isSample: $isSample)';
 }
 
 
@@ -872,7 +878,7 @@ abstract mixin class _$CompanionSummaryCopyWith<$Res> implements $CompanionSumma
   factory _$CompanionSummaryCopyWith(_CompanionSummary value, $Res Function(_CompanionSummary) _then) = __$CompanionSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String uid, String displayName, int ageYears, List<String> photoPaths, String about, List<String> activityTags, List<String> planTypes, int ratingCount, int meetupCount, int distanceKm, int spotsNearby, String? gender, PromptAnswer? prompt, VoiceIntro? voiceIntro, double? ratingAvg, DateTime? freeNowUntil, DateTime? freeFrom, DateTime? freeUntil, ProfileDetails details
+ String uid, String displayName, int ageYears, List<String> photoPaths, String about, List<String> activityTags, List<String> planTypes, int ratingCount, int meetupCount, int distanceKm, int spotsNearby, String? gender, PromptAnswer? prompt, VoiceIntro? voiceIntro, double? ratingAvg, DateTime? freeNowUntil, DateTime? freeFrom, DateTime? freeUntil, ProfileDetails details, bool isSample
 });
 
 
@@ -889,7 +895,7 @@ class __$CompanionSummaryCopyWithImpl<$Res>
 
 /// Create a copy of CompanionSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? displayName = null,Object? ageYears = null,Object? photoPaths = null,Object? about = null,Object? activityTags = null,Object? planTypes = null,Object? ratingCount = null,Object? meetupCount = null,Object? distanceKm = null,Object? spotsNearby = null,Object? gender = freezed,Object? prompt = freezed,Object? voiceIntro = freezed,Object? ratingAvg = freezed,Object? freeNowUntil = freezed,Object? freeFrom = freezed,Object? freeUntil = freezed,Object? details = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? uid = null,Object? displayName = null,Object? ageYears = null,Object? photoPaths = null,Object? about = null,Object? activityTags = null,Object? planTypes = null,Object? ratingCount = null,Object? meetupCount = null,Object? distanceKm = null,Object? spotsNearby = null,Object? gender = freezed,Object? prompt = freezed,Object? voiceIntro = freezed,Object? ratingAvg = freezed,Object? freeNowUntil = freezed,Object? freeFrom = freezed,Object? freeUntil = freezed,Object? details = null,Object? isSample = null,}) {
   return _then(_CompanionSummary(
 uid: null == uid ? _self.uid : uid // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
@@ -910,7 +916,8 @@ as double?,freeNowUntil: freezed == freeNowUntil ? _self.freeNowUntil : freeNowU
 as DateTime?,freeFrom: freezed == freeFrom ? _self.freeFrom : freeFrom // ignore: cast_nullable_to_non_nullable
 as DateTime?,freeUntil: freezed == freeUntil ? _self.freeUntil : freeUntil // ignore: cast_nullable_to_non_nullable
 as DateTime?,details: null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
-as ProfileDetails,
+as ProfileDetails,isSample: null == isSample ? _self.isSample : isSample // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

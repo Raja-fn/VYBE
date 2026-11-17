@@ -11,8 +11,6 @@ String? onboardingRedirect({
   required bool consentGiven,
   required String location,
 }) {
-  if (location == AppRoutes.devComponents) return null;
-
   if (stage.hasError) return location == AppRoutes.start ? null : AppRoutes.start;
   if (!stage.hasValue) return null;
 

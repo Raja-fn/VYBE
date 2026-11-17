@@ -17,6 +17,9 @@ abstract interface class Tables {
     int? limit,
   });
 
+  /// The matching rows, read once (one quick request, no live updates).
+  Future<List<Map<String, Object?>>> select(String table, {Where? where});
+
   /// Inserts the row, or updates it when its primary key already exists.
   /// With [ignoreDuplicates], an existing row is left as it is.
   Future<void> upsert(String table, Map<String, Object?> row, {bool ignoreDuplicates = false});
@@ -49,6 +52,13 @@ class SupabaseTables implements Tables {
     if (orderBy != null) query = query.order(orderBy, ascending: !descending);
     if (limit != null) query = query.limit(limit);
     return query.map((rows) => [for (final row in rows) row.cast<String, Object?>()]);
+  }
+
+  @override
+  Future<List<Map<String, Object?>>> select(String table, {Where? where}) async {
+    final base = _client.from(table).select();
+    final rows = await (where == null ? base : base.eq(where.column, where.value));
+    return [for (final row in rows) row.cast<String, Object?>()];
   }
 
   @override

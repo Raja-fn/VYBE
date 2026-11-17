@@ -51,12 +51,8 @@ abstract final class AppColors {
 
   /// Tinted wells behind icons: safety (green), place (coral), people (violet).
   static const successWell = Color(0xFF1C3A2E);
-  static const accentWell = Color(0xFF3A221D);
   static const violetWell = Color(0xFF2A2640);
 
-  /// Highlighted cards: "You are free now" (green), the chosen plan (coral),
-  /// "Request instantly" (violet).
-  static const successCard = Color(0xFF16261F);
   static const accentCard = Color(0xFF2C1B18);
   static const violetCard = Color(0xFF221F38);
 
@@ -67,7 +63,6 @@ abstract final class AppColors {
   static const photoBlobDeep = Color(0xFF221D4F);
   static const photoBlobLight = Color(0xFFC4BBFA);
   static const photoInitial = Color(0xFF221D4F);
-  static const sosHalo = Color(0xFF3A1E20);
   static const mapUserDot = violet;
   static const mapLand = Color(0xFF15151B);
   static const mapRoad = Color(0xFF2A2A33);

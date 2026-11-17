@@ -22,16 +22,31 @@ import '../domain/companion_summary.dart';
 import 'discover_controller.dart';
 import 'discover_providers.dart';
 import 'widgets/discovery_state_view.dart';
-import 'widgets/feed_post.dart';
 import 'widgets/labels.dart';
+import 'widgets/reel_view.dart';
 
-/// Screen 4: plan chips, then a scrolling feed of people (photos, details,
-/// Message / Save). Scrolling past someone is the skip.
-class DiscoverScreen extends ConsumerWidget {
+/// Screen 4: Discover as reels. A top bar (title, Free now, Map, credits)
+/// and the plan chips sit above the reels; each person is one rounded card
+/// filling the rest. Swipe up for the next person; tap the sides of a photo to
+/// see their other photos.
+class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
+}
+
+class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
+  final _pages = PageController();
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final textTheme = Theme.of(context).textTheme;
     final state = ref.watch(discoverControllerProvider);
@@ -45,172 +60,115 @@ class DiscoverScreen extends ConsumerWidget {
     final needsName = account != null && (account.displayName?.trim().isEmpty ?? true);
     final people = results.value;
 
-    const gutter = EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.md, AppSpacing.screenGutter, 0);
+    void selectPlan(PlanType plan) {
+      controller.selectPlan(plan);
+      if (_pages.hasClients) _pages.jumpToPage(0);
+    }
+
+    Future<void> startAgain() async {
+      if (_pages.hasClients) {
+        await _pages.animateToPage(0, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
+      }
+      ref.invalidate(discoverResultsProvider(state.plan));
+    }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!online) const OfflineBanner(),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () => ref.refresh(discoverResultsProvider(state.plan).future),
-                child: CustomScrollView(
-                  // Photos of the next few people load before they scroll into view.
-                  cacheExtent: MediaQuery.sizeOf(context).height * 1.5,
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: gutter,
-                        // Wraps onto two lines on narrow phones with large text.
-                        child: Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: AppSpacing.xs,
-                          runSpacing: AppSpacing.xs,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  l10n.appName.toUpperCase(),
-                                  style: textTheme.labelMedium?.copyWith(color: AppColors.accent),
-                                ),
-                                Semantics(header: true, child: Text(l10n.navDiscover, style: textTheme.headlineLarge)),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: AppSpacing.xs,
-                              runSpacing: AppSpacing.xs,
-                              children: [
-                                AppRoundIconButton(
-                                  label: l10n.discoverMap,
-                                  icon: Icons.place_outlined,
-                                  onPressed: () => context.go(AppRoutes.discoverMap(plan: state.plan)),
-                                ),
-                                CreditsPill(credits: credits, onPressed: () => context.push(AppRoutes.credits)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (needsName)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: gutter,
-                          child: _NameBanner(onAdd: () => context.go(AppRoutes.profile)),
-                        ),
-                      ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: gutter,
-                        child: Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          runSpacing: AppSpacing.xxs,
-                          children: [
-                            Text(
-                              l10n.discoverPlanQuestion,
-                              style: textTheme.labelMedium?.copyWith(color: AppColors.muted),
-                            ),
-                            if (showMe != null)
-                              Text(
-                                l10n.discoverShowing(_showMeLabel(l10n, showMe)),
-                                style: textTheme.labelMedium?.copyWith(color: AppColors.accentText),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: AppSizes.minTouchTarget + AppSpacing.md,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          padding: AppSpacing.screenPadding,
-                          itemCount: PlanType.values.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
-                          itemBuilder: (context, i) {
-                            final plan = PlanType.values[i];
-                            return Center(
-                              child: AppChoiceChip(
-                                label: planLabel(l10n, plan),
-                                selected: plan == state.plan,
-                                onSelected: () => controller.selectPlan(plan),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                          child: TextButton.icon(
-                            onPressed: () => context.go(AppRoutes.freeNow),
-                            icon: const Icon(Icons.bolt, size: AppSizes.iconSmall),
-                            label: Text(l10n.discoverFreeNowLink),
+            // Top bar: title and the three round actions.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.sm, AppSpacing.md, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Semantics(header: true, child: Text(l10n.navDiscover, style: textTheme.headlineMedium)),
+                        if (showMe != null)
+                          Text(
+                            l10n.discoverShowing(_showMeLabel(l10n, showMe)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.labelMedium?.copyWith(color: AppColors.muted),
                           ),
-                        ),
-                      ),
+                      ],
                     ),
-                    if (people != null && people.isNotEmpty) ...[
-                      SliverList.separated(
-                        itemCount: people.length,
-                        separatorBuilder: (_, _) => const Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                          child: Divider(height: 1),
-                        ),
-                        itemBuilder: (context, i) => _Post(companion: people[i]),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.screenGutter,
-                            AppSpacing.xl,
-                            AppSpacing.screenGutter,
-                            AppSpacing.xxl,
-                          ),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.done_all_outlined, color: AppColors.muted, size: AppSizes.iconLarge),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                l10n.discoverAllSeenTitle,
-                                style: textTheme.titleMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                              Text(
-                                l10n.feedEndBody,
-                                textAlign: TextAlign.center,
-                                style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ] else
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(minHeight: AppSizes.stateViewHeight),
-                          child: DiscoveryStateView<List<CompanionSummary>>(
-                            value: results,
-                            onRetry: () => ref.invalidate(discoverResultsProvider(state.plan)),
-                            isEmpty: (all) => all.isEmpty,
-                            emptyTitle: l10n.discoverEmptyTitle,
-                            emptyMessage: l10n.discoverEmptyBody,
-                            builder: (context, _) => const SizedBox.shrink(),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                  AppRoundIconButton(
+                    label: l10n.discoverFreeNowLink,
+                    icon: Icons.bolt_rounded,
+                    onPressed: () => context.go(AppRoutes.freeNow),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  AppRoundIconButton(
+                    label: l10n.discoverMap,
+                    icon: Icons.place_outlined,
+                    onPressed: () => context.go(AppRoutes.discoverMap(plan: state.plan)),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  CreditsPill(credits: credits, onPressed: () => context.push(AppRoutes.credits)),
+                ],
               ),
+            ),
+            if (needsName)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.sm, AppSpacing.screenGutter, 0),
+                child: _NameBanner(onAdd: () => context.go(AppRoutes.profile)),
+              ),
+            // Plan chips.
+            SizedBox(
+              height: AppSizes.minTouchTarget + AppSpacing.md,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenGutter),
+                itemCount: PlanType.values.length,
+                separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
+                itemBuilder: (context, i) {
+                  final plan = PlanType.values[i];
+                  return Center(
+                    child: AppChoiceChip(
+                      label: planLabel(l10n, plan),
+                      selected: plan == state.plan,
+                      onSelected: () => selectPlan(plan),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // The reels: one rounded card per person, below the controls.
+            Expanded(
+              child: people != null && people.isNotEmpty
+                  ? PageView.builder(
+                      key: ValueKey(state.plan),
+                      controller: _pages,
+                      scrollDirection: Axis.vertical,
+                      itemCount: people.length + 1,
+                      itemBuilder: (context, i) => Padding(
+                        // A small gap between cards shows while swiping.
+                        padding: const EdgeInsets.fromLTRB(AppSpacing.xs, 0, AppSpacing.xs, AppSpacing.sm),
+                        child: i < people.length
+                            ? ClipRRect(
+                                borderRadius: AppRadii.cardBorder,
+                                child: _Post(companion: people[i]),
+                              )
+                            : _EndOfReels(onStartAgain: startAgain),
+                      ),
+                    )
+                  : DiscoveryStateView<List<CompanionSummary>>(
+                      value: results,
+                      onRetry: () => ref.invalidate(discoverResultsProvider(state.plan)),
+                      isEmpty: (all) => all.isEmpty,
+                      emptyTitle: l10n.discoverEmptyTitle,
+                      emptyMessage: l10n.discoverEmptyBody,
+                      builder: (context, _) => const SizedBox.shrink(),
+                    ),
             ),
           ],
         ),
@@ -225,7 +183,7 @@ class DiscoverScreen extends ConsumerWidget {
   };
 }
 
-/// One feed post with its actions wired up.
+/// One reel with its actions wired up.
 class _Post extends ConsumerWidget {
   const _Post({required this.companion});
 
@@ -235,6 +193,17 @@ class _Post extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final c = companion;
+
+    if (c.isSample) {
+      void explain() {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.sampleProfileNotice)));
+      }
+
+      return ReelView(companion: c, saved: false, onOpen: explain, onMessage: explain, onToggleSave: explain);
+    }
+
     final saved = ref.watch(savedIdsProvider).value?.contains(c.uid) ?? false;
 
     Future<void> toggleSave() async {
@@ -245,12 +214,46 @@ class _Post extends ConsumerWidget {
       }
     }
 
-    return FeedPost(
+    return ReelView(
       companion: c,
       saved: saved,
       onOpen: () => context.push(AppRoutes.companion(c.uid)),
       onMessage: () => openChatWith(context, ref, companionUid: c.uid, name: c.displayName),
       onToggleSave: toggleSave,
+    );
+  }
+}
+
+/// The last page, after everyone.
+class _EndOfReels extends StatelessWidget {
+  const _EndOfReels({required this.onStartAgain});
+
+  final VoidCallback onStartAgain;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: AppSpacing.screenPadding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.done_all_rounded, color: AppColors.muted, size: AppSizes.iconLarge),
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.discoverAllSeenTitle, style: textTheme.titleLarge, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              l10n.feedEndBody,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppPillButton(label: l10n.reelStartAgain, tone: AppPillTone.accent, onPressed: onStartAgain),
+          ],
+        ),
+      ),
     );
   }
 }

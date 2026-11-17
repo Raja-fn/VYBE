@@ -1,8 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vybe/core/config/app_env.dart';
-import 'package:vybe/core/dev/component_gallery_screen.dart';
 import 'package:vybe/core/router/app_router.dart';
 import 'package:vybe/core/router/screens/not_found_screen.dart';
 import 'package:vybe/core/router/screens/start_screen.dart';
@@ -21,20 +19,6 @@ void main() {
   testWidgets('a signed-out person lands on the rules screen', (tester) async {
     await pumpFullApp(tester);
     expect(find.byType(RulesScreen), findsOneWidget);
-  });
-
-  testWidgets('test builds can open the component gallery', (tester) async {
-    await pumpFullApp(tester);
-    _container(tester).read(appRouterProvider).go('/dev/components');
-    await settle(tester);
-    expect(find.byType(ComponentGalleryScreen), findsOneWidget);
-  });
-
-  testWidgets('production builds have no component gallery', (tester) async {
-    await pumpFullApp(tester, env: AppEnv.production);
-    _container(tester).read(appRouterProvider).go('/dev/components');
-    await settle(tester);
-    expect(find.byType(NotFoundScreen), findsOneWidget);
   });
 
   testWidgets('a signed-out person is sent to the rules even from an unknown address', (tester) async {
@@ -76,8 +60,8 @@ void main() {
         wrapInScaffold: false,
         overrides: [sessionStageProvider.overrideWithValue(const AsyncLoading())],
       );
-      expect(find.text('Getting things ready'), findsOneWidget);
-      expect(find.text('Open component gallery'), findsOneWidget);
+      expect(find.bySemanticsLabel('Getting things ready'), findsOneWidget);
+      expect(find.text('Open component gallery'), findsNothing);
     });
 
     testWidgets('shows the error with a retry when the session fails to load', (tester) async {
@@ -91,17 +75,6 @@ void main() {
       );
       expect(find.text('Something went wrong'), findsOneWidget);
       expect(find.text('Try again'), findsOneWidget);
-    });
-
-    testWidgets('hides the gallery button in production', (tester) async {
-      await pumpInApp(
-        tester,
-        const StartScreen(),
-        wrapInScaffold: false,
-        env: AppEnv.production,
-        overrides: [sessionStageProvider.overrideWithValue(const AsyncLoading())],
-      );
-      expect(find.text('Open component gallery'), findsNothing);
     });
   });
 }

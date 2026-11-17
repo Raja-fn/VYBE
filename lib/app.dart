@@ -35,24 +35,16 @@ class VybeApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
 
-      builder: (context, child) => MediaQuery.withClampedTextScaling(
-        maxScaleFactor: maxTextScale,
-        child: child ?? const SizedBox.shrink(),
-      ),
+      builder: (context, child) =>
+          MediaQuery.withClampedTextScaling(maxScaleFactor: maxTextScale, child: child ?? const SizedBox.shrink()),
     );
   }
 }
 
 class BootstrapErrorApp extends StatelessWidget {
-  const BootstrapErrorApp({
-    required this.onRetry,
-    this.notConfigured = false,
-    super.key,
-  });
+  const BootstrapErrorApp({required this.onRetry, super.key});
 
   final VoidCallback onRetry;
-
-  final bool notConfigured;
 
   @override
   Widget build(BuildContext context) {
@@ -63,12 +55,7 @@ class BootstrapErrorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Builder(
         builder: (context) => Scaffold(
-          body: SafeArea(
-            child: _BootstrapError(
-              onRetry: onRetry,
-              notConfigured: notConfigured,
-            ),
-          ),
+          body: SafeArea(child: _BootstrapError(onRetry: onRetry)),
         ),
       ),
     );
@@ -76,10 +63,9 @@ class BootstrapErrorApp extends StatelessWidget {
 }
 
 class _BootstrapError extends StatelessWidget {
-  const _BootstrapError({required this.onRetry, required this.notConfigured});
+  const _BootstrapError({required this.onRetry});
 
   final VoidCallback onRetry;
-  final bool notConfigured;
 
   @override
   Widget build(BuildContext context) {
@@ -88,25 +74,17 @@ class _BootstrapError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            l10n.bootstrapErrorTitle,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text(l10n.bootstrapErrorTitle, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.xs),
           Padding(
             padding: AppSpacing.screenPadding,
             child: Text(
-              notConfigured
-                  ? l10n.bootstrapNotConfigured
-                  : l10n.bootstrapNoConnection,
+              l10n.bootstrapNoConnection,
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
             ),
           ),
-          if (!notConfigured)
-            TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
+          TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
         ],
       ),
     );

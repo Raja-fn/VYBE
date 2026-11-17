@@ -104,10 +104,6 @@ void main() {
       expect(onboardingRedirect(stage: stage, consentGiven: false, location: AppRoutes.verify), AppRoutes.start);
       expect(onboardingRedirect(stage: stage, consentGiven: false, location: AppRoutes.start), isNull);
     });
-
-    test('the developer gallery is never redirected', () {
-      expect(redirect(const SignedOut(), AppRoutes.devComponents), isNull);
-    });
   });
 
   group('phone numbers', () {

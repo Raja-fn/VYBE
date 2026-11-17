@@ -120,12 +120,6 @@ void main() {
 
 class _StalledTables extends FakeTables {
   @override
-  Stream<List<Map<String, Object?>>> watch(
-    String table, {
-    required List<String> primaryKey,
-    Where? where,
-    String? orderBy,
-    bool descending = false,
-    int? limit,
-  }) => StreamController<List<Map<String, Object?>>>().stream;
+  Future<List<Map<String, Object?>>> select(String table, {Where? where}) =>
+      Completer<List<Map<String, Object?>>>().future;
 }

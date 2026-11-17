@@ -19,7 +19,7 @@ class HomeShell extends ConsumerWidget {
     ref.listen(purchaseFlowProvider, (_, _) {});
     final l10n = context.l10n;
     return Scaffold(
-      body: shell,
+      body: _TabTransition(index: shell.currentIndex, child: shell),
       bottomNavigationBar: FloatingNavBar(
         currentIndex: shell.currentIndex,
         onSelected: (index) => shell.goBranch(index, initialLocation: index == shell.currentIndex),
@@ -32,4 +32,48 @@ class HomeShell extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Plays a short fade-and-settle whenever the tab changes. The tabs keep their
+/// state (scroll position, loaded data); only the newly shown one animates in.
+class _TabTransition extends StatefulWidget {
+  const _TabTransition({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_TabTransition> createState() => _TabTransitionState();
+}
+
+class _TabTransitionState extends State<_TabTransition> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+    value: 1,
+  );
+  late final Animation<double> _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.97,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+  @override
+  void didUpdateWidget(_TabTransition old) {
+    super.didUpdateWidget(old);
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (old.index != widget.index && !reduceMotion) _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _fade,
+    child: ScaleTransition(scale: _scale, child: widget.child),
+  );
 }

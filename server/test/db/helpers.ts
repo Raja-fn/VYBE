@@ -60,7 +60,8 @@ export const googleCaller = (uid: string, email = `${uid}@example.com`): Caller 
 export const phoneCaller = (uid: string, phone = '+919800000000'): Caller => ({ uid, phoneNumber: phone });
 
 export function makeDeps(sql: Db, config: Partial<AppConfig> = {}, now: Date = new Date()): Deps {
-  const full = { ...defaultAppConfig, ...config };
+  // Sample profiles off unless a test turns them on, so counts stay exact.
+  const full = { ...defaultAppConfig, showSampleProfiles: false, ...config };
   return { sql, config: full, services: createServices(full, true), now: () => now };
 }
 

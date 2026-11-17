@@ -57,5 +57,4 @@ abstract final class AppRoutes {
   static const credits = '/credits';
 
   /// Test builds only.
-  static const devComponents = '/dev/components';
 }

@@ -3,7 +3,7 @@
 Verified, public-place companionship and meetups. Flutter (Android + iOS) on
 **Supabase** (Postgres, Auth, Storage, Edge Functions), free plan. Firebase is
 used only for crash reports (Crashlytics).
-The full plan, data model and decisions are in [docs/phase-0-plan.md](docs/phase-0-plan.md).
+Setup is in [docs/supabase-setup.md](docs/supabase-setup.md) and the launch steps in [docs/launch-checklist.md](docs/launch-checklist.md).
 
 ## Requirements
 
@@ -39,16 +39,12 @@ Login is **Google only** for now (phone OTP is built but switched off with
 test people are `<first name>@findx.test`, for example `aarav@findx.test`; any
 other email creates a new account.
 
-## Google Maps (optional)
+## Map
 
-Without a key the app draws its own map. To use Google Maps:
-
-1. Create an API key in Google Cloud and enable "Maps SDK for Android" and "Maps SDK for iOS".
-2. Android: add `MAPS_API_KEY=AIza...` to `android/local.properties`.
-3. iOS: create `ios/Flutter/Secrets.xcconfig` with `MAPS_API_KEY = AIza...`.
-4. Run with `--dart-define=MAPS_ENABLED=true`.
-
-Both files are git-ignored. Never commit the key.
+The spots map uses `flutter_map` with OpenStreetMap tiles: no API key or
+billing needed. The public OSM tile server is meant for light use; before
+heavy traffic, switch `VenueMap._tileUrl` to a hosted tile provider
+(MapTiler, Stadia Maps or similar).
 
 ## Checks
 

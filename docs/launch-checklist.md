@@ -19,38 +19,31 @@ What's left needs your accounts. Do the steps in order. Never paste secrets
 | Companion earnings and payouts | Not offered. | Needs a payout provider. |
 | Phone OTP | Off (Google sign-in only). | See `docs/supabase-setup.md`. |
 
-## 1. Production Supabase project
+## 1. The Supabase project (live)
 
-1. Create a Supabase project named `findx-prod` in **South Asia (Mumbai)**.
-   Save the database password.
-2. Set up Google sign-in exactly as for the test project
-   (`docs/supabase-setup.md`, steps 2–3). You can reuse the same Web client;
-   add the new project's callback URL to its redirect URIs.
-3. **Authentication → Sign In / Providers → Email:** turn it **off**
-   (production is Google only).
-4. Put the project URL and publishable key into
-   `config/supabase.production.json`.
-5. Deploy. The commands only differ from the test project in the project
-   ref and the secrets:
+The project `findx-dev` (`stgfjguoytqzmliurbvp`) **is** production. Done
+already: `FINDX_ENVIRONMENT=production`, the app_config override
+`{"environment": "production"}`, the Play package and notification secret,
+and the plan-renewal cron job.
 
-```sh
-npx supabase link --project-ref <prod ref>
-npx supabase db push --remote
-npm --prefix server run build:edge
-npx supabase functions deploy api --use-api --project-ref <prod ref>
-npx supabase secrets set --project-ref <prod ref> \
-  FINDX_ENVIRONMENT=production \
-  FINDX_IDENTITY_AUTO_APPROVE=true \
-  GOOGLE_PLAY_PACKAGE=com.vybe.app \
-  FINDX_CRON_SECRET=<long random text> \
-  FINDX_PLAY_NOTIFICATION_SECRET=<another long random text>
-```
+Still to do:
 
-6. **Table Editor → app_config:** set `overrides` to
-   `{"environment": "production"}`. The seed script then refuses to run here,
-   so no test data can reach production.
-7. **Plan renewals:** create the two Vault secrets (step 5 of
-   `docs/supabase-setup.md`) with the production URL and cron secret.
+1. **Plan renewals (Vault).** The cron job runs but has nothing to call yet.
+   Make a long random text (for example a password generator, 48 characters),
+   then:
+   ```sh
+   npx supabase secrets set --project-ref stgfjguoytqzmliurbvp FINDX_CRON_SECRET=<that text>
+   ```
+   and in **SQL Editor**:
+   ```sql
+   select vault.create_secret('https://stgfjguoytqzmliurbvp.supabase.co/functions/v1/api', 'findx_api_url');
+   select vault.create_secret('<the same text>', 'findx_cron_secret');
+   ```
+   Keep the text in your password manager.
+2. **Email sign-in off:** Authentication → Sign In / Providers → Email →
+   off (VYBE signs in with Google only).
+3. **Sample profiles off** at launch: Table Editor → app_config → overrides
+   `{"environment": "production", "showSampleProfiles": false}`.
 
 ## 2. Google Play Console
 

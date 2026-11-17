@@ -130,12 +130,6 @@ abstract class AppLocalizations {
   /// **'Check your internet connection and try again.'**
   String get bootstrapNoConnection;
 
-  /// No description provided for @bootstrapNotConfigured.
-  ///
-  /// In en, this message translates to:
-  /// **'This copy of the app was built without its server settings. Install a new build.'**
-  String get bootstrapNotConfigured;
-
   /// No description provided for @commonRetry.
   ///
   /// In en, this message translates to:
@@ -310,12 +304,6 @@ abstract class AppLocalizations {
   /// **'Free now'**
   String get badgeFreeNow;
 
-  /// No description provided for @creditsPillUnit.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{credit} other{credits}}'**
-  String creditsPillUnit(int count);
-
   /// No description provided for @creditsPillSemantics.
   ///
   /// In en, this message translates to:
@@ -429,12 +417,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Step {current} of {total}'**
   String onboardingStep(int current, int total);
-
-  /// No description provided for @rulesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Book time with verified companions for everyday plans, always at public places.'**
-  String get rulesSubtitle;
 
   /// No description provided for @rulesForTitle.
   ///
@@ -886,12 +868,6 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
-  /// No description provided for @discoverPlanQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'What is the plan?'**
-  String get discoverPlanQuestion;
-
   /// No description provided for @discoverShowing.
   ///
   /// In en, this message translates to:
@@ -1162,12 +1138,6 @@ abstract class AppLocalizations {
   /// **'Book your spot'**
   String get profileBookSpot;
 
-  /// No description provided for @profileVerifiedAge.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified age'**
-  String get profileVerifiedAge;
-
   /// No description provided for @myProfileTitle.
   ///
   /// In en, this message translates to:
@@ -1287,24 +1257,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map of verified spots within {km} km of you'**
   String mapSemantics(int km);
-
-  /// No description provided for @mapLegendHot.
-  ///
-  /// In en, this message translates to:
-  /// **'Hot, most meetups'**
-  String get mapLegendHot;
-
-  /// No description provided for @mapLegendBusy.
-  ///
-  /// In en, this message translates to:
-  /// **'Busy'**
-  String get mapLegendBusy;
-
-  /// No description provided for @mapLegendQuiet.
-  ///
-  /// In en, this message translates to:
-  /// **'Quiet'**
-  String get mapLegendQuiet;
 
   /// No description provided for @mapBestSpots.
   ///
@@ -1797,132 +1749,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} is blocked.'**
   String blockDone(String name);
-
-  /// No description provided for @devGalleryTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Component gallery'**
-  String get devGalleryTitle;
-
-  /// No description provided for @devGalleryOpen.
-  ///
-  /// In en, this message translates to:
-  /// **'Open component gallery'**
-  String get devGalleryOpen;
-
-  /// No description provided for @devGallerySectionButtons.
-  ///
-  /// In en, this message translates to:
-  /// **'Buttons'**
-  String get devGallerySectionButtons;
-
-  /// No description provided for @devGallerySectionChips.
-  ///
-  /// In en, this message translates to:
-  /// **'Chips and tags'**
-  String get devGallerySectionChips;
-
-  /// No description provided for @devGallerySectionCards.
-  ///
-  /// In en, this message translates to:
-  /// **'Cards'**
-  String get devGallerySectionCards;
-
-  /// No description provided for @devGallerySectionBadges.
-  ///
-  /// In en, this message translates to:
-  /// **'Badges and stats'**
-  String get devGallerySectionBadges;
-
-  /// No description provided for @devGallerySectionSteps.
-  ///
-  /// In en, this message translates to:
-  /// **'Steps'**
-  String get devGallerySectionSteps;
-
-  /// No description provided for @devGallerySectionStates.
-  ///
-  /// In en, this message translates to:
-  /// **'Screen states'**
-  String get devGallerySectionStates;
-
-  /// No description provided for @devGalleryPrimary.
-  ///
-  /// In en, this message translates to:
-  /// **'Primary action'**
-  String get devGalleryPrimary;
-
-  /// No description provided for @devGalleryOutline.
-  ///
-  /// In en, this message translates to:
-  /// **'Secondary action'**
-  String get devGalleryOutline;
-
-  /// No description provided for @devGalleryGold.
-  ///
-  /// In en, this message translates to:
-  /// **'Gold action'**
-  String get devGalleryGold;
-
-  /// No description provided for @devGallerySuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Success action'**
-  String get devGallerySuccess;
-
-  /// No description provided for @devGalleryDisabled.
-  ///
-  /// In en, this message translates to:
-  /// **'Disabled action'**
-  String get devGalleryDisabled;
-
-  /// No description provided for @devGalleryCardTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Card title'**
-  String get devGalleryCardTitle;
-
-  /// No description provided for @devGalleryCardBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Cards use a 22 radius and a 1px border.'**
-  String get devGalleryCardBody;
-
-  /// No description provided for @devGalleryDarkCardBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Dark cards highlight one key action.'**
-  String get devGalleryDarkCardBody;
-
-  /// No description provided for @devGallerySampleName.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get devGallerySampleName;
-
-  /// No description provided for @devGallerySampleRating.
-  ///
-  /// In en, this message translates to:
-  /// **'4.8'**
-  String get devGallerySampleRating;
-
-  /// No description provided for @devGallerySampleCount.
-  ///
-  /// In en, this message translates to:
-  /// **'32'**
-  String get devGallerySampleCount;
-
-  /// No description provided for @devGallerySwitchTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch row'**
-  String get devGallerySwitchTitle;
-
-  /// No description provided for @devGallerySwitchSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Used for settings that turn on or off.'**
-  String get devGallerySwitchSubtitle;
 
   /// No description provided for @creditsTitle.
   ///
@@ -2722,12 +2548,6 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get editProfileSave;
 
-  /// No description provided for @editProfileSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved'**
-  String get editProfileSaved;
-
   /// No description provided for @editProfileClear.
   ///
   /// In en, this message translates to:
@@ -2785,8 +2605,44 @@ abstract class AppLocalizations {
   /// No description provided for @feedEndBody.
   ///
   /// In en, this message translates to:
-  /// **'Pull down to refresh, or try another plan.'**
+  /// **'New people join every day. Try another plan or check back soon.'**
   String get feedEndBody;
+
+  /// No description provided for @mapRecenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to my location'**
+  String get mapRecenter;
+
+  /// No description provided for @sampleProfileTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample'**
+  String get sampleProfileTag;
+
+  /// No description provided for @sampleProfileNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a sample profile. Real members near you will appear here as people join.'**
+  String get sampleProfileNotice;
+
+  /// No description provided for @reelProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get reelProfile;
+
+  /// No description provided for @reelSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get reelSaved;
+
+  /// No description provided for @reelStartAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Start again'**
+  String get reelStartAgain;
 }
 
 class _AppLocalizationsDelegate

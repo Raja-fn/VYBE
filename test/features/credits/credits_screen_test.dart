@@ -134,7 +134,8 @@ void main() {
         ..discover.companions = [testCompanion('neha', name: 'Neha')]
         ..chat.startFailure = const AppFailure(FailureKind.insufficientCredits);
       await pumpFullApp(tester, backend: backend);
-      await _tap(tester, find.bySemanticsLabel('Message'));
+      await tester.tap(find.bySemanticsLabel('Message'));
+      await settle(tester);
       await _tap(tester, find.text('Start chat'));
       await _tap(tester, find.text('Get credits'));
       expect(find.byType(CreditsScreen), findsOneWidget);

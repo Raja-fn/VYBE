@@ -4,6 +4,8 @@
   "distanceLabelStepKm": 1,
   "discoverCallsPerMinute": 20,
   "discoverPageSize": 20,
+  "showSampleProfiles": true,
+  "samplePhotoBaseUrl": "https://findx-dev-b5f6b.web.app/samples",
   "maxPlausibleSpeedKmh": 300,
   "launchCity": {
     "name": "Mumbai",

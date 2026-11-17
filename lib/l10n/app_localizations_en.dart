@@ -28,10 +28,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check your internet connection and try again.';
 
   @override
-  String get bootstrapNotConfigured =>
-      'This copy of the app was built without its server settings. Install a new build.';
-
-  @override
   String get commonRetry => 'Try again';
 
   @override
@@ -130,17 +126,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get badgeFreeNow => 'Free now';
 
   @override
-  String creditsPillUnit(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'credits',
-      one: 'credit',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String creditsPillSemantics(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -215,10 +200,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String onboardingStep(int current, int total) {
     return 'Step $current of $total';
   }
-
-  @override
-  String get rulesSubtitle =>
-      'Book time with verified companions for everyday plans, always at public places.';
 
   @override
   String get rulesForTitle => 'This app is for';
@@ -484,9 +465,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
-  String get discoverPlanQuestion => 'What is the plan?';
-
-  @override
   String discoverShowing(String who) {
     return 'Showing: $who';
   }
@@ -657,9 +635,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileBookSpot => 'Book your spot';
 
   @override
-  String get profileVerifiedAge => 'Verified age';
-
-  @override
   String get myProfileTitle => 'Your profile';
 
   @override
@@ -725,15 +700,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String mapSemantics(int km) {
     return 'Map of verified spots within $km km of you';
   }
-
-  @override
-  String get mapLegendHot => 'Hot, most meetups';
-
-  @override
-  String get mapLegendBusy => 'Busy';
-
-  @override
-  String get mapLegendQuiet => 'Quiet';
 
   @override
   String get mapBestSpots => 'Best spots to meet';
@@ -1033,70 +999,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String blockDone(String name) {
     return '$name is blocked.';
   }
-
-  @override
-  String get devGalleryTitle => 'Component gallery';
-
-  @override
-  String get devGalleryOpen => 'Open component gallery';
-
-  @override
-  String get devGallerySectionButtons => 'Buttons';
-
-  @override
-  String get devGallerySectionChips => 'Chips and tags';
-
-  @override
-  String get devGallerySectionCards => 'Cards';
-
-  @override
-  String get devGallerySectionBadges => 'Badges and stats';
-
-  @override
-  String get devGallerySectionSteps => 'Steps';
-
-  @override
-  String get devGallerySectionStates => 'Screen states';
-
-  @override
-  String get devGalleryPrimary => 'Primary action';
-
-  @override
-  String get devGalleryOutline => 'Secondary action';
-
-  @override
-  String get devGalleryGold => 'Gold action';
-
-  @override
-  String get devGallerySuccess => 'Success action';
-
-  @override
-  String get devGalleryDisabled => 'Disabled action';
-
-  @override
-  String get devGalleryCardTitle => 'Card title';
-
-  @override
-  String get devGalleryCardBody => 'Cards use a 22 radius and a 1px border.';
-
-  @override
-  String get devGalleryDarkCardBody => 'Dark cards highlight one key action.';
-
-  @override
-  String get devGallerySampleName => 'Name';
-
-  @override
-  String get devGallerySampleRating => '4.8';
-
-  @override
-  String get devGallerySampleCount => '32';
-
-  @override
-  String get devGallerySwitchTitle => 'Switch row';
-
-  @override
-  String get devGallerySwitchSubtitle =>
-      'Used for settings that turn on or off.';
 
   @override
   String get creditsTitle => 'Get more credits';
@@ -1571,9 +1473,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfileSave => 'Save';
 
   @override
-  String get editProfileSaved => 'Saved';
-
-  @override
   String get editProfileClear => 'Clear';
 
   @override
@@ -1605,5 +1504,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get feedEndBody => 'Pull down to refresh, or try another plan.';
+  String get feedEndBody =>
+      'New people join every day. Try another plan or check back soon.';
+
+  @override
+  String get mapRecenter => 'Back to my location';
+
+  @override
+  String get sampleProfileTag => 'Sample';
+
+  @override
+  String get sampleProfileNotice =>
+      'This is a sample profile. Real members near you will appear here as people join.';
+
+  @override
+  String get reelProfile => 'Profile';
+
+  @override
+  String get reelSaved => 'Saved';
+
+  @override
+  String get reelStartAgain => 'Start again';
 }

@@ -20234,6 +20234,8 @@ var app_config_defaults_default = {
   distanceLabelStepKm: 1,
   discoverCallsPerMinute: 20,
   discoverPageSize: 20,
+  showSampleProfiles: true,
+  samplePhotoBaseUrl: "https://findx-dev-b5f6b.web.app/samples",
   maxPlausibleSpeedKmh: 300,
   launchCity: {
     name: "Mumbai",
@@ -20343,6 +20345,9 @@ var appConfigSchema = external_exports.object({
   distanceLabelStepKm: external_exports.number().int().positive(),
   discoverCallsPerMinute: external_exports.number().int().positive(),
   discoverPageSize: external_exports.number().int().positive(),
+  /** Adds the made-up sample profiles to Discover. Turn off before the public launch. */
+  showSampleProfiles: external_exports.boolean(),
+  samplePhotoBaseUrl: external_exports.string().url(),
   maxPlausibleSpeedKmh: external_exports.number().positive(),
   launchCity: external_exports.object({
     name: external_exports.string(),
@@ -20582,52 +20587,14 @@ function canSeekerCancel(status, startAt, now) {
   return (status === "requested" || status === "accepted") && startAt.getTime() > now.getTime();
 }
 
-// node_modules/geofire-common/dist/geofire-common/index.esm.js
-var BITS_PER_CHAR = 5;
-var MAXIMUM_BITS_PRECISION = 22 * BITS_PER_CHAR;
-function validateLocation(location) {
-  var error62;
-  if (!Array.isArray(location)) {
-    error62 = "location must be an array";
-  } else if (location.length !== 2) {
-    error62 = "expected array of length 2, got length " + location.length;
-  } else {
-    var latitude = location[0];
-    var longitude = location[1];
-    if (typeof latitude !== "number" || isNaN(latitude)) {
-      error62 = "latitude must be a number";
-    } else if (latitude < -90 || latitude > 90) {
-      error62 = "latitude must be within the range [-90, 90]";
-    } else if (typeof longitude !== "number" || isNaN(longitude)) {
-      error62 = "longitude must be a number";
-    } else if (longitude < -180 || longitude > 180) {
-      error62 = "longitude must be within the range [-180, 180]";
-    }
-  }
-  if (typeof error62 !== "undefined") {
-    throw new Error("Invalid GeoFire location '" + location + "': " + error62);
-  }
-}
-function degreesToRadians(degrees) {
-  if (typeof degrees !== "number" || isNaN(degrees)) {
-    throw new Error("Error: degrees must be a number");
-  }
-  return degrees * Math.PI / 180;
-}
-function distanceBetween(location1, location2) {
-  validateLocation(location1);
-  validateLocation(location2);
-  var radius = 6371;
-  var latDelta = degreesToRadians(location2[0] - location1[0]);
-  var lonDelta = degreesToRadians(location2[1] - location1[1]);
-  var a = Math.sin(latDelta / 2) * Math.sin(latDelta / 2) + Math.cos(degreesToRadians(location1[0])) * Math.cos(degreesToRadians(location2[0])) * Math.sin(lonDelta / 2) * Math.sin(lonDelta / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return radius * c;
-}
-
 // src/domain/geo.ts
+var EARTH_RADIUS_KM = 6371;
+var toRad = (degrees) => degrees * Math.PI / 180;
 function distanceKm(a, b) {
-  return distanceBetween([a.lat, a.lng], [b.lat, b.lng]);
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 function roundedDistanceKm(km, stepKm) {
   return Math.max(stepKm, Math.round(km / stepKm) * stepKm);
@@ -20747,6 +20714,167 @@ __export(discovery_exports, {
   updateMyLocationInput: () => updateMyLocationInput,
   updateMyLocationLogic: () => updateMyLocationLogic
 });
+
+// src/domain/sampleProfiles.ts
+var SAMPLE_UID_PREFIX = "sample_";
+var people = [
+  {
+    uid: "ananya",
+    displayName: "Ananya",
+    ageYears: 24,
+    gender: "woman",
+    about: "Weekend caf\xE9 hopper and slow-morning person. Always up for a good book recommendation.",
+    planTypes: ["coffee", "walk", "event"],
+    prompt: "A long breakfast, a used bookshop and an evening walk by the river.",
+    interests: ["coffee", "books", "photography", "nature"],
+    personality: ["calm", "curious"],
+    languages: ["english", "hindi"],
+    profession: "UX designer",
+    distanceKm: 1,
+    freeNow: true
+  },
+  {
+    uid: "rohan",
+    displayName: "Rohan",
+    ageYears: 27,
+    gender: "man",
+    about: "Film buff who will happily debate the ending of any movie. Trying every biryani in town.",
+    planTypes: ["movie", "dinner", "coffee"],
+    prompt: "A morning cricket match, then a double feature at the cinema.",
+    interests: ["movies", "food", "cricket", "music"],
+    personality: ["witty", "easygoing"],
+    languages: ["english", "hindi"],
+    profession: "Software engineer",
+    distanceKm: 2,
+    freeNow: false
+  },
+  {
+    uid: "meera",
+    displayName: "Meera",
+    ageYears: 26,
+    gender: "woman",
+    about: "Trained in Kathak, now mostly dancing in my kitchen. Looking for people to try new places with.",
+    planTypes: ["event", "dinner", "walk"],
+    prompt: "Street food in the old city and a dance workshop in the evening.",
+    interests: ["dance", "food", "travel", "art"],
+    personality: ["cheerful", "adventurous"],
+    languages: ["english", "hindi"],
+    profession: "Teacher",
+    distanceKm: 3,
+    freeNow: true
+  },
+  {
+    uid: "kabir",
+    displayName: "Kabir",
+    ageYears: 29,
+    gender: "man",
+    about: "Runner, amateur photographer, and the friend who knows a quiet caf\xE9 in every neighbourhood.",
+    planTypes: ["walk", "coffee"],
+    prompt: "A 10K at sunrise, then filter coffee and a photo walk.",
+    interests: ["fitness", "photography", "coffee", "nature"],
+    personality: ["thoughtful", "ambitious"],
+    languages: ["english", "hindi"],
+    profession: "Architect",
+    distanceKm: 2,
+    freeNow: false
+  },
+  {
+    uid: "sara",
+    displayName: "Sara",
+    ageYears: 23,
+    gender: "woman",
+    about: "New to the city and keen to find the best momos, open-mic nights and board-game caf\xE9s.",
+    planTypes: ["coffee", "event", "movie"],
+    prompt: "Board games, too much chai and an open-mic night.",
+    interests: ["gaming", "music", "theatre", "coffee"],
+    personality: ["curious", "cheerful"],
+    languages: ["english"],
+    profession: "Content writer",
+    distanceKm: 4,
+    freeNow: true
+  },
+  {
+    uid: "arjun",
+    displayName: "Arjun",
+    ageYears: 31,
+    gender: "man",
+    about: "Home cook and weekend trekker. Happiest in a good conversation over dinner.",
+    planTypes: ["dinner", "walk", "coffee"],
+    prompt: "Cooking a big lunch for friends, then a sunset hike.",
+    interests: ["cooking", "travel", "nature", "books"],
+    personality: ["easygoing", "thoughtful"],
+    languages: ["english", "hindi"],
+    profession: "Product manager",
+    distanceKm: 5,
+    freeNow: false
+  },
+  {
+    uid: "ishita",
+    displayName: "Ishita",
+    ageYears: 28,
+    gender: "woman",
+    about: "Gallery regular, thrift-store fan and a big believer in trying the weird item on the menu.",
+    planTypes: ["event", "coffee", "dinner"],
+    prompt: "A new exhibition, a thrift haul and dinner somewhere new.",
+    interests: ["art", "fashion", "food", "photography"],
+    personality: ["adventurous", "witty"],
+    languages: ["english", "hindi"],
+    profession: "Illustrator",
+    distanceKm: 3,
+    freeNow: false
+  },
+  {
+    uid: "dev",
+    displayName: "Dev",
+    ageYears: 25,
+    gender: "man",
+    about: "Football on Sundays, tech meetups on weekdays. Always looking for a good walking route.",
+    planTypes: ["walk", "event", "movie"],
+    prompt: "Five-a-side in the morning, a long walk and a late movie.",
+    interests: ["football", "tech", "movies", "music"],
+    personality: ["cheerful", "ambitious"],
+    languages: ["english", "hindi"],
+    profession: "Data analyst",
+    distanceKm: 1,
+    freeNow: true
+  }
+];
+function sampleCompanions(query) {
+  return people.filter((p) => showMeIncludes(query.showMe, p.gender)).filter((p) => query.planType === null || p.planTypes.includes(query.planType)).map((p, i) => ({
+    uid: `${SAMPLE_UID_PREFIX}${p.uid}`,
+    displayName: p.displayName,
+    ageYears: p.ageYears,
+    gender: null,
+    photoPaths: [1, 2, 3].map((n) => `${query.photoBaseUrl}/${p.uid}-${n}.jpg`),
+    about: p.about,
+    activityTags: [],
+    planTypes: p.planTypes,
+    prompt: { promptId: "ideal_sunday", answer: p.prompt },
+    voiceIntro: null,
+    ratingAvg: null,
+    ratingCount: 0,
+    meetupCount: 0,
+    distanceKm: p.distanceKm,
+    spotsNearby: Math.min(query.venuesNearby, 3 + i % 4),
+    freeNowUntil: p.freeNow ? new Date(query.now.getTime() + 2 * 60 * 60 * 1e3).toISOString() : null,
+    freeFrom: null,
+    freeUntil: null,
+    isSample: true,
+    details: {
+      city: null,
+      languages: p.languages,
+      education: null,
+      profession: p.profession,
+      interests: p.interests,
+      personality: p.personality,
+      socialEnergy: null,
+      drinking: null,
+      smoking: null,
+      fitness: null
+    }
+  }));
+}
+var sampleIds = people.map((p) => p.uid);
 
 // src/handlers/places.ts
 function placesCell(point, degrees) {
@@ -20962,6 +21090,7 @@ async function toDtos(sql2, ranked, spans = /* @__PURE__ */ new Map()) {
       freeNowUntil: freeNow && candidate.freeNowUntil ? candidate.freeNowUntil.toISOString() : null,
       freeFrom: span ? span.from.toISOString() : null,
       freeUntil: span ? span.until.toISOString() : null,
+      isSample: false,
       details: {
         city: row?.city ?? null,
         languages: row?.languages ?? [],
@@ -21029,7 +21158,16 @@ async function discoverCompanionsLogic(deps, caller, input2) {
   const ctx2 = await prepare(deps, caller);
   const candidates = await candidatesNear(deps.sql, ctx2.seeker, deps.config.discoveryRadiusKm);
   const ranked = rank(deps, ctx2, candidates, input2.planType ?? null, deps.config.discoverPageSize);
-  return { companions: await toDtos(deps.sql, ranked) };
+  const companions = await toDtos(deps.sql, ranked);
+  if (!deps.config.showSampleProfiles) return { companions };
+  const samples = sampleCompanions({
+    showMe: ctx2.seeker.showMe,
+    planType: input2.planType ?? null,
+    venuesNearby: ctx2.venues.length,
+    now: ctx2.now,
+    photoBaseUrl: deps.config.samplePhotoBaseUrl
+  });
+  return { companions: [...companions, ...samples] };
 }
 var freeNowInput = external_exports.object({ window: external_exports.enum(["next_2h", "tonight", "tomorrow"]) });
 async function availabilityOf(sql2, uids) {
@@ -21245,7 +21383,7 @@ async function requestBookingLogic(deps, caller, input2) {
   const cost = input2.kind === "instant" ? config2.creditCostInstantRequest : config2.creditCostBookSpot;
   const ledgerId = `${bookingId}_charge`;
   const result = await sql2.begin(async (tx) => {
-    const people = await tx`
+    const people2 = await tx`
       select id, display_name, age_years from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [again] = await tx`select 1 from bookings where id = ${bookingId}`;
     if (again) return null;
@@ -21273,8 +21411,8 @@ async function requestBookingLogic(deps, caller, input2) {
     if (current < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
     const after = current - cost;
     const booked = slot.booked + 1;
-    const me = people.find((p) => p.id === caller.uid);
-    const them = people.find((p) => p.id === companion.uid);
+    const me = people2.find((p) => p.id === caller.uid);
+    const them = people2.find((p) => p.id === companion.uid);
     await tx`
       update venue_slots set booked = ${booked}, status = ${booked >= slot.capacity ? "full" : "open"}
       where venue_id = ${venue.venueId} and id = ${input2.slotId}`;
@@ -21489,7 +21627,7 @@ async function startChatLogic(deps, caller, input2) {
   const cost = config2.creditCostStartChat;
   const now = deps.now();
   return sql2.begin(async (tx) => {
-    const people = await tx`
+    const people2 = await tx`
       select id, display_name from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [account] = await tx`select balance from credit_accounts where uid = ${caller.uid} for update`;
     const balance = account?.balance ?? 0;
@@ -21501,7 +21639,7 @@ async function startChatLogic(deps, caller, input2) {
     if (balance < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
     const after = balance - cost;
     const ledgerId = `${chatId}_open`;
-    const name = (uid) => people.find((p) => p.id === uid)?.display_name ?? "";
+    const name = (uid) => people2.find((p) => p.id === uid)?.display_name ?? "";
     await tx`
       insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
       on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
