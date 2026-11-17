@@ -5,4 +5,5 @@ export * as discovery from './discovery';
 export * as onboarding from './onboarding';
 export * as phoneLogin from './phoneLogin';
 export * as purchases from './purchases';
+export * as reels from './reels';
 export * as safety from './safety';

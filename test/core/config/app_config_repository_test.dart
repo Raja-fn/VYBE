@@ -46,8 +46,8 @@ void main() {
       expect(config.discoveryRadiusKm, 5);
       expect(config.signupBonusCredits, 20);
       expect(config.creditCostStartChat, 1);
-      expect(config.creditCostBookSpot, 5);
-      expect(config.creditCostInstantRequest, 5);
+      expect(config.creditCostBookSpot, 0); // booking is free
+      expect(config.creditCostInstantRequest, 0);
       expect(config.plans.map((p) => (p.tier, p.monthlyCredits)), [
         (PlanTier.free, 0),
         (PlanTier.plus, 100),
@@ -78,12 +78,12 @@ void main() {
 
     test('falls back to defaults when Remote Config fails', () async {
       final config = await loadOk(remote: _FakeRemote(const Err(AppFailure(FailureKind.network))));
-      expect(config.creditCostBookSpot, 5);
+      expect(config.creditCostBookSpot, 0);
     });
 
     test('falls back to defaults when a remote value has the wrong type', () async {
       final config = await loadOk(remote: _FakeRemote(const Ok({'creditCostBookSpot': 'lots'})));
-      expect(config.creditCostBookSpot, 5);
+      expect(config.creditCostBookSpot, 0);
     });
 
     test('returns an error when the bundled defaults are malformed', () async {

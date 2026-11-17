@@ -15,14 +15,15 @@ _Preferences _$PreferencesFromJson(Map<String, dynamic> json) => _Preferences(
   whoCanRequest: $enumDecode(_$WhoCanRequestEnumMap, json['whoCanRequest']),
 );
 
-Map<String, dynamic> _$PreferencesToJson(_Preferences instance) => <String, dynamic>{
-  'gender': _$GenderEnumMap[instance.gender]!,
-  'showMe': _$ShowMeEnumMap[instance.showMe]!,
-  'ageMin': instance.ageMin,
-  'ageMax': instance.ageMax,
-  'showGender': instance.showGender,
-  'whoCanRequest': _$WhoCanRequestEnumMap[instance.whoCanRequest]!,
-};
+Map<String, dynamic> _$PreferencesToJson(_Preferences instance) =>
+    <String, dynamic>{
+      'gender': _$GenderEnumMap[instance.gender]!,
+      'showMe': _$ShowMeEnumMap[instance.showMe]!,
+      'ageMin': instance.ageMin,
+      'ageMax': instance.ageMax,
+      'showGender': instance.showGender,
+      'whoCanRequest': _$WhoCanRequestEnumMap[instance.whoCanRequest]!,
+    };
 
 const _$GenderEnumMap = {
   Gender.woman: 'woman',
@@ -31,7 +32,11 @@ const _$GenderEnumMap = {
   Gender.undisclosed: 'undisclosed',
 };
 
-const _$ShowMeEnumMap = {ShowMe.women: 'women', ShowMe.men: 'men', ShowMe.everyone: 'everyone'};
+const _$ShowMeEnumMap = {
+  ShowMe.women: 'women',
+  ShowMe.men: 'men',
+  ShowMe.everyone: 'everyone',
+};
 
 const _$WhoCanRequestEnumMap = {
   WhoCanRequest.everyone: 'everyone',

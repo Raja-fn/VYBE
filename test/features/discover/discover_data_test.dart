@@ -98,14 +98,6 @@ void main() {
       return container;
     }
 
-    test('starts on coffee; a plan can be picked', () {
-      final container = container0(readyBackend());
-      final controller = container.read(discoverControllerProvider.notifier);
-      expect(container.read(discoverControllerProvider).plan, PlanType.coffee);
-      controller.selectPlan(PlanType.walk);
-      expect(container.read(discoverControllerProvider), const DiscoverState(plan: PlanType.walk));
-    });
-
     test('save and unsave go to the repository', () async {
       final backend = readyBackend();
       final container = container0(backend);

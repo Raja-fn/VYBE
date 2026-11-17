@@ -5,8 +5,8 @@ describe('AppConfig defaults', () => {
     expect(defaultAppConfig.discoveryRadiusKm).toBe(5);
     expect(defaultAppConfig.signupBonusCredits).toBe(20);
     expect(defaultAppConfig.creditCostStartChat).toBe(1);
-    expect(defaultAppConfig.creditCostBookSpot).toBe(5);
-    expect(defaultAppConfig.creditCostInstantRequest).toBe(5);
+    expect(defaultAppConfig.creditCostBookSpot).toBe(0);
+    expect(defaultAppConfig.creditCostInstantRequest).toBe(0);
     expect(defaultAppConfig.plans.map((p) => [p.tier, p.monthlyCredits])).toEqual([
       ['free', 0],
       ['plus', 100],

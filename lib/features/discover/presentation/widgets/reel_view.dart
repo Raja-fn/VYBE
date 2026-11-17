@@ -21,6 +21,7 @@ class ReelView extends StatefulWidget {
     required this.saved,
     required this.onOpen,
     required this.onMessage,
+    required this.onBook,
     required this.onToggleSave,
     super.key,
   });
@@ -29,6 +30,7 @@ class ReelView extends StatefulWidget {
   final bool saved;
   final VoidCallback onOpen;
   final VoidCallback onMessage;
+  final VoidCallback onBook;
   final VoidCallback onToggleSave;
 
   @override
@@ -110,6 +112,7 @@ class _ReelViewState extends State<ReelView> {
               saved: widget.saved,
               onOpen: widget.onOpen,
               onMessage: widget.onMessage,
+              onBook: widget.onBook,
               onToggleSave: widget.onToggleSave,
             ),
           ),
@@ -270,6 +273,7 @@ class _Actions extends StatelessWidget {
     required this.saved,
     required this.onOpen,
     required this.onMessage,
+    required this.onBook,
     required this.onToggleSave,
   });
 
@@ -279,6 +283,7 @@ class _Actions extends StatelessWidget {
   final bool saved;
   final VoidCallback onOpen;
   final VoidCallback onMessage;
+  final VoidCallback onBook;
   final VoidCallback onToggleSave;
 
   @override
@@ -309,6 +314,18 @@ class _Actions extends StatelessWidget {
             label: l10n.discoverMessage,
             onTap: onMessage,
             child: const Icon(Icons.chat_bubble_rounded, color: AppColors.onInk, size: 32),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _ActionButton(
+            label: l10n.reelBook,
+            semanticLabel: l10n.reelBookWith(companion.displayName),
+            onTap: onBook,
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
+              child: const Icon(Icons.event_available_rounded, color: AppColors.onInk, size: 26),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _ActionButton(

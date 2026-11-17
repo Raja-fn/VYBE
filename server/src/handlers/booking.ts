@@ -276,8 +276,9 @@ export async function requestBookingLogic(
     throw appError(ErrorCodes.invalidInput, 'This plan is not offered here.');
   }
   const availability = (await availabilityOf(sql, [companion.uid])).get(companion.uid) ?? null;
+  // Booking is free by default (both costs 0); a cost above 0 charges credits.
   const cost = input.kind === 'instant' ? config.creditCostInstantRequest : config.creditCostBookSpot;
-  const ledgerId = `${bookingId}_charge`;
+  const ledgerId = cost > 0 ? `${bookingId}_charge` : null;
 
   const result = await sql.begin(async (tx) => {
     // Lock both people (in a fixed order) so neither can be double-booked by a parallel request.
@@ -309,7 +310,7 @@ export async function requestBookingLogic(
 
     const [account] = await tx<{ balance: number }[]>`select balance from credit_accounts where uid = ${caller.uid} for update`;
     const current = account?.balance ?? 0;
-    if (current < cost) throw appError(ErrorCodes.insufficientCredits, 'Not enough credits.');
+    if (cost > 0 && current < cost) throw appError(ErrorCodes.insufficientCredits, 'Not enough credits.');
     const after = current - cost;
     const booked = slot.booked + 1;
     const me = people.find((p) => p.id === caller.uid);
@@ -318,13 +319,15 @@ export async function requestBookingLogic(
     await tx`
       update venue_slots set booked = ${booked}, status = ${booked >= slot.capacity ? 'full' : 'open'}
       where venue_id = ${venue.venueId} and id = ${input.slotId}`;
-    await tx`
-      insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
-      on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
-    await tx`
-      insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
-      values (${ledgerId}, ${caller.uid}, ${-cost}, ${after}, ${input.kind === 'instant' ? 'instant_request' : 'booking'},
-        'booking', ${bookingId}, ${ledgerId}, ${now})`;
+    if (ledgerId) {
+      await tx`
+        insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
+        on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
+      await tx`
+        insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
+        values (${ledgerId}, ${caller.uid}, ${-cost}, ${after}, ${input.kind === 'instant' ? 'instant_request' : 'booking'},
+          'booking', ${bookingId}, ${ledgerId}, ${now})`;
+    }
     await tx`
       insert into bookings (id, seeker_uid, seeker_name, seeker_age, companion_uid, companion_name, companion_age,
         venue_id, venue_name, venue_category, venue_owner_uid, slot_id, day_key, start_at, end_at, plan_type, kind,

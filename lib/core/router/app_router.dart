@@ -22,6 +22,8 @@ import '../../features/onboarding/presentation/status_screens.dart';
 import '../../features/preferences/presentation/preferences_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/my_profile_screen.dart';
+import '../../features/reels/presentation/new_reel_screen.dart';
+import '../../features/reels/presentation/reels_screen.dart';
 import '../../features/verification/presentation/verification_screen.dart';
 import 'routes.dart';
 import 'screens/not_found_screen.dart';
@@ -74,6 +76,9 @@ GoRouter appRouter(Ref ref) {
             ],
           ),
           StatefulShellBranch(
+            routes: [GoRoute(path: AppRoutes.reels, builder: (context, state) => const ReelsScreen())],
+          ),
+          StatefulShellBranch(
             routes: [GoRoute(path: AppRoutes.chats, builder: (context, state) => const ChatsScreen())],
           ),
           StatefulShellBranch(
@@ -98,6 +103,13 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) => CompanionProfileScreen(uid: state.pathParameters['uid']!),
       ),
       GoRoute(path: AppRoutes.credits, builder: (context, state) => const CreditsScreen()),
+      GoRoute(
+        path: AppRoutes.newReel,
+        builder: (context, state) {
+          final file = state.extra;
+          return file is String ? NewReelScreen(file: file) : const NotFoundScreen();
+        },
+      ),
       GoRoute(
         path: AppRoutes.chatPattern,
         builder: (context, state) => ChatScreen(chatId: state.pathParameters['chatId']!),

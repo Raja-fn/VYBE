@@ -47,7 +47,7 @@ void main() {
       expect(find.byType(DiscoverScreen), findsOneWidget);
       expect(find.text('Showing: Everyone'), findsOneWidget);
       expect(find.text('Neha, 24'), findsOneWidget);
-      expect(find.text('Arjun, 27'), findsNothing);
+      expect(find.text('Coffee'), findsNothing); // no plan filter: everyone shows
       expect(find.textContaining('About 2 km away · 3 spots nearby'), findsOneWidget);
       expect(find.textContaining('Free now · '), findsOneWidget);
       expect(find.text('MY IDEAL SUNDAY'), findsOneWidget);
@@ -69,8 +69,10 @@ void main() {
       }
 
       await swipeUp();
-      expect(find.text('Sam, 26'), findsOneWidget);
+      expect(find.text('Arjun, 27'), findsOneWidget);
       expect(find.text('Neha, 24'), findsNothing);
+      await swipeUp();
+      expect(find.text('Sam, 26'), findsOneWidget);
       await swipeUp();
       expect(find.text('You have seen everyone for now'), findsOneWidget);
       await _tap(tester, find.text('Start again'));
@@ -115,10 +117,12 @@ void main() {
       expect(find.textContaining('Neha'), findsWidgets);
     });
 
-    testWidgets('plan chips filter the deck', (tester) async {
-      await pumpFullApp(tester, backend: _withCompanions());
-      await _tap(tester, find.text('Movie'));
-      expect(find.text('Arjun, 27'), findsOneWidget);
+    testWidgets('shows everyone, for any plan, and Book opens booking', (tester) async {
+      final backend = _withCompanions();
+      await pumpFullApp(tester, backend: backend);
+      expect(backend.discover.discoverCalls, [null]);
+      await _tapReel(tester, find.bySemanticsLabel('Book a meetup with Neha'));
+      expect(find.text('Book your spot'), findsOneWidget);
     });
 
     testWidgets('Save toggles and is announced', (tester) async {
@@ -129,10 +133,10 @@ void main() {
       expect(find.bySemanticsLabel('Remove from saved'), findsOneWidget);
     });
 
-    testWidgets('empty plan shows the empty state', (tester) async {
+    testWidgets('no one nearby shows the empty state', (tester) async {
       final backend = readyBackend();
       await pumpFullApp(tester, backend: backend);
-      expect(find.text('No one nearby for this plan yet'), findsOneWidget);
+      expect(find.text('No one nearby yet'), findsOneWidget);
     });
 
     testWidgets('a server error offers a retry', (tester) async {
@@ -181,7 +185,7 @@ void main() {
       expect(find.text('Neha, 24'), findsOneWidget);
       expect(find.textContaining('Free until'), findsOneWidget);
       expect(find.text('About 2 km'), findsOneWidget);
-      expect(find.text('Costs 5 credits'), findsOneWidget);
+      expect(find.text('Free · they get your request right away'), findsOneWidget);
     });
 
     testWidgets('switching to tomorrow shows the free window', (tester) async {

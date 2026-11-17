@@ -13,7 +13,12 @@ part of 'discover_providers.dart';
 const discoverRepositoryProvider = DiscoverRepositoryProvider._();
 
 final class DiscoverRepositoryProvider
-    extends $FunctionalProvider<DiscoverRepository, DiscoverRepository, DiscoverRepository>
+    extends
+        $FunctionalProvider<
+          DiscoverRepository,
+          DiscoverRepository,
+          DiscoverRepository
+        >
     with $Provider<DiscoverRepository> {
   const DiscoverRepositoryProvider._()
     : super(
@@ -31,7 +36,9 @@ final class DiscoverRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<DiscoverRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<DiscoverRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   DiscoverRepository create(Ref ref) {
@@ -40,11 +47,15 @@ final class DiscoverRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(DiscoverRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<DiscoverRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DiscoverRepository>(value),
+    );
   }
 }
 
-String _$discoverRepositoryHash() => r'd7d12df7ad077219cc4318611762b0c9bbb5461a';
+String _$discoverRepositoryHash() =>
+    r'd7d12df7ad077219cc4318611762b0c9bbb5461a';
 
 /// Reads the device position and sends it to the server. Every discovery
 /// list waits for this, so results are always around the current position.
@@ -55,7 +66,8 @@ const locationSyncProvider = LocationSyncProvider._();
 /// Reads the device position and sends it to the server. Every discovery
 /// list waits for this, so results are always around the current position.
 
-final class LocationSyncProvider extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+final class LocationSyncProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
     with $FutureModifier<void>, $FutureProvider<void> {
   /// Reads the device position and sends it to the server. Every discovery
   /// list waits for this, so results are always around the current position.
@@ -75,7 +87,8 @@ final class LocationSyncProvider extends $FunctionalProvider<AsyncValue<void>, v
 
   @$internal
   @override
-  $FutureProviderElement<void> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<void> create(Ref ref) {
@@ -86,7 +99,7 @@ final class LocationSyncProvider extends $FunctionalProvider<AsyncValue<void>, v
 String _$locationSyncHash() => r'd3dbbb708fc30dcbc68114772cf4964a21ca3648';
 
 @ProviderFor(discoverResults)
-const discoverResultsProvider = DiscoverResultsFamily._();
+const discoverResultsProvider = DiscoverResultsProvider._();
 
 final class DiscoverResultsProvider
     extends
@@ -95,9 +108,13 @@ final class DiscoverResultsProvider
           List<CompanionSummary>,
           FutureOr<List<CompanionSummary>>
         >
-    with $FutureModifier<List<CompanionSummary>>, $FutureProvider<List<CompanionSummary>> {
-  const DiscoverResultsProvider._({required DiscoverResultsFamily super.from, required PlanType super.argument})
+    with
+        $FutureModifier<List<CompanionSummary>>,
+        $FutureProvider<List<CompanionSummary>> {
+  const DiscoverResultsProvider._()
     : super(
+        from: null,
+        argument: null,
         retry: null,
         name: r'discoverResultsProvider',
         isAutoDispose: true,
@@ -108,53 +125,19 @@ final class DiscoverResultsProvider
   @override
   String debugGetCreateSourceHash() => _$discoverResultsHash();
 
-  @override
-  String toString() {
-    return r'discoverResultsProvider'
-        ''
-        '($argument)';
-  }
-
   @$internal
   @override
-  $FutureProviderElement<List<CompanionSummary>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<CompanionSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<CompanionSummary>> create(Ref ref) {
-    final argument = this.argument as PlanType;
-    return discoverResults(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is DiscoverResultsProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
+    return discoverResults(ref);
   }
 }
 
-String _$discoverResultsHash() => r'cadef0971ff85bc3c7c1073df05c5d2cee1bd18c';
-
-final class DiscoverResultsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<CompanionSummary>>, PlanType> {
-  const DiscoverResultsFamily._()
-    : super(
-        retry: null,
-        name: r'discoverResultsProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  DiscoverResultsProvider call(PlanType plan) => DiscoverResultsProvider._(argument: plan, from: this);
-
-  @override
-  String toString() => r'discoverResultsProvider';
-}
+String _$discoverResultsHash() => r'56f9f289d7bc332c80f1750c799189a36743563e';
 
 @ProviderFor(freeNowResults)
 const freeNowResultsProvider = FreeNowResultsFamily._();
@@ -166,15 +149,19 @@ final class FreeNowResultsProvider
           List<CompanionSummary>,
           FutureOr<List<CompanionSummary>>
         >
-    with $FutureModifier<List<CompanionSummary>>, $FutureProvider<List<CompanionSummary>> {
-  const FreeNowResultsProvider._({required FreeNowResultsFamily super.from, required FreeWindow super.argument})
-    : super(
-        retry: null,
-        name: r'freeNowResultsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+    with
+        $FutureModifier<List<CompanionSummary>>,
+        $FutureProvider<List<CompanionSummary>> {
+  const FreeNowResultsProvider._({
+    required FreeNowResultsFamily super.from,
+    required FreeWindow super.argument,
+  }) : super(
+         retry: null,
+         name: r'freeNowResultsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$freeNowResultsHash();
@@ -188,8 +175,9 @@ final class FreeNowResultsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<CompanionSummary>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<CompanionSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<CompanionSummary>> create(Ref ref) {
@@ -211,7 +199,11 @@ final class FreeNowResultsProvider
 String _$freeNowResultsHash() => r'f8a188ccf4c5cb496edef24ddf7fe482ef30b9c0';
 
 final class FreeNowResultsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<CompanionSummary>>, FreeWindow> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<CompanionSummary>>,
+          FreeWindow
+        > {
   const FreeNowResultsFamily._()
     : super(
         retry: null,
@@ -221,7 +213,8 @@ final class FreeNowResultsFamily extends $Family
         isAutoDispose: true,
       );
 
-  FreeNowResultsProvider call(FreeWindow window) => FreeNowResultsProvider._(argument: window, from: this);
+  FreeNowResultsProvider call(FreeWindow window) =>
+      FreeNowResultsProvider._(argument: window, from: this);
 
   @override
   String toString() => r'freeNowResultsProvider';
@@ -231,16 +224,23 @@ final class FreeNowResultsFamily extends $Family
 const companionProfileProvider = CompanionProfileFamily._();
 
 final class CompanionProfileProvider
-    extends $FunctionalProvider<AsyncValue<CompanionSummary>, CompanionSummary, FutureOr<CompanionSummary>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<CompanionSummary>,
+          CompanionSummary,
+          FutureOr<CompanionSummary>
+        >
     with $FutureModifier<CompanionSummary>, $FutureProvider<CompanionSummary> {
-  const CompanionProfileProvider._({required CompanionProfileFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'companionProfileProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const CompanionProfileProvider._({
+    required CompanionProfileFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'companionProfileProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$companionProfileHash();
@@ -254,7 +254,9 @@ final class CompanionProfileProvider
 
   @$internal
   @override
-  $FutureProviderElement<CompanionSummary> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<CompanionSummary> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<CompanionSummary> create(Ref ref) {
@@ -275,7 +277,8 @@ final class CompanionProfileProvider
 
 String _$companionProfileHash() => r'b137740150e0b1740ccfed8dd9b4794a1e519d3a';
 
-final class CompanionProfileFamily extends $Family with $FunctionalFamilyOverride<FutureOr<CompanionSummary>, String> {
+final class CompanionProfileFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<CompanionSummary>, String> {
   const CompanionProfileFamily._()
     : super(
         retry: null,
@@ -285,7 +288,8 @@ final class CompanionProfileFamily extends $Family with $FunctionalFamilyOverrid
         isAutoDispose: true,
       );
 
-  CompanionProfileProvider call(String uid) => CompanionProfileProvider._(argument: uid, from: this);
+  CompanionProfileProvider call(String uid) =>
+      CompanionProfileProvider._(argument: uid, from: this);
 
   @override
   String toString() => r'companionProfileProvider';
@@ -301,7 +305,9 @@ final class SavedCompanionsProvider
           List<CompanionSummary>,
           FutureOr<List<CompanionSummary>>
         >
-    with $FutureModifier<List<CompanionSummary>>, $FutureProvider<List<CompanionSummary>> {
+    with
+        $FutureModifier<List<CompanionSummary>>,
+        $FutureProvider<List<CompanionSummary>> {
   const SavedCompanionsProvider._()
     : super(
         from: null,
@@ -318,8 +324,9 @@ final class SavedCompanionsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<CompanionSummary>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<CompanionSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<CompanionSummary>> create(Ref ref) {
@@ -332,7 +339,13 @@ String _$savedCompanionsHash() => r'd80844ed9082de579f6d99bfa8fa55c3a99e0c70';
 @ProviderFor(savedIds)
 const savedIdsProvider = SavedIdsProvider._();
 
-final class SavedIdsProvider extends $FunctionalProvider<AsyncValue<Set<String>>, Set<String>, Stream<Set<String>>>
+final class SavedIdsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<String>>,
+          Set<String>,
+          Stream<Set<String>>
+        >
     with $FutureModifier<Set<String>>, $StreamProvider<Set<String>> {
   const SavedIdsProvider._()
     : super(
@@ -350,7 +363,9 @@ final class SavedIdsProvider extends $FunctionalProvider<AsyncValue<Set<String>>
 
   @$internal
   @override
-  $StreamProviderElement<Set<String>> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<Set<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<Set<String>> create(Ref ref) {
@@ -364,7 +379,12 @@ String _$savedIdsHash() => r'29077711917c1d19cbde4475de137cf0257a4bd5';
 const creditsRepositoryProvider = CreditsRepositoryProvider._();
 
 final class CreditsRepositoryProvider
-    extends $FunctionalProvider<CreditsRepository, CreditsRepository, CreditsRepository>
+    extends
+        $FunctionalProvider<
+          CreditsRepository,
+          CreditsRepository,
+          CreditsRepository
+        >
     with $Provider<CreditsRepository> {
   const CreditsRepositoryProvider._()
     : super(
@@ -382,7 +402,9 @@ final class CreditsRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<CreditsRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<CreditsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   CreditsRepository create(Ref ref) {
@@ -391,7 +413,10 @@ final class CreditsRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(CreditsRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<CreditsRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreditsRepository>(value),
+    );
   }
 }
 
@@ -404,7 +429,8 @@ const creditBalanceProvider = CreditBalanceProvider._();
 
 /// The person's own credit balance (read-only; only the server changes it).
 
-final class CreditBalanceProvider extends $FunctionalProvider<AsyncValue<int>, int, Stream<int>>
+final class CreditBalanceProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, Stream<int>>
     with $FutureModifier<int>, $StreamProvider<int> {
   /// The person's own credit balance (read-only; only the server changes it).
   const CreditBalanceProvider._()
@@ -423,7 +449,8 @@ final class CreditBalanceProvider extends $FunctionalProvider<AsyncValue<int>, i
 
   @$internal
   @override
-  $StreamProviderElement<int> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<int> create(Ref ref) {

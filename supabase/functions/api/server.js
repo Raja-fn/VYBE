@@ -20255,8 +20255,8 @@ var app_config_defaults_default = {
   rulesVersion: 1,
   signupBonusCredits: 20,
   creditCostStartChat: 1,
-  creditCostBookSpot: 5,
-  creditCostInstantRequest: 5,
+  creditCostBookSpot: 0,
+  creditCostInstantRequest: 0,
   plans: [
     {
       tier: "free",
@@ -21381,7 +21381,7 @@ async function requestBookingLogic(deps, caller, input2) {
   }
   const availability = (await availabilityOf(sql2, [companion.uid])).get(companion.uid) ?? null;
   const cost = input2.kind === "instant" ? config2.creditCostInstantRequest : config2.creditCostBookSpot;
-  const ledgerId = `${bookingId}_charge`;
+  const ledgerId = cost > 0 ? `${bookingId}_charge` : null;
   const result = await sql2.begin(async (tx) => {
     const people2 = await tx`
       select id, display_name, age_years from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
@@ -21408,7 +21408,7 @@ async function requestBookingLogic(deps, caller, input2) {
     if (seekerDay.some((b) => overlaps(b, span))) throw appError(ErrorCodes.invalidInput, "You already have a meetup at that time.");
     const [account] = await tx`select balance from credit_accounts where uid = ${caller.uid} for update`;
     const current = account?.balance ?? 0;
-    if (current < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
+    if (cost > 0 && current < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
     const after = current - cost;
     const booked = slot.booked + 1;
     const me = people2.find((p) => p.id === caller.uid);
@@ -21416,13 +21416,15 @@ async function requestBookingLogic(deps, caller, input2) {
     await tx`
       update venue_slots set booked = ${booked}, status = ${booked >= slot.capacity ? "full" : "open"}
       where venue_id = ${venue.venueId} and id = ${input2.slotId}`;
-    await tx`
-      insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
-      on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
-    await tx`
-      insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
-      values (${ledgerId}, ${caller.uid}, ${-cost}, ${after}, ${input2.kind === "instant" ? "instant_request" : "booking"},
-        'booking', ${bookingId}, ${ledgerId}, ${now})`;
+    if (ledgerId) {
+      await tx`
+        insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
+        on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
+      await tx`
+        insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
+        values (${ledgerId}, ${caller.uid}, ${-cost}, ${after}, ${input2.kind === "instant" ? "instant_request" : "booking"},
+          'booking', ${bookingId}, ${ledgerId}, ${now})`;
+    }
     await tx`
       insert into bookings (id, seeker_uid, seeker_name, seeker_age, companion_uid, companion_name, companion_age,
         venue_id, venue_name, venue_category, venue_owner_uid, slot_id, day_key, start_at, end_at, plan_type, kind,
@@ -21475,7 +21477,7 @@ async function cancelBookingLogic(deps, caller, input2) {
 }
 
 // src/handlers/account.ts
-var PERSONAL_BUCKETS = ["photos", "voice", "verification"];
+var PERSONAL_BUCKETS = ["photos", "voice", "verification", "reels"];
 async function deleteAccountLogic(deps, caller) {
   const { sql: sql2 } = deps;
   const now = deps.now();
@@ -22262,6 +22264,109 @@ async function handleStoreNotificationLogic(deps, platform, body, headers) {
   });
 }
 
+// src/handlers/reels.ts
+var reels_exports = {};
+__export(reels_exports, {
+  REELS_PAGE_SIZE: () => REELS_PAGE_SIZE,
+  REELS_PER_DAY: () => REELS_PER_DAY,
+  REEL_CAPTION_MAX: () => REEL_CAPTION_MAX,
+  deleteReelInput: () => deleteReelInput,
+  deleteReelLogic: () => deleteReelLogic,
+  postReelInput: () => postReelInput,
+  postReelLogic: () => postReelLogic,
+  reelFeedInput: () => reelFeedInput,
+  reelFeedLogic: () => reelFeedLogic,
+  reelVideoPath: () => reelVideoPath
+});
+var REELS_PAGE_SIZE = 15;
+var REEL_CAPTION_MAX = 150;
+var REELS_PER_DAY = 10;
+var reelIdSchema = external_exports.string().uuid();
+async function requireMember(deps, uid) {
+  const [user] = await deps.sql`
+    select account_status, verification_status from users where id = ${uid}`;
+  if (!user) throw appError(ErrorCodes.notFound, "Accept the rules first.");
+  if (user.account_status !== "active") throw appError(ErrorCodes.blocked, "This account is suspended.");
+  if (user.verification_status !== "approved") throw appError(ErrorCodes.notVerified, "Finish verification first.");
+}
+var reelVideoPath = (uid, reelId) => `reels/${uid}/${reelId}.mp4`;
+var reelFeedInput = external_exports.object({
+  /** Only reels older than this one (the last reel of the previous page). */
+  before: reelIdSchema.nullable().optional(),
+  /** Only this person's reels (their profile). */
+  authorUid: external_exports.string().uuid().nullable().optional()
+});
+async function reelFeedLogic(deps, caller, input2) {
+  const { sql: sql2 } = deps;
+  await requireMember(deps, caller.uid);
+  const blocked = [...await blockedUids(sql2, caller.uid)];
+  let cursor;
+  if (input2.before) {
+    [cursor] = await sql2`select created_at, id from reels where id = ${input2.before}`;
+    if (!cursor) return { reels: [], hasMore: false };
+  }
+  const rows = await sql2`
+    select r.id, r.uid, r.video_path, r.caption, r.created_at, u.display_name, u.photo_paths, c.is_listed
+    from reels r
+    join users u on u.id = r.uid
+    left join companion_profiles c on c.uid = r.uid
+    where u.account_status = 'active' and u.verification_status = 'approved'
+      ${blocked.length ? sql2`and r.uid not in ${sql2(blocked)}` : sql2``}
+      ${input2.authorUid ? sql2`and r.uid = ${input2.authorUid}` : sql2``}
+      ${cursor ? sql2`and (r.created_at, r.id) < (${cursor.created_at}, ${cursor.id})` : sql2``}
+    order by r.created_at desc, r.id desc
+    limit ${REELS_PAGE_SIZE + 1}`;
+  const page = rows.slice(0, REELS_PAGE_SIZE);
+  return {
+    hasMore: rows.length > REELS_PAGE_SIZE,
+    reels: page.map((r) => ({
+      reelId: r.id,
+      authorUid: r.uid,
+      authorName: r.display_name?.trim() || "VYBE member",
+      authorPhotoPath: r.photo_paths?.[0] ?? null,
+      authorBookable: r.uid !== caller.uid && r.is_listed === true,
+      videoPath: r.video_path,
+      caption: r.caption,
+      createdAt: r.created_at.toISOString(),
+      isMine: r.uid === caller.uid
+    }))
+  };
+}
+var postReelInput = external_exports.object({
+  /** Client-generated id; the video was uploaded to reels/<uid>/<reelId>.mp4. */
+  reelId: reelIdSchema,
+  caption: external_exports.string().optional()
+});
+async function postReelLogic(deps, caller, input2) {
+  const { sql: sql2 } = deps;
+  const now = deps.now();
+  await requireMember(deps, caller.uid);
+  const caption = (input2.caption ?? "").trim().replace(/\s+/g, " ");
+  if (caption.length > REEL_CAPTION_MAX) throw appError(ErrorCodes.invalidInput, "The caption is too long.");
+  const [existing] = await sql2`select uid from reels where id = ${input2.reelId}`;
+  if (existing) {
+    if (existing.uid !== caller.uid) throw appError(ErrorCodes.invalidInput, "Use a new reel id.");
+    return { reelId: input2.reelId };
+  }
+  const path = reelVideoPath(caller.uid, input2.reelId);
+  const objectName = path.slice("reels/".length);
+  const [file2] = await sql2`select 1 from storage.objects where bucket_id = 'reels' and name = ${objectName}`;
+  if (!file2) throw appError(ErrorCodes.invalidInput, "Upload the video first.");
+  await consumeRateLimit(sql2, `${caller.uid}_reels`, REELS_PER_DAY, 864e5, now);
+  await sql2`
+    insert into reels (id, uid, video_path, caption, created_at)
+    values (${input2.reelId}, ${caller.uid}, ${path}, ${caption}, ${now})
+    on conflict (id) do nothing`;
+  return { reelId: input2.reelId };
+}
+var deleteReelInput = external_exports.object({ reelId: reelIdSchema });
+async function deleteReelLogic(deps, caller, input2) {
+  const [row] = await deps.sql`select uid from reels where id = ${input2.reelId}`;
+  if (!row || row.uid !== caller.uid) throw appError(ErrorCodes.notFound, "Reel not found.");
+  await deps.sql`delete from reels where id = ${input2.reelId}`;
+  return { deleted: true };
+}
+
 // src/handlers/safety.ts
 var safety_exports = {};
 __export(safety_exports, {
@@ -22281,7 +22386,7 @@ var REPORT_REASONS = [
 ];
 var submitReportInput = external_exports.object({
   reportedUid: uidSchema,
-  contextType: external_exports.enum(["profile", "chat", "booking", "meetup"]),
+  contextType: external_exports.enum(["profile", "chat", "booking", "meetup", "reel"]),
   refId: external_exports.string().min(1).nullable().optional(),
   reason: external_exports.enum(REPORT_REASONS),
   details: external_exports.string().optional()
@@ -22349,7 +22454,10 @@ var signedIn = {
   markChatRead: { kind: "user", schema: chat_exports.markChatReadInput, run: chat_exports.markChatReadLogic },
   submitReport: { kind: "user", schema: safety_exports.submitReportInput, run: safety_exports.submitReportLogic },
   blockUser: { kind: "user", schema: safety_exports.blockUserInput, run: safety_exports.blockUserLogic },
-  verifyPurchase: { kind: "user", schema: purchases_exports.verifyPurchaseInput, run: purchases_exports.verifyPurchaseLogic }
+  verifyPurchase: { kind: "user", schema: purchases_exports.verifyPurchaseInput, run: purchases_exports.verifyPurchaseLogic },
+  reelFeed: { kind: "user", schema: reels_exports.reelFeedInput, run: reels_exports.reelFeedLogic },
+  postReel: { kind: "user", schema: reels_exports.postReelInput, run: reels_exports.postReelLogic },
+  deleteReel: { kind: "user", schema: reels_exports.deleteReelInput, run: reels_exports.deleteReelLogic }
 };
 var json2 = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 var errorResponse = (error62) => json2(httpStatusFor[error62.status], { error: { status: error62.status, code: error62.code, message: error62.message } });

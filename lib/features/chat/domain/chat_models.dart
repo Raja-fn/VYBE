@@ -58,4 +58,4 @@ enum ReportReason {
   final String wire;
 }
 
-enum ReportContext { profile, chat, booking, meetup }
+enum ReportContext { profile, chat, booking, meetup, reel }

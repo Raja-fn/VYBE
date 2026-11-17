@@ -12,7 +12,8 @@ part of 'voice_player.dart';
 @ProviderFor(voicePlayer)
 const voicePlayerProvider = VoicePlayerProvider._();
 
-final class VoicePlayerProvider extends $FunctionalProvider<VoicePlayer, VoicePlayer, VoicePlayer>
+final class VoicePlayerProvider
+    extends $FunctionalProvider<VoicePlayer, VoicePlayer, VoicePlayer>
     with $Provider<VoicePlayer> {
   const VoicePlayerProvider._()
     : super(
@@ -30,7 +31,8 @@ final class VoicePlayerProvider extends $FunctionalProvider<VoicePlayer, VoicePl
 
   @$internal
   @override
-  $ProviderElement<VoicePlayer> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<VoicePlayer> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   VoicePlayer create(Ref ref) {
@@ -39,7 +41,10 @@ final class VoicePlayerProvider extends $FunctionalProvider<VoicePlayer, VoicePl
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(VoicePlayer value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<VoicePlayer>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<VoicePlayer>(value),
+    );
   }
 }
 

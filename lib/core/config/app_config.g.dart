@@ -8,7 +8,8 @@ part of 'app_config.dart';
 
 _AppConfig _$AppConfigFromJson(Map<String, dynamic> json) => _AppConfig(
   discoveryRadiusKm: (json['discoveryRadiusKm'] as num).toInt(),
-  companionLocationSnapMeters: (json['companionLocationSnapMeters'] as num).toInt(),
+  companionLocationSnapMeters: (json['companionLocationSnapMeters'] as num)
+      .toInt(),
   distanceLabelStepKm: (json['distanceLabelStepKm'] as num).toInt(),
   discoverCallsPerMinute: (json['discoverCallsPerMinute'] as num).toInt(),
   discoverPageSize: (json['discoverPageSize'] as num).toInt(),
@@ -28,26 +29,36 @@ _AppConfig _$AppConfigFromJson(Map<String, dynamic> json) => _AppConfig(
   creditCostStartChat: (json['creditCostStartChat'] as num).toInt(),
   creditCostBookSpot: (json['creditCostBookSpot'] as num).toInt(),
   creditCostInstantRequest: (json['creditCostInstantRequest'] as num).toInt(),
-  plans: (json['plans'] as List<dynamic>).map((e) => PlanConfig.fromJson(e as Map<String, dynamic>)).toList(),
-  topUpPacks: (json['topUpPacks'] as List<dynamic>).map((e) => TopUpPack.fromJson(e as Map<String, dynamic>)).toList(),
+  plans: (json['plans'] as List<dynamic>)
+      .map((e) => PlanConfig.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  topUpPacks: (json['topUpPacks'] as List<dynamic>)
+      .map((e) => TopUpPack.fromJson(e as Map<String, dynamic>))
+      .toList(),
   subscriptionPeriodDays: (json['subscriptionPeriodDays'] as num).toInt(),
   bookingDaysAhead: (json['bookingDaysAhead'] as num).toInt(),
   slotMinutesDefault: (json['slotMinutesDefault'] as num).toInt(),
   freeNowMaxHours: (json['freeNowMaxHours'] as num).toInt(),
   tonightStartHour: (json['tonightStartHour'] as num).toInt(),
-  checkInWindowMinutesBefore: (json['checkInWindowMinutesBefore'] as num).toInt(),
+  checkInWindowMinutesBefore: (json['checkInWindowMinutesBefore'] as num)
+      .toInt(),
   checkInWindowMinutesAfter: (json['checkInWindowMinutesAfter'] as num).toInt(),
-  safetyCheckIntervalMinutes: (json['safetyCheckIntervalMinutes'] as num).toInt(),
-  safetyMissedCheckInsToEscalate: (json['safetyMissedCheckInsToEscalate'] as num).toInt(),
+  safetyCheckIntervalMinutes: (json['safetyCheckIntervalMinutes'] as num)
+      .toInt(),
+  safetyMissedCheckInsToEscalate:
+      (json['safetyMissedCheckInsToEscalate'] as num).toInt(),
   sosHoldSeconds: (json['sosHoldSeconds'] as num).toInt(),
   autoCompleteGraceMinutes: (json['autoCompleteGraceMinutes'] as num).toInt(),
-  moderationStrikesForReport: (json['moderationStrikesForReport'] as num).toInt(),
-  moderationStrikeWindowHours: (json['moderationStrikeWindowHours'] as num).toInt(),
+  moderationStrikesForReport: (json['moderationStrikesForReport'] as num)
+      .toInt(),
+  moderationStrikeWindowHours: (json['moderationStrikeWindowHours'] as num)
+      .toInt(),
   chatMessageMaxLength: (json['chatMessageMaxLength'] as num).toInt(),
   chatMessagesPageSize: (json['chatMessagesPageSize'] as num).toInt(),
   reportsPerDay: (json['reportsPerDay'] as num).toInt(),
   reportDetailsMaxLength: (json['reportDetailsMaxLength'] as num).toInt(),
-  verificationSessionMinutes: (json['verificationSessionMinutes'] as num).toInt(),
+  verificationSessionMinutes: (json['verificationSessionMinutes'] as num)
+      .toInt(),
   captureMaxDimension: (json['captureMaxDimension'] as num).toInt(),
   captureJpegQuality: (json['captureJpegQuality'] as num).toInt(),
   voiceIntroMaxSec: (json['voiceIntroMaxSec'] as num).toInt(),
@@ -60,11 +71,15 @@ _AppConfig _$AppConfigFromJson(Map<String, dynamic> json) => _AppConfig(
   popularityHotThreshold: (json['popularityHotThreshold'] as num).toDouble(),
   popularityBusyThreshold: (json['popularityBusyThreshold'] as num).toDouble(),
   maxTextScale: (json['maxTextScale'] as num).toDouble(),
-  remoteConfigFetchTimeoutSeconds: (json['remoteConfigFetchTimeoutSeconds'] as num).toInt(),
-  remoteConfigMinimumFetchIntervalMinutes: (json['remoteConfigMinimumFetchIntervalMinutes'] as num).toInt(),
+  remoteConfigFetchTimeoutSeconds:
+      (json['remoteConfigFetchTimeoutSeconds'] as num).toInt(),
+  remoteConfigMinimumFetchIntervalMinutes:
+      (json['remoteConfigMinimumFetchIntervalMinutes'] as num).toInt(),
 );
 
-Map<String, dynamic> _$AppConfigToJson(_AppConfig instance) => <String, dynamic>{
+Map<String, dynamic> _$AppConfigToJson(
+  _AppConfig instance,
+) => <String, dynamic>{
   'discoveryRadiusKm': instance.discoveryRadiusKm,
   'companionLocationSnapMeters': instance.companionLocationSnapMeters,
   'distanceLabelStepKm': instance.distanceLabelStepKm,
@@ -119,7 +134,8 @@ Map<String, dynamic> _$AppConfigToJson(_AppConfig instance) => <String, dynamic>
   'popularityBusyThreshold': instance.popularityBusyThreshold,
   'maxTextScale': instance.maxTextScale,
   'remoteConfigFetchTimeoutSeconds': instance.remoteConfigFetchTimeoutSeconds,
-  'remoteConfigMinimumFetchIntervalMinutes': instance.remoteConfigMinimumFetchIntervalMinutes,
+  'remoteConfigMinimumFetchIntervalMinutes':
+      instance.remoteConfigMinimumFetchIntervalMinutes,
 };
 
 _LaunchCity _$LaunchCityFromJson(Map<String, dynamic> json) => _LaunchCity(
@@ -129,12 +145,13 @@ _LaunchCity _$LaunchCityFromJson(Map<String, dynamic> json) => _LaunchCity(
   timezone: json['timezone'] as String,
 );
 
-Map<String, dynamic> _$LaunchCityToJson(_LaunchCity instance) => <String, dynamic>{
-  'name': instance.name,
-  'lat': instance.lat,
-  'lng': instance.lng,
-  'timezone': instance.timezone,
-};
+Map<String, dynamic> _$LaunchCityToJson(_LaunchCity instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'lat': instance.lat,
+      'lng': instance.lng,
+      'timezone': instance.timezone,
+    };
 
 _PlanConfig _$PlanConfigFromJson(Map<String, dynamic> json) => _PlanConfig(
   tier: $enumDecode(_$PlanTierEnumMap, json['tier']),
@@ -142,21 +159,29 @@ _PlanConfig _$PlanConfigFromJson(Map<String, dynamic> json) => _PlanConfig(
   monthlyCredits: (json['monthlyCredits'] as num).toInt(),
 );
 
-Map<String, dynamic> _$PlanConfigToJson(_PlanConfig instance) => <String, dynamic>{
-  'tier': _$PlanTierEnumMap[instance.tier]!,
-  'productId': instance.productId,
-  'monthlyCredits': instance.monthlyCredits,
+Map<String, dynamic> _$PlanConfigToJson(_PlanConfig instance) =>
+    <String, dynamic>{
+      'tier': _$PlanTierEnumMap[instance.tier]!,
+      'productId': instance.productId,
+      'monthlyCredits': instance.monthlyCredits,
+    };
+
+const _$PlanTierEnumMap = {
+  PlanTier.free: 'free',
+  PlanTier.plus: 'plus',
+  PlanTier.premium: 'premium',
 };
 
-const _$PlanTierEnumMap = {PlanTier.free: 'free', PlanTier.plus: 'plus', PlanTier.premium: 'premium'};
+_TopUpPack _$TopUpPackFromJson(Map<String, dynamic> json) => _TopUpPack(
+  productId: json['productId'] as String,
+  credits: (json['credits'] as num).toInt(),
+);
 
-_TopUpPack _$TopUpPackFromJson(Map<String, dynamic> json) =>
-    _TopUpPack(productId: json['productId'] as String, credits: (json['credits'] as num).toInt());
-
-Map<String, dynamic> _$TopUpPackToJson(_TopUpPack instance) => <String, dynamic>{
-  'productId': instance.productId,
-  'credits': instance.credits,
-};
+Map<String, dynamic> _$TopUpPackToJson(_TopUpPack instance) =>
+    <String, dynamic>{
+      'productId': instance.productId,
+      'credits': instance.credits,
+    };
 
 // **************************************************************************
 // RiverpodGenerator
@@ -171,7 +196,9 @@ const appConfigProvider = AppConfigProvider._();
 
 /// Set once in `bootstrap()` through a provider override.
 
-final class AppConfigProvider extends $FunctionalProvider<AppConfig, AppConfig, AppConfig> with $Provider<AppConfig> {
+final class AppConfigProvider
+    extends $FunctionalProvider<AppConfig, AppConfig, AppConfig>
+    with $Provider<AppConfig> {
   /// Set once in `bootstrap()` through a provider override.
   const AppConfigProvider._()
     : super(
@@ -189,7 +216,8 @@ final class AppConfigProvider extends $FunctionalProvider<AppConfig, AppConfig, 
 
   @$internal
   @override
-  $ProviderElement<AppConfig> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AppConfig> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   AppConfig create(Ref ref) {
@@ -198,7 +226,10 @@ final class AppConfigProvider extends $FunctionalProvider<AppConfig, AppConfig, 
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AppConfig value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AppConfig>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppConfig>(value),
+    );
   }
 }
 

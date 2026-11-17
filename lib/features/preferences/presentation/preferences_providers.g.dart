@@ -13,7 +13,12 @@ part of 'preferences_providers.dart';
 const preferencesRepositoryProvider = PreferencesRepositoryProvider._();
 
 final class PreferencesRepositoryProvider
-    extends $FunctionalProvider<PreferencesRepository, PreferencesRepository, PreferencesRepository>
+    extends
+        $FunctionalProvider<
+          PreferencesRepository,
+          PreferencesRepository,
+          PreferencesRepository
+        >
     with $Provider<PreferencesRepository> {
   const PreferencesRepositoryProvider._()
     : super(
@@ -31,7 +36,9 @@ final class PreferencesRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<PreferencesRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<PreferencesRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   PreferencesRepository create(Ref ref) {
@@ -40,26 +47,37 @@ final class PreferencesRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(PreferencesRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<PreferencesRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PreferencesRepository>(value),
+    );
   }
 }
 
-String _$preferencesRepositoryHash() => r'914348a4a3052e1807cb4c1c08b0d5cc4fb51255';
+String _$preferencesRepositoryHash() =>
+    r'914348a4a3052e1807cb4c1c08b0d5cc4fb51255';
 
 @ProviderFor(preferences)
 const preferencesProvider = PreferencesFamily._();
 
 final class PreferencesProvider
-    extends $FunctionalProvider<AsyncValue<Preferences?>, Preferences?, Stream<Preferences?>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<Preferences?>,
+          Preferences?,
+          Stream<Preferences?>
+        >
     with $FutureModifier<Preferences?>, $StreamProvider<Preferences?> {
-  const PreferencesProvider._({required PreferencesFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'preferencesProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const PreferencesProvider._({
+    required PreferencesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'preferencesProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$preferencesHash();
@@ -73,7 +91,9 @@ final class PreferencesProvider
 
   @$internal
   @override
-  $StreamProviderElement<Preferences?> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<Preferences?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<Preferences?> create(Ref ref) {
@@ -94,7 +114,8 @@ final class PreferencesProvider
 
 String _$preferencesHash() => r'e9d0da16e9e8b3bf8f2a08af527ae47e962392fe';
 
-final class PreferencesFamily extends $Family with $FunctionalFamilyOverride<Stream<Preferences?>, String> {
+final class PreferencesFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<Preferences?>, String> {
   const PreferencesFamily._()
     : super(
         retry: null,
@@ -104,7 +125,8 @@ final class PreferencesFamily extends $Family with $FunctionalFamilyOverride<Str
         isAutoDispose: false,
       );
 
-  PreferencesProvider call(String uid) => PreferencesProvider._(argument: uid, from: this);
+  PreferencesProvider call(String uid) =>
+      PreferencesProvider._(argument: uid, from: this);
 
   @override
   String toString() => r'preferencesProvider';

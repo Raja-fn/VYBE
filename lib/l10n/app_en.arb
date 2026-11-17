@@ -263,7 +263,7 @@
   },
   "discoverMap": "Map",
   "discoverFreeNowLink": "See who is free right now",
-  "discoverEmptyTitle": "No one nearby for this plan yet",
+  "discoverEmptyTitle": "No one nearby yet",
   "discoverEmptyBody": "Try another plan, or see who is free right now.",
   "discoverAllSeenTitle": "You have seen everyone for now",
   "discoverMessage": "Message",
@@ -653,7 +653,7 @@
     }
   },
   "creditsTitle": "Get more credits",
-  "creditsSubtitle": "Unlock chats and bookings.",
+  "creditsSubtitle": "Unlock new chats.",
   "planFree": "Free",
   "planPlus": "Plus",
   "planPremium": "Premium",
@@ -940,5 +940,42 @@
   "sampleProfileNotice": "This is a sample profile. Real members near you will appear here as people join.",
   "reelProfile": "Profile",
   "reelSaved": "Saved",
-  "reelStartAgain": "Start again"
+  "reelStartAgain": "Start again",
+  "costFree": "Free",
+  "instantBodyFree": "Free · they get your request right away",
+  "reelBook": "Book",
+  "reelBookWith": "Book a meetup with {name}",
+  "@reelBookWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "navReels": "Reels",
+  "reelsPost": "Post a reel",
+  "reelsRecord": "Record a video",
+  "reelsPickGallery": "Choose from gallery",
+  "reelsEmptyTitle": "No reels yet",
+  "reelsEmptyBody": "Post a short video to show people what you are into.",
+  "reelVideo": "Video",
+  "reelPlay": "Play",
+  "reelPause": "Pause",
+  "reelCouldNotPlay": "This video could not play",
+  "reelMute": "Sound off",
+  "reelUnmute": "Sound on",
+  "reelMore": "More",
+  "reelReport": "Report or block",
+  "reelYou": "You",
+  "reelDelete": "Delete",
+  "reelDeleteTitle": "Delete this reel?",
+  "reelDeleteBody": "It is removed for everyone. This cannot be undone.",
+  "reelDeleted": "Reel deleted",
+  "reelTooBig": "This video is too big. Pick one under 50 MB.",
+  "newReelTitle": "New reel",
+  "newReelCaption": "Caption",
+  "newReelCaptionHint": "Say something about it (optional)",
+  "newReelRules": "Keep it friendly: no nudity, hate or contact details. Reels that break the rules are removed.",
+  "newReelPost": "Post",
+  "newReelPosted": "Your reel is posted"
 }

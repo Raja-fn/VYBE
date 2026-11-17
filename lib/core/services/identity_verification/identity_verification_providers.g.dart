@@ -12,13 +12,19 @@ part of 'identity_verification_providers.dart';
 /// is chosen on the server, so the test project exercises the real app flow.
 
 @ProviderFor(identityVerificationService)
-const identityVerificationServiceProvider = IdentityVerificationServiceProvider._();
+const identityVerificationServiceProvider =
+    IdentityVerificationServiceProvider._();
 
 /// Always the server client. Which provider (fake or real) decides
 /// is chosen on the server, so the test project exercises the real app flow.
 
 final class IdentityVerificationServiceProvider
-    extends $FunctionalProvider<IdentityVerificationService, IdentityVerificationService, IdentityVerificationService>
+    extends
+        $FunctionalProvider<
+          IdentityVerificationService,
+          IdentityVerificationService,
+          IdentityVerificationService
+        >
     with $Provider<IdentityVerificationService> {
   /// Always the server client. Which provider (fake or real) decides
   /// is chosen on the server, so the test project exercises the real app flow.
@@ -38,7 +44,9 @@ final class IdentityVerificationServiceProvider
 
   @$internal
   @override
-  $ProviderElement<IdentityVerificationService> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<IdentityVerificationService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   IdentityVerificationService create(Ref ref) {
@@ -47,8 +55,12 @@ final class IdentityVerificationServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(IdentityVerificationService value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<IdentityVerificationService>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IdentityVerificationService>(value),
+    );
   }
 }
 
-String _$identityVerificationServiceHash() => r'09bc6751ef7d69dea4ac0a827429a64e5373343c';
+String _$identityVerificationServiceHash() =>
+    r'09bc6751ef7d69dea4ac0a827429a64e5373343c';

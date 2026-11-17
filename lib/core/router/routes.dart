@@ -11,6 +11,7 @@ abstract final class AppRoutes {
   // Home tabs (Phase 3).
   static const discover = '/discover';
   static const freeNow = '/discover/free-now';
+  static const reels = '/reels';
   static const chats = '/chats';
   static const bookings = '/bookings';
   static const profile = '/profile';
@@ -55,6 +56,9 @@ abstract final class AppRoutes {
 
   /// Screen 11: credits and plans (Phase 6).
   static const credits = '/credits';
+
+  /// Post a reel; the picked video's file path goes in `extra`.
+  static const newReel = '/new-reel';
 
   /// Test builds only.
 }

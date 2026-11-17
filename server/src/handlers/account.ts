@@ -11,7 +11,7 @@ export interface AccountDeps {
 }
 
 /** Buckets that hold a person's own files, in folders named after their account id. */
-const PERSONAL_BUCKETS = ['photos', 'voice', 'verification'] as const;
+const PERSONAL_BUCKETS = ['photos', 'voice', 'verification', 'reels'] as const;
 
 /**
  * Deletes the caller's account (Google Play requirement):

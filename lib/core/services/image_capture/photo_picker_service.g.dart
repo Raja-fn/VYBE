@@ -13,7 +13,12 @@ part of 'photo_picker_service.dart';
 const photoPickerServiceProvider = PhotoPickerServiceProvider._();
 
 final class PhotoPickerServiceProvider
-    extends $FunctionalProvider<PhotoPickerService, PhotoPickerService, PhotoPickerService>
+    extends
+        $FunctionalProvider<
+          PhotoPickerService,
+          PhotoPickerService,
+          PhotoPickerService
+        >
     with $Provider<PhotoPickerService> {
   const PhotoPickerServiceProvider._()
     : super(
@@ -31,7 +36,9 @@ final class PhotoPickerServiceProvider
 
   @$internal
   @override
-  $ProviderElement<PhotoPickerService> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<PhotoPickerService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   PhotoPickerService create(Ref ref) {
@@ -40,8 +47,12 @@ final class PhotoPickerServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(PhotoPickerService value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<PhotoPickerService>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PhotoPickerService>(value),
+    );
   }
 }
 
-String _$photoPickerServiceHash() => r'42d6e992ab748310aa41580d131569280724954b';
+String _$photoPickerServiceHash() =>
+    r'42d6e992ab748310aa41580d131569280724954b';

@@ -13,7 +13,12 @@ part of 'booking_providers.dart';
 const bookingRepositoryProvider = BookingRepositoryProvider._();
 
 final class BookingRepositoryProvider
-    extends $FunctionalProvider<BookingRepository, BookingRepository, BookingRepository>
+    extends
+        $FunctionalProvider<
+          BookingRepository,
+          BookingRepository,
+          BookingRepository
+        >
     with $Provider<BookingRepository> {
   const BookingRepositoryProvider._()
     : super(
@@ -31,7 +36,9 @@ final class BookingRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<BookingRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<BookingRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   BookingRepository create(Ref ref) {
@@ -40,7 +47,10 @@ final class BookingRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(BookingRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<BookingRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BookingRepository>(value),
+    );
   }
 }
 
@@ -54,7 +64,12 @@ const myPositionProvider = MyPositionProvider._();
 /// The device position, for centring the map on the person.
 
 final class MyPositionProvider
-    extends $FunctionalProvider<AsyncValue<DevicePosition>, DevicePosition, FutureOr<DevicePosition>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<DevicePosition>,
+          DevicePosition,
+          FutureOr<DevicePosition>
+        >
     with $FutureModifier<DevicePosition>, $FutureProvider<DevicePosition> {
   /// The device position, for centring the map on the person.
   const MyPositionProvider._()
@@ -73,7 +88,9 @@ final class MyPositionProvider
 
   @$internal
   @override
-  $FutureProviderElement<DevicePosition> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<DevicePosition> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<DevicePosition> create(Ref ref) {
@@ -91,7 +108,12 @@ const nearbyVenuesProvider = NearbyVenuesFamily._();
 /// "Best spots to meet", optionally for one plan and reachable by one companion.
 
 final class NearbyVenuesProvider
-    extends $FunctionalProvider<AsyncValue<List<Venue>>, List<Venue>, FutureOr<List<Venue>>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Venue>>,
+          List<Venue>,
+          FutureOr<List<Venue>>
+        >
     with $FutureModifier<List<Venue>>, $FutureProvider<List<Venue>> {
   /// "Best spots to meet", optionally for one plan and reachable by one companion.
   const NearbyVenuesProvider._({
@@ -117,12 +139,18 @@ final class NearbyVenuesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Venue>> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<List<Venue>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Venue>> create(Ref ref) {
     final argument = this.argument as ({PlanType? plan, String? companionUid});
-    return nearbyVenues(ref, plan: argument.plan, companionUid: argument.companionUid);
+    return nearbyVenues(
+      ref,
+      plan: argument.plan,
+      companionUid: argument.companionUid,
+    );
   }
 
   @override
@@ -141,7 +169,11 @@ String _$nearbyVenuesHash() => r'e56b4eebf2630fbf79a1550af5a4b78ef0a729c2';
 /// "Best spots to meet", optionally for one plan and reachable by one companion.
 
 final class NearbyVenuesFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<Venue>>, ({PlanType? plan, String? companionUid})> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<Venue>>,
+          ({PlanType? plan, String? companionUid})
+        > {
   const NearbyVenuesFamily._()
     : super(
         retry: null,
@@ -154,7 +186,10 @@ final class NearbyVenuesFamily extends $Family
   /// "Best spots to meet", optionally for one plan and reachable by one companion.
 
   NearbyVenuesProvider call({PlanType? plan, String? companionUid}) =>
-      NearbyVenuesProvider._(argument: (plan: plan, companionUid: companionUid), from: this);
+      NearbyVenuesProvider._(
+        argument: (plan: plan, companionUid: companionUid),
+        from: this,
+      );
 
   @override
   String toString() => r'nearbyVenuesProvider';
@@ -164,11 +199,17 @@ final class NearbyVenuesFamily extends $Family
 const venueSlotsProvider = VenueSlotsFamily._();
 
 final class VenueSlotsProvider
-    extends $FunctionalProvider<AsyncValue<List<VenueSlot>>, List<VenueSlot>, FutureOr<List<VenueSlot>>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<VenueSlot>>,
+          List<VenueSlot>,
+          FutureOr<List<VenueSlot>>
+        >
     with $FutureModifier<List<VenueSlot>>, $FutureProvider<List<VenueSlot>> {
   const VenueSlotsProvider._({
     required VenueSlotsFamily super.from,
-    required ({String venueId, String dayKey, String companionUid}) super.argument,
+    required ({String venueId, String dayKey, String companionUid})
+    super.argument,
   }) : super(
          retry: null,
          name: r'venueSlotsProvider',
@@ -189,12 +230,20 @@ final class VenueSlotsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<VenueSlot>> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+  $FutureProviderElement<List<VenueSlot>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<VenueSlot>> create(Ref ref) {
-    final argument = this.argument as ({String venueId, String dayKey, String companionUid});
-    return venueSlots(ref, venueId: argument.venueId, dayKey: argument.dayKey, companionUid: argument.companionUid);
+    final argument =
+        this.argument as ({String venueId, String dayKey, String companionUid});
+    return venueSlots(
+      ref,
+      venueId: argument.venueId,
+      dayKey: argument.dayKey,
+      companionUid: argument.companionUid,
+    );
   }
 
   @override
@@ -211,7 +260,11 @@ final class VenueSlotsProvider
 String _$venueSlotsHash() => r'49a4c098156ee409d46a0fcdeea00fe923f15cce';
 
 final class VenueSlotsFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<VenueSlot>>, ({String venueId, String dayKey, String companionUid})> {
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<VenueSlot>>,
+          ({String venueId, String dayKey, String companionUid})
+        > {
   const VenueSlotsFamily._()
     : super(
         retry: null,
@@ -221,8 +274,14 @@ final class VenueSlotsFamily extends $Family
         isAutoDispose: true,
       );
 
-  VenueSlotsProvider call({required String venueId, required String dayKey, required String companionUid}) =>
-      VenueSlotsProvider._(argument: (venueId: venueId, dayKey: dayKey, companionUid: companionUid), from: this);
+  VenueSlotsProvider call({
+    required String venueId,
+    required String dayKey,
+    required String companionUid,
+  }) => VenueSlotsProvider._(
+    argument: (venueId: venueId, dayKey: dayKey, companionUid: companionUid),
+    from: this,
+  );
 
   @override
   String toString() => r'venueSlotsProvider';
@@ -232,7 +291,12 @@ final class VenueSlotsFamily extends $Family
 const myBookingsProvider = MyBookingsProvider._();
 
 final class MyBookingsProvider
-    extends $FunctionalProvider<AsyncValue<List<Booking>>, List<Booking>, Stream<List<Booking>>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Booking>>,
+          List<Booking>,
+          Stream<List<Booking>>
+        >
     with $FutureModifier<List<Booking>>, $StreamProvider<List<Booking>> {
   const MyBookingsProvider._()
     : super(
@@ -250,7 +314,9 @@ final class MyBookingsProvider
 
   @$internal
   @override
-  $StreamProviderElement<List<Booking>> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<List<Booking>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<List<Booking>> create(Ref ref) {
@@ -266,16 +332,19 @@ String _$myBookingsHash() => r'6befa8fe003d5a8f8eea1621afcd6e9ecedf5c14';
 const bookSpotControllerProvider = BookSpotControllerFamily._();
 
 /// Screen 6: choosing a venue, day and time, then sending the request.
-final class BookSpotControllerProvider extends $NotifierProvider<BookSpotController, BookSpotState> {
+final class BookSpotControllerProvider
+    extends $NotifierProvider<BookSpotController, BookSpotState> {
   /// Screen 6: choosing a venue, day and time, then sending the request.
-  const BookSpotControllerProvider._({required BookSpotControllerFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'bookSpotControllerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const BookSpotControllerProvider._({
+    required BookSpotControllerFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'bookSpotControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$bookSpotControllerHash();
@@ -293,7 +362,10 @@ final class BookSpotControllerProvider extends $NotifierProvider<BookSpotControl
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(BookSpotState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<BookSpotState>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BookSpotState>(value),
+    );
   }
 
   @override
@@ -307,12 +379,20 @@ final class BookSpotControllerProvider extends $NotifierProvider<BookSpotControl
   }
 }
 
-String _$bookSpotControllerHash() => r'cd8b5d2bbaadc57bb536ee9a4c5d203e2da2b259';
+String _$bookSpotControllerHash() =>
+    r'cd8b5d2bbaadc57bb536ee9a4c5d203e2da2b259';
 
 /// Screen 6: choosing a venue, day and time, then sending the request.
 
 final class BookSpotControllerFamily extends $Family
-    with $ClassFamilyOverride<BookSpotController, BookSpotState, BookSpotState, BookSpotState, String> {
+    with
+        $ClassFamilyOverride<
+          BookSpotController,
+          BookSpotState,
+          BookSpotState,
+          BookSpotState,
+          String
+        > {
   const BookSpotControllerFamily._()
     : super(
         retry: null,
@@ -345,7 +425,12 @@ abstract class _$BookSpotController extends $Notifier<BookSpotState> {
     final ref = this.ref as $Ref<BookSpotState, BookSpotState>;
     final element =
         ref.element
-            as $ClassProviderElement<AnyNotifier<BookSpotState, BookSpotState>, BookSpotState, Object?, Object?>;
+            as $ClassProviderElement<
+              AnyNotifier<BookSpotState, BookSpotState>,
+              BookSpotState,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }
@@ -356,7 +441,8 @@ abstract class _$BookSpotController extends $Notifier<BookSpotState> {
 const cancelBookingProvider = CancelBookingProvider._();
 
 /// Seeker-side cancel. Credits are not refunded.
-final class CancelBookingProvider extends $AsyncNotifierProvider<CancelBooking, void> {
+final class CancelBookingProvider
+    extends $AsyncNotifierProvider<CancelBooking, void> {
   /// Seeker-side cancel. Credits are not refunded.
   const CancelBookingProvider._()
     : super(
@@ -389,7 +475,13 @@ abstract class _$CancelBooking extends $AsyncNotifier<void> {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
-        ref.element as $ClassProviderElement<AnyNotifier<AsyncValue<void>, void>, AsyncValue<void>, Object?, Object?>;
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }

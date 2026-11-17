@@ -6,7 +6,7 @@ import '../../../core/l10n/l10n.dart';
 import '../../../core/widgets/floating_nav_bar.dart';
 import '../../credits/presentation/credits_providers.dart';
 
-/// Bottom navigation for the seeker: Discover, Chats, Bookings, Profile.
+/// Bottom navigation for the seeker: Discover, Reels, Chats, Bookings, Profile.
 /// Also starts listening for store purchases, so one left unfinished last
 /// time is confirmed with the server after sign-in.
 class HomeShell extends ConsumerWidget {
@@ -25,6 +25,7 @@ class HomeShell extends ConsumerWidget {
         onSelected: (index) => shell.goBranch(index, initialLocation: index == shell.currentIndex),
         items: [
           FloatingNavItem(icon: Icons.explore_outlined, label: l10n.navDiscover),
+          FloatingNavItem(icon: Icons.play_circle_outline_rounded, label: l10n.navReels),
           FloatingNavItem(icon: Icons.chat_bubble_outline, label: l10n.navChats),
           FloatingNavItem(icon: Icons.calendar_today_outlined, label: l10n.navBookings),
           FloatingNavItem(icon: Icons.person_outline, label: l10n.navProfile),

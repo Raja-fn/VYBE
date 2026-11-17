@@ -12,7 +12,8 @@ part of 'verification_controller.dart';
 @ProviderFor(VerificationController)
 const verificationControllerProvider = VerificationControllerProvider._();
 
-final class VerificationControllerProvider extends $NotifierProvider<VerificationController, VerificationFlowState> {
+final class VerificationControllerProvider
+    extends $NotifierProvider<VerificationController, VerificationFlowState> {
   const VerificationControllerProvider._()
     : super(
         from: null,
@@ -33,13 +34,18 @@ final class VerificationControllerProvider extends $NotifierProvider<Verificatio
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(VerificationFlowState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<VerificationFlowState>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<VerificationFlowState>(value),
+    );
   }
 }
 
-String _$verificationControllerHash() => r'17d7450d969dc3197cf508b35faaf250a348d78f';
+String _$verificationControllerHash() =>
+    r'17d7450d969dc3197cf508b35faaf250a348d78f';
 
-abstract class _$VerificationController extends $Notifier<VerificationFlowState> {
+abstract class _$VerificationController
+    extends $Notifier<VerificationFlowState> {
   VerificationFlowState build();
   @$mustCallSuper
   @override

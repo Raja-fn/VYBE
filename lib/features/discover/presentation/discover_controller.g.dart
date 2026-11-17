@@ -8,11 +8,18 @@ part of 'discover_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Discover actions (saving people). Discover shows everyone nearby, for any
+/// plan; the plan is picked when booking.
 
 @ProviderFor(DiscoverController)
 const discoverControllerProvider = DiscoverControllerProvider._();
 
-final class DiscoverControllerProvider extends $NotifierProvider<DiscoverController, DiscoverState> {
+/// Discover actions (saving people). Discover shows everyone nearby, for any
+/// plan; the plan is picked when booking.
+final class DiscoverControllerProvider
+    extends $NotifierProvider<DiscoverController, void> {
+  /// Discover actions (saving people). Discover shows everyone nearby, for any
+  /// plan; the plan is picked when booking.
   const DiscoverControllerProvider._()
     : super(
         from: null,
@@ -32,23 +39,35 @@ final class DiscoverControllerProvider extends $NotifierProvider<DiscoverControl
   DiscoverController create() => DiscoverController();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DiscoverState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<DiscoverState>(value));
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
   }
 }
 
-String _$discoverControllerHash() => r'e9784013373897a528bef04bff53276769e788f0';
+String _$discoverControllerHash() =>
+    r'bd4624546a9afae0733ea73f1d1f822e44c51474';
 
-abstract class _$DiscoverController extends $Notifier<DiscoverState> {
-  DiscoverState build();
+/// Discover actions (saving people). Discover shows everyone nearby, for any
+/// plan; the plan is picked when booking.
+
+abstract class _$DiscoverController extends $Notifier<void> {
+  void build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
-    final ref = this.ref as $Ref<DiscoverState, DiscoverState>;
+    build();
+    final ref = this.ref as $Ref<void, void>;
     final element =
         ref.element
-            as $ClassProviderElement<AnyNotifier<DiscoverState, DiscoverState>, DiscoverState, Object?, Object?>;
-    element.handleValue(ref, created);
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, null);
   }
 }

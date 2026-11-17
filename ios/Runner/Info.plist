@@ -48,9 +48,11 @@
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>VYBE uses your location to show verified companions and public spots near you. Other people never see your exact location.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>VYBE uses the camera for your selfie check and ID check.</string>
+		<string>VYBE uses the camera for your selfie check, ID check and the reels you record.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>VYBE needs photo access only if you choose a photo for your profile.</string>
+		<string>VYBE needs photo access only if you choose a photo or a video for your profile or a reel.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>VYBE records sound with the reels you film.</string>
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsLocalNetworking</key>

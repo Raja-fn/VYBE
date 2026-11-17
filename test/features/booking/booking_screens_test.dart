@@ -137,8 +137,8 @@ void main() {
       expect(find.text('Today'), findsOneWidget);
       expect(find.text('Pick a day'), findsOneWidget);
       expect(find.text('Spot booking'), findsOneWidget);
-      expect(find.text('5 credits'), findsOneWidget);
-      expect(find.text('Credits are not refunded if the request is declined or cancelled.'), findsOneWidget);
+      expect(find.text('Free'), findsOneWidget);
+      expect(find.text('Credits are not refunded if the request is declined or cancelled.'), findsNothing);
     });
 
     testWidgets('full and unavailable times cannot be chosen; Confirm waits for a time', (tester) async {

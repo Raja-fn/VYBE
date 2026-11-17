@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,6 +15,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 abstract interface class FileUploader {
   /// Throws on failure; callers wrap calls in `runGuarded`.
   Future<void> uploadJpeg(String path, Uint8List bytes);
+
+  /// Uploads a video from a file on the device, streamed (videos can be large).
+  Future<void> uploadVideo(String path, String localFile);
 
   Future<void> delete(String path);
 }
@@ -32,10 +36,27 @@ class SupabaseStorageUploader implements FileUploader {
   }
 
   @override
+  Future<void> uploadVideo(String path, String localFile) async {
+    final target = splitStoragePath(path);
+    await _storage
+        .from(target.bucket)
+        .upload(target.name, File(localFile), fileOptions: FileOptions(contentType: videoContentType(localFile)));
+  }
+
+  @override
   Future<void> delete(String path) async {
     final target = splitStoragePath(path);
     await _storage.from(target.bucket).remove([target.name]);
   }
+}
+
+/// The video type from the file name; phones record MP4 (Android) or MOV (iPhone).
+String videoContentType(String file) {
+  final name = file.toLowerCase();
+  if (name.endsWith('.mov')) return 'video/quicktime';
+  if (name.endsWith('.3gp')) return 'video/3gpp';
+  if (name.endsWith('.webm')) return 'video/webm';
+  return 'video/mp4';
 }
 
 /// Turns a storage path into a URL the app can load. Behind an interface for tests.

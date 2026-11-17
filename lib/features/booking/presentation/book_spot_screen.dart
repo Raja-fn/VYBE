@@ -25,6 +25,7 @@ import '../../discover/presentation/widgets/labels.dart';
 import '../../map/presentation/map_screen.dart';
 import '../../onboarding/presentation/widgets/onboarding_scaffold.dart';
 import '../domain/booking_models.dart';
+import 'booking_cost.dart';
 import 'booking_providers.dart';
 import 'widgets/venue_labels.dart';
 
@@ -194,11 +195,13 @@ class _BookSpot extends ConsumerWidget {
                       style: textTheme.bodyLarge?.copyWith(color: AppColors.muted),
                     ),
                   ),
-                  Text(l10n.creditsCount(cost), style: textTheme.titleMedium),
+                  Text(bookingCostLabel(l10n, cost), style: textTheme.titleMedium),
                 ],
               ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(l10n.bookNoRefund, style: textTheme.bodySmall?.copyWith(color: AppColors.muted)),
+              if (cost > 0) ...[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(l10n.bookNoRefund, style: textTheme.bodySmall?.copyWith(color: AppColors.muted)),
+              ],
             ],
           ),
           child: AppButton(

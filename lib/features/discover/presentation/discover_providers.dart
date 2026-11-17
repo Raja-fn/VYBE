@@ -22,9 +22,9 @@ Future<void> locationSync(Ref ref) async {
 }
 
 @riverpod
-Future<List<CompanionSummary>> discoverResults(Ref ref, PlanType plan) async {
+Future<List<CompanionSummary>> discoverResults(Ref ref) async {
   await ref.watch(locationSyncProvider.future);
-  return (await ref.watch(discoverRepositoryProvider).discover(plan)).valueOrThrow;
+  return (await ref.watch(discoverRepositoryProvider).discover(null)).valueOrThrow;
 }
 
 @riverpod

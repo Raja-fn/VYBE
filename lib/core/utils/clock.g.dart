@@ -12,7 +12,8 @@ part of 'clock.dart';
 @ProviderFor(clock)
 const clockProvider = ClockProvider._();
 
-final class ClockProvider extends $FunctionalProvider<Clock, Clock, Clock> with $Provider<Clock> {
+final class ClockProvider extends $FunctionalProvider<Clock, Clock, Clock>
+    with $Provider<Clock> {
   const ClockProvider._()
     : super(
         from: null,
@@ -29,7 +30,8 @@ final class ClockProvider extends $FunctionalProvider<Clock, Clock, Clock> with 
 
   @$internal
   @override
-  $ProviderElement<Clock> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<Clock> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   Clock create(Ref ref) {
@@ -38,7 +40,10 @@ final class ClockProvider extends $FunctionalProvider<Clock, Clock, Clock> with 
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Clock value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Clock>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Clock>(value),
+    );
   }
 }
 

@@ -14,6 +14,7 @@ import '../../../core/widgets/app_pill_button.dart';
 import '../../../core/widgets/async_state_view.dart';
 import '../../../core/widgets/initials_avatar.dart';
 import '../../booking/domain/booking_models.dart';
+import '../../booking/presentation/booking_cost.dart';
 import '../../booking/presentation/booking_providers.dart';
 import '../../discover/presentation/widgets/labels.dart';
 import '../../onboarding/presentation/session_providers.dart';
@@ -330,7 +331,7 @@ class _BookPrompt extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(l10n.chatBookTitle(t.otherName), style: textTheme.titleMedium?.copyWith(color: AppColors.onInk)),
-              Text(l10n.creditsCount(cost), style: textTheme.bodyMedium?.copyWith(color: AppColors.onInkMuted)),
+              Text(bookingCostLabel(l10n, cost), style: textTheme.bodyMedium?.copyWith(color: AppColors.onInkMuted)),
             ],
           ),
           AppButton(

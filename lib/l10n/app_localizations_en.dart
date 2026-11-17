@@ -476,7 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverFreeNowLink => 'See who is free right now';
 
   @override
-  String get discoverEmptyTitle => 'No one nearby for this plan yet';
+  String get discoverEmptyTitle => 'No one nearby yet';
 
   @override
   String get discoverEmptyBody =>
@@ -1004,7 +1004,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creditsTitle => 'Get more credits';
 
   @override
-  String get creditsSubtitle => 'Unlock chats and bookings.';
+  String get creditsSubtitle => 'Unlock new chats.';
 
   @override
   String get planFree => 'Free';
@@ -1525,4 +1525,99 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reelStartAgain => 'Start again';
+
+  @override
+  String get costFree => 'Free';
+
+  @override
+  String get instantBodyFree => 'Free · they get your request right away';
+
+  @override
+  String get reelBook => 'Book';
+
+  @override
+  String reelBookWith(String name) {
+    return 'Book a meetup with $name';
+  }
+
+  @override
+  String get navReels => 'Reels';
+
+  @override
+  String get reelsPost => 'Post a reel';
+
+  @override
+  String get reelsRecord => 'Record a video';
+
+  @override
+  String get reelsPickGallery => 'Choose from gallery';
+
+  @override
+  String get reelsEmptyTitle => 'No reels yet';
+
+  @override
+  String get reelsEmptyBody =>
+      'Post a short video to show people what you are into.';
+
+  @override
+  String get reelVideo => 'Video';
+
+  @override
+  String get reelPlay => 'Play';
+
+  @override
+  String get reelPause => 'Pause';
+
+  @override
+  String get reelCouldNotPlay => 'This video could not play';
+
+  @override
+  String get reelMute => 'Sound off';
+
+  @override
+  String get reelUnmute => 'Sound on';
+
+  @override
+  String get reelMore => 'More';
+
+  @override
+  String get reelReport => 'Report or block';
+
+  @override
+  String get reelYou => 'You';
+
+  @override
+  String get reelDelete => 'Delete';
+
+  @override
+  String get reelDeleteTitle => 'Delete this reel?';
+
+  @override
+  String get reelDeleteBody =>
+      'It is removed for everyone. This cannot be undone.';
+
+  @override
+  String get reelDeleted => 'Reel deleted';
+
+  @override
+  String get reelTooBig => 'This video is too big. Pick one under 50 MB.';
+
+  @override
+  String get newReelTitle => 'New reel';
+
+  @override
+  String get newReelCaption => 'Caption';
+
+  @override
+  String get newReelCaptionHint => 'Say something about it (optional)';
+
+  @override
+  String get newReelRules =>
+      'Keep it friendly: no nudity, hate or contact details. Reels that break the rules are removed.';
+
+  @override
+  String get newReelPost => 'Post';
+
+  @override
+  String get newReelPosted => 'Your reel is posted';
 }

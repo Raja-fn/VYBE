@@ -13,7 +13,12 @@ part of 'image_capture_service.dart';
 const imageCaptureServiceProvider = ImageCaptureServiceProvider._();
 
 final class ImageCaptureServiceProvider
-    extends $FunctionalProvider<ImageCaptureService, ImageCaptureService, ImageCaptureService>
+    extends
+        $FunctionalProvider<
+          ImageCaptureService,
+          ImageCaptureService,
+          ImageCaptureService
+        >
     with $Provider<ImageCaptureService> {
   const ImageCaptureServiceProvider._()
     : super(
@@ -31,7 +36,9 @@ final class ImageCaptureServiceProvider
 
   @$internal
   @override
-  $ProviderElement<ImageCaptureService> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<ImageCaptureService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   ImageCaptureService create(Ref ref) {
@@ -40,8 +47,12 @@ final class ImageCaptureServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ImageCaptureService value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ImageCaptureService>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ImageCaptureService>(value),
+    );
   }
 }
 
-String _$imageCaptureServiceHash() => r'ebf5fe16067605b0102c53719bfe743c4781a4a7';
+String _$imageCaptureServiceHash() =>
+    r'ebf5fe16067605b0102c53719bfe743c4781a4a7';

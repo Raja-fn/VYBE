@@ -13,7 +13,12 @@ part of 'connectivity_service.dart';
 const connectivityServiceProvider = ConnectivityServiceProvider._();
 
 final class ConnectivityServiceProvider
-    extends $FunctionalProvider<ConnectivityService, ConnectivityService, ConnectivityService>
+    extends
+        $FunctionalProvider<
+          ConnectivityService,
+          ConnectivityService,
+          ConnectivityService
+        >
     with $Provider<ConnectivityService> {
   const ConnectivityServiceProvider._()
     : super(
@@ -31,7 +36,9 @@ final class ConnectivityServiceProvider
 
   @$internal
   @override
-  $ProviderElement<ConnectivityService> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<ConnectivityService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   ConnectivityService create(Ref ref) {
@@ -40,16 +47,21 @@ final class ConnectivityServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ConnectivityService value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ConnectivityService>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ConnectivityService>(value),
+    );
   }
 }
 
-String _$connectivityServiceHash() => r'12f773725e4f6c6233a7468249e0e40ebc6ab619';
+String _$connectivityServiceHash() =>
+    r'12f773725e4f6c6233a7468249e0e40ebc6ab619';
 
 @ProviderFor(isOnline)
 const isOnlineProvider = IsOnlineProvider._();
 
-final class IsOnlineProvider extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
+final class IsOnlineProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
     with $FutureModifier<bool>, $StreamProvider<bool> {
   const IsOnlineProvider._()
     : super(
@@ -67,7 +79,8 @@ final class IsOnlineProvider extends $FunctionalProvider<AsyncValue<bool>, bool,
 
   @$internal
   @override
-  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<bool> create(Ref ref) {
@@ -84,7 +97,8 @@ const isOnlineValueProvider = IsOnlineValueProvider._();
 
 /// Synchronous view of [isOnline]: assumes online until told otherwise.
 
-final class IsOnlineValueProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
+final class IsOnlineValueProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
   /// Synchronous view of [isOnline]: assumes online until told otherwise.
   const IsOnlineValueProvider._()
     : super(
@@ -102,7 +116,8 @@ final class IsOnlineValueProvider extends $FunctionalProvider<bool, bool, bool> 
 
   @$internal
   @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   bool create(Ref ref) {
@@ -111,7 +126,10 @@ final class IsOnlineValueProvider extends $FunctionalProvider<bool, bool, bool> 
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
   }
 }
 

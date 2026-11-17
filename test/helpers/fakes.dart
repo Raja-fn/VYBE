@@ -25,6 +25,8 @@ import 'package:vybe/features/preferences/data/preferences_repository.dart';
 import 'package:vybe/features/preferences/domain/preferences.dart';
 import 'package:vybe/features/profile/data/profile_repository.dart';
 import 'package:vybe/features/profile/domain/profile_details.dart';
+import 'package:vybe/features/reels/data/reels_repository.dart';
+import 'package:vybe/features/reels/domain/reel.dart';
 
 /// A value that streams its current state to every new listener, then updates.
 ///
@@ -279,6 +281,11 @@ class FakeFileUploader implements FileUploader {
   @override
   Future<void> uploadJpeg(String path, Uint8List bytes) async {
     uploads.add((path, bytes.length));
+  }
+
+  @override
+  Future<void> uploadVideo(String path, String localFile) async {
+    uploads.add((path, 0));
   }
 
   @override
@@ -717,3 +724,80 @@ class FakeStorageUrlResolver implements StorageUrlResolver {
     return Future.error(StateError('No storage in tests'));
   }
 }
+
+/// Reels kept in memory. [all] is the server's list, newest first.
+class FakeReelsRepository implements ReelsRepository {
+  List<Reel> all = [];
+  AppFailure? failure;
+  final List<({String uid, String reelId, String localFile, String caption})> posted = [];
+  final List<String> deleted = [];
+  final List<String?> feedCalls = [];
+
+  /// Reels per page, as the server pages them.
+  int pageSize = 15;
+
+  @override
+  Future<Result<ReelPage>> feed({String? before}) async {
+    feedCalls.add(before);
+    final error = failure;
+    if (error != null) return Err(error);
+    final start = before == null ? 0 : all.indexWhere((r) => r.reelId == before) + 1;
+    final page = all.skip(start).take(pageSize).toList();
+    return Ok((reels: page, hasMore: start + page.length < all.length));
+  }
+
+  @override
+  Future<Result<void>> post({
+    required String uid,
+    required String reelId,
+    required String localFile,
+    required String caption,
+  }) async {
+    final error = failure;
+    if (error != null) return Err(error);
+    posted.add((uid: uid, reelId: reelId, localFile: localFile, caption: caption));
+    all = [
+      testReel(reelId, author: uid, name: 'Me', caption: caption, isMine: true),
+      ...all,
+    ];
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> delete(Reel reel) async {
+    deleted.add(reel.reelId);
+    all = all.where((r) => r.reelId != reel.reelId).toList();
+    return const Ok(null);
+  }
+}
+
+class FakeVideoPicker implements VideoPickerService {
+  /// Null simulates backing out of the picker.
+  PickedVideo? next = (path: '/tmp/clip.mp4', bytes: 1000);
+  final List<VideoSource> picks = [];
+
+  @override
+  Future<Result<PickedVideo?>> pick(VideoSource source) async {
+    picks.add(source);
+    return Ok(next);
+  }
+}
+
+Reel testReel(
+  String id, {
+  String author = 'neha',
+  String name = 'Neha',
+  String caption = '',
+  bool bookable = false,
+  bool isMine = false,
+}) => Reel(
+  reelId: id,
+  authorUid: author,
+  authorName: name,
+  authorPhotoPath: null,
+  authorBookable: bookable,
+  videoPath: 'reels/$author/$id.mp4',
+  caption: caption,
+  createdAt: DateTime(2026, 11, 17),
+  isMine: isMine,
+);

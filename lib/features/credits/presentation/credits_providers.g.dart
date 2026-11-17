@@ -15,7 +15,8 @@ const storeClientProvider = StoreClientProvider._();
 
 /// Real stores in production; the built-in test store everywhere else.
 
-final class StoreClientProvider extends $FunctionalProvider<StoreClient, StoreClient, StoreClient>
+final class StoreClientProvider
+    extends $FunctionalProvider<StoreClient, StoreClient, StoreClient>
     with $Provider<StoreClient> {
   /// Real stores in production; the built-in test store everywhere else.
   const StoreClientProvider._()
@@ -34,7 +35,8 @@ final class StoreClientProvider extends $FunctionalProvider<StoreClient, StoreCl
 
   @$internal
   @override
-  $ProviderElement<StoreClient> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<StoreClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   StoreClient create(Ref ref) {
@@ -43,7 +45,10 @@ final class StoreClientProvider extends $FunctionalProvider<StoreClient, StoreCl
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StoreClient value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StoreClient>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StoreClient>(value),
+    );
   }
 }
 
@@ -53,7 +58,12 @@ String _$storeClientHash() => r'42f4f188cd3743cff5277fc7c98a63c64a6d05b1';
 const purchaseRepositoryProvider = PurchaseRepositoryProvider._();
 
 final class PurchaseRepositoryProvider
-    extends $FunctionalProvider<PurchaseRepository, PurchaseRepository, PurchaseRepository>
+    extends
+        $FunctionalProvider<
+          PurchaseRepository,
+          PurchaseRepository,
+          PurchaseRepository
+        >
     with $Provider<PurchaseRepository> {
   const PurchaseRepositoryProvider._()
     : super(
@@ -71,7 +81,9 @@ final class PurchaseRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<PurchaseRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<PurchaseRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   PurchaseRepository create(Ref ref) {
@@ -80,17 +92,26 @@ final class PurchaseRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(PurchaseRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<PurchaseRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PurchaseRepository>(value),
+    );
   }
 }
 
-String _$purchaseRepositoryHash() => r'befe5a09073d5913a7b4f2e4c7ae5f827d72f4cc';
+String _$purchaseRepositoryHash() =>
+    r'befe5a09073d5913a7b4f2e4c7ae5f827d72f4cc';
 
 @ProviderFor(mySubscription)
 const mySubscriptionProvider = MySubscriptionProvider._();
 
 final class MySubscriptionProvider
-    extends $FunctionalProvider<AsyncValue<SubscriptionInfo>, SubscriptionInfo, Stream<SubscriptionInfo>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<SubscriptionInfo>,
+          SubscriptionInfo,
+          Stream<SubscriptionInfo>
+        >
     with $FutureModifier<SubscriptionInfo>, $StreamProvider<SubscriptionInfo> {
   const MySubscriptionProvider._()
     : super(
@@ -108,7 +129,9 @@ final class MySubscriptionProvider
 
   @$internal
   @override
-  $StreamProviderElement<SubscriptionInfo> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<SubscriptionInfo> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<SubscriptionInfo> create(Ref ref) {
@@ -126,8 +149,15 @@ const storePricesProvider = StorePricesProvider._();
 /// Store prices for every plan and pack. Empty for the test store.
 
 final class StorePricesProvider
-    extends $FunctionalProvider<AsyncValue<Map<String, String>>, Map<String, String>, FutureOr<Map<String, String>>>
-    with $FutureModifier<Map<String, String>>, $FutureProvider<Map<String, String>> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<Map<String, String>>,
+          Map<String, String>,
+          FutureOr<Map<String, String>>
+        >
+    with
+        $FutureModifier<Map<String, String>>,
+        $FutureProvider<Map<String, String>> {
   /// Store prices for every plan and pack. Empty for the test store.
   const StorePricesProvider._()
     : super(
@@ -145,8 +175,9 @@ final class StorePricesProvider
 
   @$internal
   @override
-  $FutureProviderElement<Map<String, String>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<Map<String, String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<Map<String, String>> create(Ref ref) {
@@ -166,7 +197,8 @@ const purchaseFlowProvider = PurchaseFlowProvider._();
 /// Runs a purchase: store payment sheet → server check → credits added →
 /// store told it is done. Listens from sign-in so a purchase left unfinished
 /// last time is picked up again.
-final class PurchaseFlowProvider extends $NotifierProvider<PurchaseFlow, PurchaseFlowState> {
+final class PurchaseFlowProvider
+    extends $NotifierProvider<PurchaseFlow, PurchaseFlowState> {
   /// Runs a purchase: store payment sheet → server check → credits added →
   /// store told it is done. Listens from sign-in so a purchase left unfinished
   /// last time is picked up again.
@@ -190,7 +222,10 @@ final class PurchaseFlowProvider extends $NotifierProvider<PurchaseFlow, Purchas
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(PurchaseFlowState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<PurchaseFlowState>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PurchaseFlowState>(value),
+    );
   }
 }
 

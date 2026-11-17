@@ -889,7 +889,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoverEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'No one nearby for this plan yet'**
+  /// **'No one nearby yet'**
   String get discoverEmptyTitle;
 
   /// No description provided for @discoverEmptyBody.
@@ -1759,7 +1759,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Unlock chats and bookings.'**
+  /// **'Unlock new chats.'**
   String get creditsSubtitle;
 
   /// No description provided for @planFree.
@@ -2643,6 +2643,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start again'**
   String get reelStartAgain;
+
+  /// No description provided for @costFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get costFree;
+
+  /// No description provided for @instantBodyFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free · they get your request right away'**
+  String get instantBodyFree;
+
+  /// No description provided for @reelBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get reelBook;
+
+  /// No description provided for @reelBookWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a meetup with {name}'**
+  String reelBookWith(String name);
+
+  /// No description provided for @navReels.
+  ///
+  /// In en, this message translates to:
+  /// **'Reels'**
+  String get navReels;
+
+  /// No description provided for @reelsPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a reel'**
+  String get reelsPost;
+
+  /// No description provided for @reelsRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a video'**
+  String get reelsRecord;
+
+  /// No description provided for @reelsPickGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get reelsPickGallery;
+
+  /// No description provided for @reelsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reels yet'**
+  String get reelsEmptyTitle;
+
+  /// No description provided for @reelsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Post a short video to show people what you are into.'**
+  String get reelsEmptyBody;
+
+  /// No description provided for @reelVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get reelVideo;
+
+  /// No description provided for @reelPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get reelPlay;
+
+  /// No description provided for @reelPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get reelPause;
+
+  /// No description provided for @reelCouldNotPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'This video could not play'**
+  String get reelCouldNotPlay;
+
+  /// No description provided for @reelMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound off'**
+  String get reelMute;
+
+  /// No description provided for @reelUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound on'**
+  String get reelUnmute;
+
+  /// No description provided for @reelMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get reelMore;
+
+  /// No description provided for @reelReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report or block'**
+  String get reelReport;
+
+  /// No description provided for @reelYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get reelYou;
+
+  /// No description provided for @reelDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get reelDelete;
+
+  /// No description provided for @reelDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reel?'**
+  String get reelDeleteTitle;
+
+  /// No description provided for @reelDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is removed for everyone. This cannot be undone.'**
+  String get reelDeleteBody;
+
+  /// No description provided for @reelDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Reel deleted'**
+  String get reelDeleted;
+
+  /// No description provided for @reelTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'This video is too big. Pick one under 50 MB.'**
+  String get reelTooBig;
+
+  /// No description provided for @newReelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New reel'**
+  String get newReelTitle;
+
+  /// No description provided for @newReelCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Caption'**
+  String get newReelCaption;
+
+  /// No description provided for @newReelCaptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say something about it (optional)'**
+  String get newReelCaptionHint;
+
+  /// No description provided for @newReelRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it friendly: no nudity, hate or contact details. Reels that break the rules are removed.'**
+  String get newReelRules;
+
+  /// No description provided for @newReelPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get newReelPost;
+
+  /// No description provided for @newReelPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reel is posted'**
+  String get newReelPosted;
 }
 
 class _AppLocalizationsDelegate

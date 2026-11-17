@@ -20,7 +20,7 @@ export const REPORT_REASONS = [
 
 export const submitReportInput = z.object({
   reportedUid: uidSchema,
-  contextType: z.enum(['profile', 'chat', 'booking', 'meetup']),
+  contextType: z.enum(['profile', 'chat', 'booking', 'meetup', 'reel']),
   refId: z.string().min(1).nullable().optional(),
   reason: z.enum(REPORT_REASONS),
   details: z.string().optional(),

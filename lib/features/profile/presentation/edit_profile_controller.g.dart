@@ -16,7 +16,12 @@ const myProfileDetailsProvider = MyProfileDetailsProvider._();
 /// The signed-in person's profile details, live.
 
 final class MyProfileDetailsProvider
-    extends $FunctionalProvider<AsyncValue<ProfileDetails>, ProfileDetails, Stream<ProfileDetails>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<ProfileDetails>,
+          ProfileDetails,
+          Stream<ProfileDetails>
+        >
     with $FutureModifier<ProfileDetails>, $StreamProvider<ProfileDetails> {
   /// The signed-in person's profile details, live.
   const MyProfileDetailsProvider._()
@@ -35,7 +40,9 @@ final class MyProfileDetailsProvider
 
   @$internal
   @override
-  $StreamProviderElement<ProfileDetails> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ProfileDetails> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<ProfileDetails> create(Ref ref) {
@@ -48,7 +55,8 @@ String _$myProfileDetailsHash() => r'9f644e86cb2ac655ff148d5fc4f89f0633721370';
 @ProviderFor(EditProfileController)
 const editProfileControllerProvider = EditProfileControllerProvider._();
 
-final class EditProfileControllerProvider extends $NotifierProvider<EditProfileController, EditProfileState> {
+final class EditProfileControllerProvider
+    extends $NotifierProvider<EditProfileController, EditProfileState> {
   const EditProfileControllerProvider._()
     : super(
         from: null,
@@ -69,11 +77,15 @@ final class EditProfileControllerProvider extends $NotifierProvider<EditProfileC
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(EditProfileState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<EditProfileState>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<EditProfileState>(value),
+    );
   }
 }
 
-String _$editProfileControllerHash() => r'c307c698ccb1069ea4ea2bb9ac9e56d96b090fa4';
+String _$editProfileControllerHash() =>
+    r'c307c698ccb1069ea4ea2bb9ac9e56d96b090fa4';
 
 abstract class _$EditProfileController extends $Notifier<EditProfileState> {
   EditProfileState build();

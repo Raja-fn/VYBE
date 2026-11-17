@@ -12,7 +12,9 @@ part of 'app_router.dart';
 @ProviderFor(appRouter)
 const appRouterProvider = AppRouterProvider._();
 
-final class AppRouterProvider extends $FunctionalProvider<GoRouter, GoRouter, GoRouter> with $Provider<GoRouter> {
+final class AppRouterProvider
+    extends $FunctionalProvider<GoRouter, GoRouter, GoRouter>
+    with $Provider<GoRouter> {
   const AppRouterProvider._()
     : super(
         from: null,
@@ -29,7 +31,8 @@ final class AppRouterProvider extends $FunctionalProvider<GoRouter, GoRouter, Go
 
   @$internal
   @override
-  $ProviderElement<GoRouter> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<GoRouter> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   GoRouter create(Ref ref) {
@@ -38,8 +41,11 @@ final class AppRouterProvider extends $FunctionalProvider<GoRouter, GoRouter, Go
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(GoRouter value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<GoRouter>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GoRouter>(value),
+    );
   }
 }
 
-String _$appRouterHash() => r'0669d79655bc8fb988437ae77303b996f706aa75';
+String _$appRouterHash() => r'dfc0dbf5bb2f491a185f3b4d48c731cd8eae9549';

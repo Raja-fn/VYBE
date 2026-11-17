@@ -13,7 +13,12 @@ part of 'chat_providers.dart';
 const _supabaseChatProvider = _SupabaseChatProvider._();
 
 final class _SupabaseChatProvider
-    extends $FunctionalProvider<SupabaseChatRepository, SupabaseChatRepository, SupabaseChatRepository>
+    extends
+        $FunctionalProvider<
+          SupabaseChatRepository,
+          SupabaseChatRepository,
+          SupabaseChatRepository
+        >
     with $Provider<SupabaseChatRepository> {
   const _SupabaseChatProvider._()
     : super(
@@ -31,7 +36,9 @@ final class _SupabaseChatProvider
 
   @$internal
   @override
-  $ProviderElement<SupabaseChatRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<SupabaseChatRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   SupabaseChatRepository create(Ref ref) {
@@ -40,7 +47,10 @@ final class _SupabaseChatProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(SupabaseChatRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<SupabaseChatRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SupabaseChatRepository>(value),
+    );
   }
 }
 
@@ -49,7 +59,8 @@ String _$_supabaseChatHash() => r'28557be89c8b0a99cc91d9cd4ebaac08c945331a';
 @ProviderFor(chatRepository)
 const chatRepositoryProvider = ChatRepositoryProvider._();
 
-final class ChatRepositoryProvider extends $FunctionalProvider<ChatRepository, ChatRepository, ChatRepository>
+final class ChatRepositoryProvider
+    extends $FunctionalProvider<ChatRepository, ChatRepository, ChatRepository>
     with $Provider<ChatRepository> {
   const ChatRepositoryProvider._()
     : super(
@@ -67,7 +78,8 @@ final class ChatRepositoryProvider extends $FunctionalProvider<ChatRepository, C
 
   @$internal
   @override
-  $ProviderElement<ChatRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<ChatRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   ChatRepository create(Ref ref) {
@@ -76,7 +88,10 @@ final class ChatRepositoryProvider extends $FunctionalProvider<ChatRepository, C
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ChatRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ChatRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ChatRepository>(value),
+    );
   }
 }
 
@@ -85,7 +100,13 @@ String _$chatRepositoryHash() => r'5f72699e22b2089c8c073183da822eda308107f9';
 @ProviderFor(safetyRepository)
 const safetyRepositoryProvider = SafetyRepositoryProvider._();
 
-final class SafetyRepositoryProvider extends $FunctionalProvider<SafetyRepository, SafetyRepository, SafetyRepository>
+final class SafetyRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SafetyRepository,
+          SafetyRepository,
+          SafetyRepository
+        >
     with $Provider<SafetyRepository> {
   const SafetyRepositoryProvider._()
     : super(
@@ -103,7 +124,8 @@ final class SafetyRepositoryProvider extends $FunctionalProvider<SafetyRepositor
 
   @$internal
   @override
-  $ProviderElement<SafetyRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<SafetyRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   SafetyRepository create(Ref ref) {
@@ -112,7 +134,10 @@ final class SafetyRepositoryProvider extends $FunctionalProvider<SafetyRepositor
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(SafetyRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<SafetyRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SafetyRepository>(value),
+    );
   }
 }
 
@@ -126,7 +151,12 @@ const myChatsProvider = MyChatsProvider._();
 /// Open chats only: a blocked chat disappears for both people.
 
 final class MyChatsProvider
-    extends $FunctionalProvider<AsyncValue<List<ChatThread>>, List<ChatThread>, Stream<List<ChatThread>>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ChatThread>>,
+          List<ChatThread>,
+          Stream<List<ChatThread>>
+        >
     with $FutureModifier<List<ChatThread>>, $StreamProvider<List<ChatThread>> {
   /// Open chats only: a blocked chat disappears for both people.
   const MyChatsProvider._()
@@ -145,7 +175,9 @@ final class MyChatsProvider
 
   @$internal
   @override
-  $StreamProviderElement<List<ChatThread>> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<List<ChatThread>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<List<ChatThread>> create(Ref ref) {
@@ -163,17 +195,26 @@ const chatMessagesProvider = ChatMessagesFamily._();
 /// Newest first.
 
 final class ChatMessagesProvider
-    extends $FunctionalProvider<AsyncValue<List<ChatMessage>>, List<ChatMessage>, Stream<List<ChatMessage>>>
-    with $FutureModifier<List<ChatMessage>>, $StreamProvider<List<ChatMessage>> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ChatMessage>>,
+          List<ChatMessage>,
+          Stream<List<ChatMessage>>
+        >
+    with
+        $FutureModifier<List<ChatMessage>>,
+        $StreamProvider<List<ChatMessage>> {
   /// Newest first.
-  const ChatMessagesProvider._({required ChatMessagesFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'chatMessagesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const ChatMessagesProvider._({
+    required ChatMessagesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'chatMessagesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$chatMessagesHash();
@@ -187,7 +228,9 @@ final class ChatMessagesProvider
 
   @$internal
   @override
-  $StreamProviderElement<List<ChatMessage>> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<List<ChatMessage>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
 
   @override
   Stream<List<ChatMessage>> create(Ref ref) {
@@ -210,7 +253,8 @@ String _$chatMessagesHash() => r'c1f9d33072bd00e32288c7bec95701b8879ad833';
 
 /// Newest first.
 
-final class ChatMessagesFamily extends $Family with $FunctionalFamilyOverride<Stream<List<ChatMessage>>, String> {
+final class ChatMessagesFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<ChatMessage>>, String> {
   const ChatMessagesFamily._()
     : super(
         retry: null,
@@ -222,7 +266,8 @@ final class ChatMessagesFamily extends $Family with $FunctionalFamilyOverride<St
 
   /// Newest first.
 
-  ChatMessagesProvider call(String chatId) => ChatMessagesProvider._(argument: chatId, from: this);
+  ChatMessagesProvider call(String chatId) =>
+      ChatMessagesProvider._(argument: chatId, from: this);
 
   @override
   String toString() => r'chatMessagesProvider';
@@ -231,15 +276,18 @@ final class ChatMessagesFamily extends $Family with $FunctionalFamilyOverride<St
 @ProviderFor(ChatComposer)
 const chatComposerProvider = ChatComposerFamily._();
 
-final class ChatComposerProvider extends $NotifierProvider<ChatComposer, ChatComposerState> {
-  const ChatComposerProvider._({required ChatComposerFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'chatComposerProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+final class ChatComposerProvider
+    extends $NotifierProvider<ChatComposer, ChatComposerState> {
+  const ChatComposerProvider._({
+    required ChatComposerFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'chatComposerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$chatComposerHash();
@@ -257,7 +305,10 @@ final class ChatComposerProvider extends $NotifierProvider<ChatComposer, ChatCom
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ChatComposerState value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ChatComposerState>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ChatComposerState>(value),
+    );
   }
 
   @override
@@ -274,7 +325,14 @@ final class ChatComposerProvider extends $NotifierProvider<ChatComposer, ChatCom
 String _$chatComposerHash() => r'9211065b114f9b22c411ba0442509b6bab6c26d9';
 
 final class ChatComposerFamily extends $Family
-    with $ClassFamilyOverride<ChatComposer, ChatComposerState, ChatComposerState, ChatComposerState, String> {
+    with
+        $ClassFamilyOverride<
+          ChatComposer,
+          ChatComposerState,
+          ChatComposerState,
+          ChatComposerState,
+          String
+        > {
   const ChatComposerFamily._()
     : super(
         retry: null,
@@ -284,7 +342,8 @@ final class ChatComposerFamily extends $Family
         isAutoDispose: true,
       );
 
-  ChatComposerProvider call(String chatId) => ChatComposerProvider._(argument: chatId, from: this);
+  ChatComposerProvider call(String chatId) =>
+      ChatComposerProvider._(argument: chatId, from: this);
 
   @override
   String toString() => r'chatComposerProvider';
@@ -318,7 +377,8 @@ abstract class _$ChatComposer extends $Notifier<ChatComposerState> {
 const chatActionsProvider = ChatActionsProvider._();
 
 /// Opening a chat, report and block: the actions available on profiles and chats.
-final class ChatActionsProvider extends $AsyncNotifierProvider<ChatActions, void> {
+final class ChatActionsProvider
+    extends $AsyncNotifierProvider<ChatActions, void> {
   /// Opening a chat, report and block: the actions available on profiles and chats.
   const ChatActionsProvider._()
     : super(
@@ -351,7 +411,13 @@ abstract class _$ChatActions extends $AsyncNotifier<void> {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
-        ref.element as $ClassProviderElement<AnyNotifier<AsyncValue<void>, void>, AsyncValue<void>, Object?, Object?>;
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }

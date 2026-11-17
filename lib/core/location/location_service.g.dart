@@ -12,7 +12,9 @@ part of 'location_service.dart';
 @ProviderFor(locationService)
 const locationServiceProvider = LocationServiceProvider._();
 
-final class LocationServiceProvider extends $FunctionalProvider<LocationService, LocationService, LocationService>
+final class LocationServiceProvider
+    extends
+        $FunctionalProvider<LocationService, LocationService, LocationService>
     with $Provider<LocationService> {
   const LocationServiceProvider._()
     : super(
@@ -30,7 +32,8 @@ final class LocationServiceProvider extends $FunctionalProvider<LocationService,
 
   @$internal
   @override
-  $ProviderElement<LocationService> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<LocationService> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   LocationService create(Ref ref) {
@@ -39,8 +42,11 @@ final class LocationServiceProvider extends $FunctionalProvider<LocationService,
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(LocationService value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<LocationService>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocationService>(value),
+    );
   }
 }
 
-String _$locationServiceHash() => r'03e8a8992cc3a802c194a6c996e68630b7c5e75e';
+String _$locationServiceHash() => r'1ce88b209a03d593a6390ff131ace6570a1ad2ef';

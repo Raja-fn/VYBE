@@ -15,7 +15,8 @@ const appEnvProvider = AppEnvProvider._();
 
 /// Set once in `bootstrap()` through a provider override.
 
-final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv> with $Provider<AppEnv> {
+final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv>
+    with $Provider<AppEnv> {
   /// Set once in `bootstrap()` through a provider override.
   const AppEnvProvider._()
     : super(
@@ -33,7 +34,8 @@ final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv> w
 
   @$internal
   @override
-  $ProviderElement<AppEnv> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AppEnv> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   AppEnv create(Ref ref) {
@@ -42,7 +44,10 @@ final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv> w
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AppEnv value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AppEnv>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppEnv>(value),
+    );
   }
 }
 

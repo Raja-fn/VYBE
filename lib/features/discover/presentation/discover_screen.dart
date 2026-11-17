@@ -9,7 +9,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/widgets/app_back_button.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_choice_chip.dart';
 import '../../../core/widgets/app_pill_button.dart';
 import '../../../core/widgets/async_state_view.dart';
 import '../../../core/widgets/badges.dart';
@@ -22,12 +21,11 @@ import '../domain/companion_summary.dart';
 import 'discover_controller.dart';
 import 'discover_providers.dart';
 import 'widgets/discovery_state_view.dart';
-import 'widgets/labels.dart';
 import 'widgets/reel_view.dart';
 
 /// Screen 4: Discover as reels. A top bar (title, Free now, Map, credits)
-/// and the plan chips sit above the reels; each person is one rounded card
-/// filling the rest. Swipe up for the next person; tap the sides of a photo to
+/// sits above the reels; each person is one rounded card filling the rest.
+/// Everyone nearby shows, for any plan: the plan is picked when booking. Swipe up for the next person; tap the sides of a photo to
 /// see their other photos.
 class DiscoverScreen extends ConsumerStatefulWidget {
   const DiscoverScreen({super.key});
@@ -49,9 +47,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final textTheme = Theme.of(context).textTheme;
-    final state = ref.watch(discoverControllerProvider);
-    final controller = ref.read(discoverControllerProvider.notifier);
-    final results = ref.watch(discoverResultsProvider(state.plan));
+    final results = ref.watch(discoverResultsProvider);
     final online = ref.watch(isOnlineValueProvider);
     final credits = ref.watch(creditBalanceProvider).value ?? 0;
     final stage = ref.watch(sessionStageProvider).value;
@@ -60,16 +56,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final needsName = account != null && (account.displayName?.trim().isEmpty ?? true);
     final people = results.value;
 
-    void selectPlan(PlanType plan) {
-      controller.selectPlan(plan);
-      if (_pages.hasClients) _pages.jumpToPage(0);
-    }
-
     Future<void> startAgain() async {
       if (_pages.hasClients) {
         await _pages.animateToPage(0, duration: const Duration(milliseconds: 500), curve: Curves.easeOutCubic);
       }
-      ref.invalidate(discoverResultsProvider(state.plan));
+      ref.invalidate(discoverResultsProvider);
     }
 
     return Scaffold(
@@ -110,7 +101,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   AppRoundIconButton(
                     label: l10n.discoverMap,
                     icon: Icons.place_outlined,
-                    onPressed: () => context.go(AppRoutes.discoverMap(plan: state.plan)),
+                    onPressed: () => context.go(AppRoutes.discoverMap()),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   CreditsPill(credits: credits, onPressed: () => context.push(AppRoutes.credits)),
@@ -122,31 +113,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 padding: const EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.sm, AppSpacing.screenGutter, 0),
                 child: _NameBanner(onAdd: () => context.go(AppRoutes.profile)),
               ),
-            // Plan chips.
-            SizedBox(
-              height: AppSizes.minTouchTarget + AppSpacing.md,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenGutter),
-                itemCount: PlanType.values.length,
-                separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
-                itemBuilder: (context, i) {
-                  final plan = PlanType.values[i];
-                  return Center(
-                    child: AppChoiceChip(
-                      label: planLabel(l10n, plan),
-                      selected: plan == state.plan,
-                      onSelected: () => selectPlan(plan),
-                    ),
-                  );
-                },
-              ),
-            ),
+            const SizedBox(height: AppSpacing.sm),
             // The reels: one rounded card per person, below the controls.
             Expanded(
               child: people != null && people.isNotEmpty
                   ? PageView.builder(
-                      key: ValueKey(state.plan),
                       controller: _pages,
                       scrollDirection: Axis.vertical,
                       itemCount: people.length + 1,
@@ -163,7 +134,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                     )
                   : DiscoveryStateView<List<CompanionSummary>>(
                       value: results,
-                      onRetry: () => ref.invalidate(discoverResultsProvider(state.plan)),
+                      onRetry: () => ref.invalidate(discoverResultsProvider),
                       isEmpty: (all) => all.isEmpty,
                       emptyTitle: l10n.discoverEmptyTitle,
                       emptyMessage: l10n.discoverEmptyBody,
@@ -201,7 +172,14 @@ class _Post extends ConsumerWidget {
           ..showSnackBar(SnackBar(content: Text(l10n.sampleProfileNotice)));
       }
 
-      return ReelView(companion: c, saved: false, onOpen: explain, onMessage: explain, onToggleSave: explain);
+      return ReelView(
+        companion: c,
+        saved: false,
+        onOpen: explain,
+        onMessage: explain,
+        onBook: explain,
+        onToggleSave: explain,
+      );
     }
 
     final saved = ref.watch(savedIdsProvider).value?.contains(c.uid) ?? false;
@@ -219,6 +197,7 @@ class _Post extends ConsumerWidget {
       saved: saved,
       onOpen: () => context.push(AppRoutes.companion(c.uid)),
       onMessage: () => openChatWith(context, ref, companionUid: c.uid, name: c.displayName),
+      onBook: () => context.push(AppRoutes.book(companionUid: c.uid)),
       onToggleSave: toggleSave,
     );
   }

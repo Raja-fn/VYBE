@@ -25,8 +25,8 @@
   "rulesVersion": 1,
   "signupBonusCredits": 20,
   "creditCostStartChat": 1,
-  "creditCostBookSpot": 5,
-  "creditCostInstantRequest": 5,
+  "creditCostBookSpot": 0,
+  "creditCostInstantRequest": 0,
   "plans": [
     {
       "tier": "free",

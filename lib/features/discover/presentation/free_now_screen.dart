@@ -128,7 +128,9 @@ class _FreeNowScreenState extends ConsumerState<FreeNowScreen> {
                         children: [
                           Text(l10n.instantTitle, style: textTheme.titleMedium?.copyWith(color: AppColors.onInk)),
                           Text(
-                            l10n.instantBody(config.creditCostInstantRequest),
+                            config.creditCostInstantRequest > 0
+                                ? l10n.instantBody(config.creditCostInstantRequest)
+                                : l10n.instantBodyFree,
                             style: textTheme.bodyMedium?.copyWith(color: AppColors.onInkMuted),
                           ),
                           if (selectedUid == null)

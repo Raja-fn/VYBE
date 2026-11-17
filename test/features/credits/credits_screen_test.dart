@@ -31,7 +31,7 @@ void main() {
     testWidgets('shows Free, Plus, Premium and three packs, credits only', (tester) async {
       await _open(tester, readyBackend());
       expect(find.text('Get more credits'), findsOneWidget);
-      expect(find.text('Unlock chats and bookings.'), findsOneWidget);
+      expect(find.text('Unlock new chats.'), findsOneWidget);
       expect(find.text('Free'), findsOneWidget);
       expect(find.text('₹0'), findsOneWidget);
       expect(find.text('20 credits when you join'), findsOneWidget);

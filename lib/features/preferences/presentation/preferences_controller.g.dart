@@ -12,7 +12,8 @@ part of 'preferences_controller.dart';
 @ProviderFor(PreferencesController)
 const preferencesControllerProvider = PreferencesControllerProvider._();
 
-final class PreferencesControllerProvider extends $NotifierProvider<PreferencesController, PreferencesDraft> {
+final class PreferencesControllerProvider
+    extends $NotifierProvider<PreferencesController, PreferencesDraft> {
   const PreferencesControllerProvider._()
     : super(
         from: null,
@@ -33,11 +34,15 @@ final class PreferencesControllerProvider extends $NotifierProvider<PreferencesC
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(PreferencesDraft value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<PreferencesDraft>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PreferencesDraft>(value),
+    );
   }
 }
 
-String _$preferencesControllerHash() => r'd1f2749fee7ff6826d2932da7831590a0c559593';
+String _$preferencesControllerHash() =>
+    r'd1f2749fee7ff6826d2932da7831590a0c559593';
 
 abstract class _$PreferencesController extends $Notifier<PreferencesDraft> {
   PreferencesDraft build();

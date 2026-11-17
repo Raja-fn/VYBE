@@ -10,7 +10,9 @@ const ist = (hm: string) => new Date(`2026-11-10T${hm}:00+05:30`);
 const sql = connect();
 let people: People;
 
-const deps = () => makeDeps(sql, { discoverCallsPerMinute: 1000 }, NOW);
+// Booking is free by default; most tests turn a price on to check the charging path.
+const deps = (config: Parameters<typeof makeDeps>[1] = {}) =>
+  makeDeps(sql, { discoverCallsPerMinute: 1000, creditCostBookSpot: 5, creditCostInstantRequest: 5, ...config }, NOW);
 const uid = (name: string) => people.uid(name);
 const caller = (name: string) => googleCaller(uid(name));
 
@@ -126,6 +128,23 @@ describe('requestBooking', () => {
     expect((await slot()).booked).toBe(1);
     const [ledger] = await sql`select * from credit_ledger where id = ${`${result.bookingId}_charge`}`;
     expect(ledger).toMatchObject({ uid: uid('aarav'), delta: -5, balance_after: 15, reason: 'booking' });
+  });
+
+  it('is free by default: no credits needed, nothing charged', async () => {
+    await sql`update credit_accounts set balance = 0 where uid = ${uid('aarav')}`;
+    const result = await requestBookingLogic(makeDeps(sql, { discoverCallsPerMinute: 1000 }, NOW), caller('aarav'), {
+      requestId: 'reqfreexx',
+      companionUid: uid('neha'),
+      venueId: 'cafe',
+      slotId: '20261110_1700',
+      planType: 'coffee',
+      kind: 'scheduled',
+    });
+    expect(result.balance).toBe(0);
+    const [booking] = await sql`select status, credit_cost, charge_ledger_id from bookings where id = ${result.bookingId}`;
+    expect(booking).toEqual({ status: 'requested', credit_cost: 0, charge_ledger_id: null });
+    expect(await sql`select 1 from credit_ledger where ref_id = ${result.bookingId}`).toHaveLength(0);
+    expect((await slot()).booked).toBe(1);
   });
 
   it('instant requests are recorded as such', async () => {

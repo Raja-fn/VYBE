@@ -16,7 +16,8 @@ const rulesControllerProvider = RulesControllerProvider._();
 
 /// Accepting the rules. Before sign-in this only remembers consent; if the
 /// phone is already verified it also records consent on the server.
-final class RulesControllerProvider extends $AsyncNotifierProvider<RulesController, void> {
+final class RulesControllerProvider
+    extends $AsyncNotifierProvider<RulesController, void> {
   /// Accepting the rules. Before sign-in this only remembers consent; if the
   /// phone is already verified it also records consent on the server.
   const RulesControllerProvider._()
@@ -51,7 +52,13 @@ abstract class _$RulesController extends $AsyncNotifier<void> {
     build();
     final ref = this.ref as $Ref<AsyncValue<void>, void>;
     final element =
-        ref.element as $ClassProviderElement<AnyNotifier<AsyncValue<void>, void>, AsyncValue<void>, Object?, Object?>;
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, null);
   }
 }

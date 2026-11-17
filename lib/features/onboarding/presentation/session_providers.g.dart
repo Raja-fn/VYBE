@@ -12,7 +12,8 @@ part of 'session_providers.dart';
 @ProviderFor(authRepository)
 const authRepositoryProvider = AuthRepositoryProvider._();
 
-final class AuthRepositoryProvider extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
+final class AuthRepositoryProvider
+    extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
     with $Provider<AuthRepository> {
   const AuthRepositoryProvider._()
     : super(
@@ -30,7 +31,8 @@ final class AuthRepositoryProvider extends $FunctionalProvider<AuthRepository, A
 
   @$internal
   @override
-  $ProviderElement<AuthRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AuthRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   AuthRepository create(Ref ref) {
@@ -39,7 +41,10 @@ final class AuthRepositoryProvider extends $FunctionalProvider<AuthRepository, A
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AuthRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AuthRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AuthRepository>(value),
+    );
   }
 }
 
@@ -49,7 +54,12 @@ String _$authRepositoryHash() => r'5a298a673d7a14f3b182d98675efeb2dfdc824b0';
 const accountRepositoryProvider = AccountRepositoryProvider._();
 
 final class AccountRepositoryProvider
-    extends $FunctionalProvider<AccountRepository, AccountRepository, AccountRepository>
+    extends
+        $FunctionalProvider<
+          AccountRepository,
+          AccountRepository,
+          AccountRepository
+        >
     with $Provider<AccountRepository> {
   const AccountRepositoryProvider._()
     : super(
@@ -67,7 +77,9 @@ final class AccountRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<AccountRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AccountRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   AccountRepository create(Ref ref) {
@@ -76,7 +88,10 @@ final class AccountRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AccountRepository value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AccountRepository>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AccountRepository>(value),
+    );
   }
 }
 
@@ -85,7 +100,9 @@ String _$accountRepositoryHash() => r'3e0d996f24b482978f452c2501ca7a99b1d7b608';
 @ProviderFor(authUser)
 const authUserProvider = AuthUserProvider._();
 
-final class AuthUserProvider extends $FunctionalProvider<AsyncValue<AuthUser?>, AuthUser?, Stream<AuthUser?>>
+final class AuthUserProvider
+    extends
+        $FunctionalProvider<AsyncValue<AuthUser?>, AuthUser?, Stream<AuthUser?>>
     with $FutureModifier<AuthUser?>, $StreamProvider<AuthUser?> {
   const AuthUserProvider._()
     : super(
@@ -103,7 +120,8 @@ final class AuthUserProvider extends $FunctionalProvider<AsyncValue<AuthUser?>, 
 
   @$internal
   @override
-  $StreamProviderElement<AuthUser?> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<AuthUser?> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<AuthUser?> create(Ref ref) {
@@ -116,16 +134,20 @@ String _$authUserHash() => r'eb5861fccca8a24b7df59fc0415964608897267f';
 @ProviderFor(account)
 const accountProvider = AccountFamily._();
 
-final class AccountProvider extends $FunctionalProvider<AsyncValue<Account?>, Account?, Stream<Account?>>
+final class AccountProvider
+    extends
+        $FunctionalProvider<AsyncValue<Account?>, Account?, Stream<Account?>>
     with $FutureModifier<Account?>, $StreamProvider<Account?> {
-  const AccountProvider._({required AccountFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'accountProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  const AccountProvider._({
+    required AccountFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'accountProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$accountHash();
@@ -139,7 +161,8 @@ final class AccountProvider extends $FunctionalProvider<AsyncValue<Account?>, Ac
 
   @$internal
   @override
-  $StreamProviderElement<Account?> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+  $StreamProviderElement<Account?> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<Account?> create(Ref ref) {
@@ -160,7 +183,8 @@ final class AccountProvider extends $FunctionalProvider<AsyncValue<Account?>, Ac
 
 String _$accountHash() => r'47a77f5b4823dcae0b78325977ada0419965a080';
 
-final class AccountFamily extends $Family with $FunctionalFamilyOverride<Stream<Account?>, String> {
+final class AccountFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<Account?>, String> {
   const AccountFamily._()
     : super(
         retry: null,
@@ -170,7 +194,8 @@ final class AccountFamily extends $Family with $FunctionalFamilyOverride<Stream<
         isAutoDispose: false,
       );
 
-  AccountProvider call(String uid) => AccountProvider._(argument: uid, from: this);
+  AccountProvider call(String uid) =>
+      AccountProvider._(argument: uid, from: this);
 
   @override
   String toString() => r'accountProvider';
@@ -184,7 +209,12 @@ const sessionStageProvider = SessionStageProvider._();
 /// Where the person is in getting set up. The router redirects on this.
 
 final class SessionStageProvider
-    extends $FunctionalProvider<AsyncValue<SessionStage>, AsyncValue<SessionStage>, AsyncValue<SessionStage>>
+    extends
+        $FunctionalProvider<
+          AsyncValue<SessionStage>,
+          AsyncValue<SessionStage>,
+          AsyncValue<SessionStage>
+        >
     with $Provider<AsyncValue<SessionStage>> {
   /// Where the person is in getting set up. The router redirects on this.
   const SessionStageProvider._()
@@ -203,7 +233,9 @@ final class SessionStageProvider
 
   @$internal
   @override
-  $ProviderElement<AsyncValue<SessionStage>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AsyncValue<SessionStage>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   AsyncValue<SessionStage> create(Ref ref) {
@@ -212,7 +244,10 @@ final class SessionStageProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AsyncValue<SessionStage> value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AsyncValue<SessionStage>>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<SessionStage>>(value),
+    );
   }
 }
 
@@ -255,7 +290,10 @@ final class ConsentGivenProvider extends $NotifierProvider<ConsentGiven, bool> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
   }
 }
 
@@ -273,7 +311,14 @@ abstract class _$ConsentGiven extends $Notifier<bool> {
   void runBuild() {
     final created = build();
     final ref = this.ref as $Ref<bool, bool>;
-    final element = ref.element as $ClassProviderElement<AnyNotifier<bool, bool>, bool, Object?, Object?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
     element.handleValue(ref, created);
   }
 }

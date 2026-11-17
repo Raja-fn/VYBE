@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import { loadAppConfig, type AppConfig } from '../config/appConfig';
-import { account, booking, chat, discovery, onboarding, phoneLogin, purchases, safety } from '../handlers';
+import { account, booking, chat, discovery, onboarding, phoneLogin, purchases, reels, safety } from '../handlers';
 import type { Deps } from '../handlers/deps';
 import type { AuthAdmin } from '../services/auth/authAdmin';
 import type { Services } from '../services/factory';
@@ -49,6 +49,9 @@ const signedIn: Record<string, SignedIn> = {
   submitReport: { kind: 'user', schema: safety.submitReportInput, run: safety.submitReportLogic },
   blockUser: { kind: 'user', schema: safety.blockUserInput, run: safety.blockUserLogic },
   verifyPurchase: { kind: 'user', schema: purchases.verifyPurchaseInput, run: purchases.verifyPurchaseLogic },
+  reelFeed: { kind: 'user', schema: reels.reelFeedInput, run: reels.reelFeedLogic },
+  postReel: { kind: 'user', schema: reels.postReelInput, run: reels.postReelLogic },
+  deleteReel: { kind: 'user', schema: reels.deleteReelInput, run: reels.deleteReelLogic },
 };
 
 const json = (status: number, body: unknown) =>

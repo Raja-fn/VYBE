@@ -15,6 +15,7 @@ What's left needs your accounts. Do the steps in order. Never paste secrets
 |---|---|---|
 | Selfie and ID checks | **Approved automatically.** Every account gets the same placeholder date of birth (age 26), so ages on profiles are not real. | Connect a provider (HyperVerge, IDfy, Digio) to read real ages. |
 | Payments | Real Google Play Billing: credit packs and Plus/Premium plans, verified by the server. Refunds take credits back. | — |
+| Booking a meetup | **Free**, no credits (client decision). Credits are only used to start a new chat. | Set `creditCostBookSpot` / `creditCostInstantRequest` in app_config overrides to charge again. |
 | Venue "Hot / Busy" | No data source yet: every venue shows as quiet, and spots are ranked by distance. | Connect a popularity source. |
 | Companion earnings and payouts | Not offered. | Needs a payout provider. |
 | Phone OTP | Off (Google sign-in only). | See `docs/supabase-setup.md`. |
@@ -44,6 +45,19 @@ Still to do:
    off (VYBE signs in with Google only).
 3. **Sample profiles off** at launch: Table Editor → app_config → overrides
    `{"environment": "production", "showSampleProfiles": false}`.
+4. **Reels and free booking (server update).** Apply the new database
+   migration (the `reels` table and video storage), then deploy the API:
+   ```sh
+   npx supabase db push --remote
+   npm --prefix server run build:edge
+   npx supabase functions deploy api --use-api --project-ref stgfjguoytqzmliurbvp
+   ```
+   Until then the Reels tab shows "Something went wrong" and booking still
+   costs credits.
+5. **Reels moderation.** Reported reels land in the `reports` table
+   (context `reel`). To remove one: Table Editor → `reels` → delete the row,
+   and delete its file in Storage → `reels`. Google Play requires that
+   reported content is reviewed.
 
 ## 2. Google Play Console
 

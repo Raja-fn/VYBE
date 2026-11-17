@@ -27,6 +27,7 @@ import 'package:vybe/features/onboarding/presentation/session_providers.dart';
 import 'package:vybe/features/preferences/domain/preferences.dart';
 import 'package:vybe/features/preferences/presentation/preferences_providers.dart';
 import 'package:vybe/features/profile/presentation/my_profile_controller.dart';
+import 'package:vybe/features/reels/presentation/reels_providers.dart';
 
 import 'fakes.dart';
 
@@ -63,6 +64,8 @@ class TestBackend {
   late final FakeProfileRepository profile = FakeProfileRepository(accounts);
   final FakePhotoPicker photos = FakePhotoPicker();
   final FakeStorageUrlResolver storage = FakeStorageUrlResolver();
+  final FakeReelsRepository reels = FakeReelsRepository();
+  final FakeVideoPicker videos = FakeVideoPicker();
   LocationService location = const FixedLocationService(DevicePosition(lat: 19.0596, lng: 72.8295, accuracyM: 5));
 
   List<Override> get overrides => [
@@ -82,6 +85,10 @@ class TestBackend {
     profileRepositoryProvider.overrideWithValue(profile),
     photoPickerServiceProvider.overrideWithValue(photos),
     storageUrlResolverProvider.overrideWithValue(storage),
+    reelsRepositoryProvider.overrideWithValue(reels),
+    videoPickerProvider.overrideWithValue(videos),
+    // No video engine in widget tests.
+    videoPlaybackProvider.overrideWithValue(false),
   ];
 }
 
