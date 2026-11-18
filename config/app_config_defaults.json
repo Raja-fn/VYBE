@@ -68,6 +68,7 @@
   "safetyCheckIntervalMinutes": 30,
   "safetyMissedCheckInsToEscalate": 1,
   "sosHoldSeconds": 3,
+  "emergencyNumber": "112",
   "autoCompleteGraceMinutes": 30,
   "moderationStrikesForReport": 3,
   "moderationStrikeWindowHours": 24,

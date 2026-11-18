@@ -82,15 +82,49 @@ abstract class Booking with _$Booking {
     required BookingStatus status,
     required BookingKind kind,
     required int creditCost,
+
+    /// Who has tapped "I'm here" at the venue.
+    @Default(<String>[]) List<String> checkedInUids,
+
+    /// Who has said how the meetup went (the answers themselves stay private).
+    @Default(<String>[]) List<String> feedbackUids,
   }) = _Booking;
 
   const Booking._();
 
-  /// Mirrors the server rule: before the start, while requested or accepted.
+  /// Mirrors the server rule: either person, before the start, while requested or accepted.
   bool canCancel(DateTime now) =>
       (status == BookingStatus.requested || status == BookingStatus.accepted) && startAt.isAfter(now);
 
   /// A request nobody answered before its time. Requests never expire, but
   /// a time that has passed cannot be met any more.
   bool timePassed(DateTime now) => status == BookingStatus.requested && !startAt.isAfter(now);
+
+  /// The invited person can accept or decline until the start.
+  bool canRespond(String? me, DateTime now) =>
+      me == companionUid && status == BookingStatus.requested && startAt.isAfter(now);
+
+  bool get isConfirmed => status == BookingStatus.accepted || status == BookingStatus.checkedIn;
+
+  /// "I'm here" is open from [before] ahead of the start until [after] past it.
+  bool canCheckIn(String? me, DateTime now, {required Duration before, required Duration after}) =>
+      me != null &&
+      isConfirmed &&
+      !checkedInUids.contains(me) &&
+      !now.isBefore(startAt.subtract(before)) &&
+      !now.isAfter(startAt.add(after));
+
+  /// "How did it go?" is open from the start for [meetFeedbackWindow] after the end.
+  bool canGiveFeedback(String? me, DateTime now) =>
+      me != null &&
+      (isConfirmed || status == BookingStatus.completed) &&
+      !feedbackUids.contains(me) &&
+      !now.isBefore(startAt) &&
+      !now.isAfter(endAt.add(meetFeedbackWindow));
 }
+
+/// Mirrors the server's FEEDBACK_DAYS.
+const meetFeedbackWindow = Duration(days: 14);
+
+/// The private answer to "How did it go?".
+enum MeetFeeling { good, okay, unsafe }

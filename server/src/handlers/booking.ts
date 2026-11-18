@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
-import { ACTIVE_STATUSES, canSeekerCancel, companionCovers, overlaps, slotState, type BookingStatus, type SlotState } from '../domain/booking';
+import {
+  ACTIVE_STATUSES,
+  canCancel,
+  canRespond,
+  checkInOpen,
+  companionCovers,
+  feedbackOpen,
+  overlaps,
+  slotState,
+  type BookingStatus,
+  type SlotState,
+} from '../domain/booking';
 import type { CompanionCandidate } from '../domain/discovery';
 import { rankCandidates } from '../domain/discovery';
 import { distanceKm, type LatLng } from '../domain/geo';
@@ -368,7 +379,30 @@ export async function releaseSlot(tx: Sql, venueId: string, slotId: string): Pro
     where venue_id = ${venueId} and id = ${slotId}`;
 }
 
-/** The seeker cancels. The table is freed; credits are not refunded. */
+interface LockedBooking {
+  seeker_uid: string;
+  companion_uid: string;
+  status: BookingStatus;
+  start_at: Date;
+  end_at: Date;
+  venue_id: string;
+  slot_id: string;
+  checked_in_uids: string[];
+  feedback_uids: string[];
+}
+
+/** Locks a booking the caller is part of, or "not found". */
+async function lockBooking(tx: Sql, bookingId: string, uid: string): Promise<LockedBooking> {
+  const [booking] = await tx<LockedBooking[]>`
+    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids
+    from bookings where id = ${bookingId} for update`;
+  if (!booking || (booking.seeker_uid !== uid && booking.companion_uid !== uid)) {
+    throw appError(ErrorCodes.notFound, 'Booking not found.');
+  }
+  return booking;
+}
+
+/** Either person cancels before the start. The table is freed; credits are not refunded. */
 export async function cancelBookingLogic(
   deps: Deps,
   caller: Caller,
@@ -376,17 +410,119 @@ export async function cancelBookingLogic(
 ): Promise<{ status: 'cancelled' }> {
   const now = deps.now();
   await deps.sql.begin(async (tx) => {
-    const [booking] = await tx<{ seeker_uid: string; status: BookingStatus; start_at: Date; venue_id: string; slot_id: string }[]>`
-      select seeker_uid, status, start_at, venue_id, slot_id from bookings where id = ${input.bookingId} for update`;
-    if (!booking || booking.seeker_uid !== caller.uid) throw appError(ErrorCodes.notFound, 'Booking not found.');
-    if (!canSeekerCancel(booking.status, booking.start_at, now)) {
+    const booking = await lockBooking(tx, input.bookingId, caller.uid);
+    if (!canCancel(booking.status, booking.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, 'This booking can no longer be cancelled.');
     }
     await releaseSlot(tx, booking.venue_id, booking.slot_id);
+    const reason = booking.seeker_uid === caller.uid ? 'seeker_cancelled' : 'companion_cancelled';
     await tx`
-      update bookings set status = 'cancelled', status_reason = 'seeker_cancelled', cancelled_by = ${caller.uid},
+      update bookings set status = 'cancelled', status_reason = ${reason}, cancelled_by = ${caller.uid},
         updated_at = ${now}
       where id = ${input.bookingId}`;
   });
   return { status: 'cancelled' };
+}
+
+// ---------- respondBooking ----------
+
+export const respondBookingInput = z.object({ bookingId: z.string().min(1), accept: z.boolean() });
+
+/**
+ * The invited person says yes or no. A meetup only counts once both have
+ * said yes; declining frees the table.
+ */
+export async function respondBookingLogic(
+  deps: Deps,
+  caller: Caller,
+  input: z.infer<typeof respondBookingInput>,
+): Promise<{ status: 'accepted' | 'declined' }> {
+  const now = deps.now();
+  const target = input.accept ? 'accepted' : 'declined';
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input.bookingId, caller.uid);
+    if (booking.companion_uid !== caller.uid) throw appError(ErrorCodes.notFound, 'Booking not found.');
+    if (booking.status === target) return; // a retry
+    if (!canRespond(booking.status, booking.start_at, now)) {
+      throw appError(ErrorCodes.invalidInput, 'This request can no longer be answered.');
+    }
+    if (!input.accept) await releaseSlot(tx, booking.venue_id, booking.slot_id);
+    await tx`
+      update bookings set status = ${target}, status_reason = ${input.accept ? null : 'companion_declined'},
+        updated_at = ${now}
+      where id = ${input.bookingId}`;
+  });
+  return { status: target };
+}
+
+// ---------- checkInBooking ----------
+
+export const checkInBookingInput = z.object({ bookingId: z.string().min(1) });
+
+/** "I'm here": each person checks in at the venue around the start time. */
+export async function checkInBookingLogic(
+  deps: Deps,
+  caller: Caller,
+  input: z.infer<typeof checkInBookingInput>,
+): Promise<{ status: 'checked_in' }> {
+  const now = deps.now();
+  const { checkInWindowMinutesBefore: before, checkInWindowMinutesAfter: after } = deps.config;
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input.bookingId, caller.uid);
+    if (booking.checked_in_uids.includes(caller.uid)) return;
+    if (booking.status !== 'accepted' && booking.status !== 'checked_in') {
+      throw appError(ErrorCodes.invalidInput, 'Only a confirmed meetup can be checked in.');
+    }
+    if (!checkInOpen(booking.start_at, now, before, after)) {
+      throw appError(ErrorCodes.invalidInput, 'Check-in is not open now.');
+    }
+    await tx`
+      update bookings set status = 'checked_in', checked_in_uids = array_append(checked_in_uids, ${caller.uid}::uuid),
+        updated_at = ${now}
+      where id = ${input.bookingId}`;
+  });
+  return { status: 'checked_in' };
+}
+
+// ---------- meetFeedback ----------
+
+export const meetFeedbackInput = z.object({
+  bookingId: z.string().min(1),
+  felt: z.enum(['good', 'okay', 'unsafe']),
+  note: z.string().optional(),
+});
+
+/**
+ * Private "How did it go?" after a meetup. Never shown to the other person.
+ * "unsafe" also files a report for the safety team.
+ */
+export async function meetFeedbackLogic(
+  deps: Deps,
+  caller: Caller,
+  input: z.infer<typeof meetFeedbackInput>,
+): Promise<{ saved: true }> {
+  const now = deps.now();
+  const note = (input.note ?? '').trim();
+  if (note.length > deps.config.reportDetailsMaxLength) throw appError(ErrorCodes.invalidInput, 'The note is too long.');
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input.bookingId, caller.uid);
+    if (booking.feedback_uids.includes(caller.uid)) return;
+    if (!feedbackOpen(booking.status, booking.start_at, booking.end_at, now)) {
+      throw appError(ErrorCodes.invalidInput, 'Feedback is not open for this booking.');
+    }
+    const other = booking.seeker_uid === caller.uid ? booking.companion_uid : booking.seeker_uid;
+    await tx`
+      insert into meet_feedback (booking_id, uid, about_uid, felt, note, created_at)
+      values (${input.bookingId}, ${caller.uid}, ${other}, ${input.felt}, ${note || null}, ${now})
+      on conflict do nothing`;
+    await tx`
+      update bookings set feedback_uids = array_append(feedback_uids, ${caller.uid}::uuid), updated_at = ${now}
+      where id = ${input.bookingId}`;
+    if (input.felt === 'unsafe') {
+      await tx`
+        insert into reports (reporter_uid, reported_uid, context_type, context_ref_id, reason, details, source, status, created_at)
+        values (${caller.uid}, ${other}, 'meetup', ${input.bookingId}, 'safety_concern', ${note || null}, 'feedback', 'open', ${now})`;
+    }
+  });
+  return { saved: true };
 }

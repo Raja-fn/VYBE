@@ -1,4 +1,12 @@
-import { cancelBookingLogic, nearbyVenuesLogic, requestBookingLogic, venueSlotsLogic } from '../../src/handlers/booking';
+import {
+  cancelBookingLogic,
+  checkInBookingLogic,
+  meetFeedbackLogic,
+  nearbyVenuesLogic,
+  requestBookingLogic,
+  respondBookingLogic,
+  venueSlotsLogic,
+} from '../../src/handlers/booking';
 import { AppError } from '../../src/shared/errorCodes';
 import { addPerson, addVenue, connect, expectAppError, googleCaller, makeDeps, People, reset } from './helpers';
 
@@ -214,10 +222,110 @@ describe('cancelBooking', () => {
     expect(await balance('aarav')).toBe(15);
   });
 
-  it('only the seeker can cancel, and only once', async () => {
+  it('only the two people can cancel, and only once', async () => {
     const { bookingId } = await request('aarav');
     await expectAppError(cancelBookingLogic(deps(), caller('kabir'), { bookingId }), 'not_found');
     await cancelBookingLogic(deps(), caller('aarav'), { bookingId });
     await expectAppError(cancelBookingLogic(deps(), caller('aarav'), { bookingId }), 'invalid_input');
+  });
+
+  it('the invited person can cancel too', async () => {
+    const { bookingId } = await request('aarav');
+    await cancelBookingLogic(deps(), caller('neha'), { bookingId });
+    const [booking] = await sql`select status, status_reason, cancelled_by from bookings where id = ${bookingId}`;
+    expect(booking).toEqual({ status: 'cancelled', status_reason: 'companion_cancelled', cancelled_by: uid('neha') });
+  });
+});
+
+// The 17:00 IST slot starts at 11:30Z.
+const at = (iso: string) => (config: Parameters<typeof makeDeps>[1] = {}) =>
+  makeDeps(sql, { discoverCallsPerMinute: 1000, ...config }, new Date(iso));
+const statusOf = async (bookingId: string) =>
+  (await sql<{ status: string; checked_in_uids: string[]; feedback_uids: string[] }[]>`
+    select status, checked_in_uids, feedback_uids from bookings where id = ${bookingId}`)[0];
+
+describe('respondBooking', () => {
+  it('the invited person accepts; a retry is fine', async () => {
+    const { bookingId } = await request('aarav');
+    expect(await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true })).toEqual({ status: 'accepted' });
+    expect(await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true })).toEqual({ status: 'accepted' });
+    expect((await statusOf(bookingId)).status).toBe('accepted');
+  });
+
+  it('declining frees the table', async () => {
+    await sql`update venue_slots set capacity = 1 where venue_id = 'cafe' and id = '20261110_1700'`;
+    const { bookingId } = await request('aarav');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: false });
+    expect((await statusOf(bookingId)).status).toBe('declined');
+    expect(await slot()).toMatchObject({ booked: 0, status: 'open' });
+    await expectAppError(respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true }), 'invalid_input');
+  });
+
+  it('only the invited person can answer, and not after the start', async () => {
+    const { bookingId } = await request('aarav');
+    await expectAppError(respondBookingLogic(deps(), caller('aarav'), { bookingId, accept: true }), 'not_found');
+    await expectAppError(respondBookingLogic(deps(), caller('kabir'), { bookingId, accept: true }), 'not_found');
+    await expectAppError(respondBookingLogic(at('2026-11-10T11:31:00Z')(), caller('neha'), { bookingId, accept: true }), 'invalid_input');
+  });
+});
+
+describe('checkInBooking', () => {
+  it('opens 15 minutes before the start; each person checks in once', async () => {
+    const { bookingId } = await request('aarav');
+    await expectAppError(checkInBookingLogic(at('2026-11-10T11:20:00Z')(), caller('aarav'), { bookingId }), 'invalid_input');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true });
+    await expectAppError(checkInBookingLogic(at('2026-11-10T11:10:00Z')(), caller('aarav'), { bookingId }), 'invalid_input');
+
+    await checkInBookingLogic(at('2026-11-10T11:20:00Z')(), caller('aarav'), { bookingId });
+    await checkInBookingLogic(at('2026-11-10T11:21:00Z')(), caller('aarav'), { bookingId });
+    await checkInBookingLogic(at('2026-11-10T11:40:00Z')(), caller('neha'), { bookingId });
+    expect(await statusOf(bookingId)).toMatchObject({ status: 'checked_in', checked_in_uids: [uid('aarav'), uid('neha')] });
+    await expectAppError(checkInBookingLogic(at('2026-11-10T11:41:00Z')(), caller('kabir'), { bookingId }), 'not_found');
+  });
+
+  it('closes 30 minutes after the start', async () => {
+    const { bookingId } = await request('aarav');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true });
+    await expectAppError(checkInBookingLogic(at('2026-11-10T12:01:00Z')(), caller('aarav'), { bookingId }), 'invalid_input');
+  });
+});
+
+describe('meetFeedback', () => {
+  it('is private, once per person, and only after the start of a confirmed meetup', async () => {
+    const { bookingId } = await request('aarav');
+    const after = at('2026-11-10T13:00:00Z')();
+    await expectAppError(meetFeedbackLogic(after, caller('aarav'), { bookingId, felt: 'good' }), 'invalid_input');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true });
+    await expectAppError(meetFeedbackLogic(deps(), caller('aarav'), { bookingId, felt: 'good' }), 'invalid_input');
+
+    await meetFeedbackLogic(after, caller('aarav'), { bookingId, felt: 'good', note: ' Lovely ' });
+    await meetFeedbackLogic(after, caller('aarav'), { bookingId, felt: 'unsafe' });
+    const rows = await sql`select uid, about_uid, felt, note from meet_feedback where booking_id = ${bookingId}`;
+    expect(rows).toEqual([{ uid: uid('aarav'), about_uid: uid('neha'), felt: 'good', note: 'Lovely' }]);
+    expect((await statusOf(bookingId)).feedback_uids).toEqual([uid('aarav')]);
+    expect(await sql`select 1 from reports`).toHaveLength(0);
+    await expectAppError(meetFeedbackLogic(after, caller('kabir'), { bookingId, felt: 'good' }), 'not_found');
+  });
+
+  it('"unsafe" files a report for the safety team', async () => {
+    const { bookingId } = await request('aarav');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true });
+    await meetFeedbackLogic(at('2026-11-10T13:00:00Z')(), caller('neha'), { bookingId, felt: 'unsafe', note: 'Kept pushing' });
+    const [report] = await sql`select reporter_uid, reported_uid, context_type, context_ref_id, reason, details, source from reports`;
+    expect(report).toEqual({
+      reporter_uid: uid('neha'),
+      reported_uid: uid('aarav'),
+      context_type: 'meetup',
+      context_ref_id: bookingId,
+      reason: 'safety_concern',
+      details: 'Kept pushing',
+      source: 'feedback',
+    });
+  });
+
+  it('closes two weeks after the meetup', async () => {
+    const { bookingId } = await request('aarav');
+    await respondBookingLogic(deps(), caller('neha'), { bookingId, accept: true });
+    await expectAppError(meetFeedbackLogic(at('2026-11-25T13:00:00Z')(), caller('aarav'), { bookingId, felt: 'good' }), 'invalid_input');
   });
 });

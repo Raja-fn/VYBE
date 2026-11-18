@@ -238,13 +238,13 @@ void main() {
       expect(find.text('Cancel'), findsNWidgets(2));
     });
 
-    testWidgets('cancelling asks first and warns there is no refund', (tester) async {
+    testWidgets('cancelling asks first', (tester) async {
       final backend = _world();
       backend.booking.bookings.value = [testBooking('b1')];
       await pumpFullApp(tester, backend: backend);
       await _tap(tester, find.byTooltip('Bookings'));
       await _tap(tester, find.text('Cancel'));
-      expect(find.text('Your table is released. Credits are not refunded.'), findsOneWidget);
+      expect(find.text('The table is released and they will see it is cancelled.'), findsOneWidget);
 
       await _tap(tester, find.text('Keep it'));
       expect(backend.booking.cancelled, isEmpty);

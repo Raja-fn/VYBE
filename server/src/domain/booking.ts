@@ -75,9 +75,29 @@ export function slotState(input: {
 }
 
 /**
- * The seeker may cancel while the meetup has not started. Credits are never
- * refunded (owner decision); cancelling only frees the table.
+ * Either person may cancel while the meetup has not started. Credits are
+ * never refunded (owner decision); cancelling only frees the table.
  */
-export function canSeekerCancel(status: BookingStatus, startAt: Date, now: Date): boolean {
+export function canCancel(status: BookingStatus, startAt: Date, now: Date): boolean {
   return (status === 'requested' || status === 'accepted') && startAt.getTime() > now.getTime();
+}
+
+/** The invited person may accept or decline a request before its time. */
+export function canRespond(status: BookingStatus, startAt: Date, now: Date): boolean {
+  return status === 'requested' && startAt.getTime() > now.getTime();
+}
+
+/** Check-in is open from [beforeMin] before the start to [afterMin] after it. */
+export function checkInOpen(startAt: Date, now: Date, beforeMin: number, afterMin: number): boolean {
+  const t = now.getTime();
+  return t >= startAt.getTime() - beforeMin * 60_000 && t <= startAt.getTime() + afterMin * 60_000;
+}
+
+/** How long after the end someone can still say how a meetup went. */
+export const FEEDBACK_DAYS = 14;
+
+/** "How did it go?" is open from the start of a confirmed meetup for [FEEDBACK_DAYS] after its end. */
+export function feedbackOpen(status: BookingStatus, startAt: Date, endAt: Date, now: Date): boolean {
+  const confirmed = status === 'accepted' || status === 'checked_in' || status === 'completed';
+  return confirmed && now.getTime() >= startAt.getTime() && now.getTime() <= endAt.getTime() + FEEDBACK_DAYS * 86_400_000;
 }

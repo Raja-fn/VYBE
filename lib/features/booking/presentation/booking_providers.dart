@@ -5,6 +5,7 @@ import '../../../core/backend/backend_providers.dart';
 import '../../../core/location/location_service.dart';
 import '../../../core/utils/app_failure.dart';
 import '../../../core/utils/ids.dart';
+import '../../../core/utils/result.dart';
 import '../../discover/domain/companion_summary.dart';
 import '../../discover/presentation/discover_providers.dart';
 import '../../onboarding/presentation/session_providers.dart';
@@ -124,7 +125,7 @@ class BookSpotController extends _$BookSpotController {
   }
 }
 
-/// Seeker-side cancel. Credits are not refunded.
+/// Either person cancels before the start. Credits are not refunded.
 @riverpod
 class CancelBooking extends _$CancelBooking {
   @override
@@ -136,4 +137,27 @@ class CancelBooking extends _$CancelBooking {
     state = const AsyncData(null);
     return result.failureOrNull;
   }
+}
+
+/// Accept or decline, "I'm here" and "How did it go?". Each returns the
+/// failure, or null when it worked; the bookings stream shows the result.
+@riverpod
+class MeetupActions extends _$MeetupActions {
+  @override
+  FutureOr<void> build() {}
+
+  Future<AppFailure?> _run(Future<Result<void>> Function(BookingRepository repo) action) async {
+    state = const AsyncLoading();
+    final result = await action(ref.read(bookingRepositoryProvider));
+    state = const AsyncData(null);
+    return result.failureOrNull;
+  }
+
+  Future<AppFailure?> respond(String bookingId, {required bool accept}) =>
+      _run((repo) => repo.respond(bookingId, accept: accept));
+
+  Future<AppFailure?> checkIn(String bookingId) => _run((repo) => repo.checkIn(bookingId));
+
+  Future<AppFailure?> feedback(String bookingId, {required MeetFeeling felt, String? note}) =>
+      _run((repo) => repo.feedback(bookingId, felt: felt, note: note));
 }

@@ -1,4 +1,4 @@
-import { canSeekerCancel, companionCovers, overlaps, slotState } from '../src/domain/booking';
+import { canCancel, companionCovers, overlaps, slotState } from '../src/domain/booking';
 import { rankVenues } from '../src/domain/venues';
 
 const TZ = 'Asia/Kolkata';
@@ -57,13 +57,13 @@ describe('slotState', () => {
   });
 });
 
-describe('canSeekerCancel', () => {
+describe('canCancel', () => {
   it('only before the meetup starts, and only while requested or accepted', () => {
-    expect(canSeekerCancel('requested', ist('17:00'), NOW)).toBe(true);
-    expect(canSeekerCancel('accepted', ist('17:00'), NOW)).toBe(true);
-    expect(canSeekerCancel('requested', ist('15:00'), NOW)).toBe(false);
+    expect(canCancel('requested', ist('17:00'), NOW)).toBe(true);
+    expect(canCancel('accepted', ist('17:00'), NOW)).toBe(true);
+    expect(canCancel('requested', ist('15:00'), NOW)).toBe(false);
     for (const status of ['declined', 'cancelled', 'checked_in', 'completed', 'disputed'] as const) {
-      expect(canSeekerCancel(status, ist('17:00'), NOW)).toBe(false);
+      expect(canCancel(status, ist('17:00'), NOW)).toBe(false);
     }
   });
 });

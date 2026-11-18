@@ -27,6 +27,7 @@ import 'package:vybe/features/profile/data/profile_repository.dart';
 import 'package:vybe/features/profile/domain/profile_details.dart';
 import 'package:vybe/features/reels/data/reels_repository.dart';
 import 'package:vybe/features/reels/domain/reel.dart';
+import 'package:vybe/features/safety/data/safety_services.dart';
 
 /// A value that streams its current state to every new listener, then updates.
 ///
@@ -478,6 +479,10 @@ class FakeBookingRepository implements BookingRepository {
   final List<Map<String, Object?>> requests = [];
   final List<String> cancelled = [];
   final List<({PlanType? plan, String? companionUid})> venueQueries = [];
+  AppFailure? actionFailure;
+  final List<(String, bool)> responses = [];
+  final List<String> checkIns = [];
+  final List<({String bookingId, MeetFeeling felt, String? note})> feedbacks = [];
 
   @override
   Future<Result<List<Venue>>> nearbyVenues({PlanType? plan, String? companionUid}) async {
@@ -525,8 +530,86 @@ class FakeBookingRepository implements BookingRepository {
     return const Ok(null);
   }
 
+  void _update(String bookingId, Booking Function(Booking b) change) =>
+      bookings.value = [for (final b in bookings.value) b.id == bookingId ? change(b) : b];
+
+  @override
+  Future<Result<void>> respond(String bookingId, {required bool accept}) async {
+    final failure = actionFailure;
+    if (failure != null) return Err(failure);
+    responses.add((bookingId, accept));
+    _update(bookingId, (b) => b.copyWith(status: accept ? BookingStatus.accepted : BookingStatus.declined));
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> checkIn(String bookingId) async {
+    final failure = actionFailure;
+    if (failure != null) return Err(failure);
+    checkIns.add(bookingId);
+    _update(
+      bookingId,
+      (b) => b.copyWith(status: BookingStatus.checkedIn, checkedInUids: [...b.checkedInUids, testUid]),
+    );
+    return const Ok(null);
+  }
+
+  @override
+  Future<Result<void>> feedback(String bookingId, {required MeetFeeling felt, String? note}) async {
+    final failure = actionFailure;
+    if (failure != null) return Err(failure);
+    feedbacks.add((bookingId: bookingId, felt: felt, note: note));
+    _update(bookingId, (b) => b.copyWith(feedbackUids: [...b.feedbackUids, testUid]));
+    return const Ok(null);
+  }
+
   @override
   Stream<List<Booking>> watchMyBookings(String uid) => bookings.stream();
+}
+
+/// The trusted contact, kept in memory.
+class FakeTrustedContactRepository implements TrustedContactRepository {
+  TrustedContact? contact;
+  AppFailure? failure;
+  final List<TrustedContact?> saved = [];
+
+  @override
+  Future<Result<TrustedContact?>> load(String uid) async => Ok(contact);
+
+  @override
+  Future<Result<void>> save(String uid, TrustedContact? contact) async {
+    final f = failure;
+    if (f != null) return Err(f);
+    saved.add(contact);
+    this.contact = contact;
+    return const Ok(null);
+  }
+}
+
+/// Records calls, texts and shares instead of leaving the app.
+class FakeSafetyLauncher implements SafetyLauncher {
+  bool opens = true;
+  final List<String> calls = [];
+  final List<(String?, String)> texts = [];
+  final List<String> shares = [];
+
+  @override
+  Future<bool> call(String number) async {
+    calls.add(number);
+    return opens;
+  }
+
+  @override
+  Future<bool> text(String? phone, String body) async {
+    texts.add((phone, body));
+    return opens;
+  }
+
+  @override
+  Future<bool> share(String body) async {
+    shares.add(body);
+    return opens;
+  }
 }
 
 Booking testBooking(
@@ -534,23 +617,30 @@ Booking testBooking(
   BookingStatus status = BookingStatus.requested,
   DateTime? startAt,
   String seekerUid = testUid,
+  String companionUid = 'neha',
   String companionName = 'Neha',
+  String seekerName = 'Aarav',
+  DateTime? endAt,
+  List<String> checkedInUids = const [],
+  List<String> feedbackUids = const [],
 }) {
   final start = startAt ?? DateTime.now().add(const Duration(hours: 3));
   return Booking(
     id: id,
     seekerUid: seekerUid,
-    companionUid: 'neha',
+    companionUid: companionUid,
     companionName: companionName,
-    seekerName: 'Aarav',
+    seekerName: seekerName,
     venueName: 'Harbour Bean Cafe',
     venueCategory: 'cafe',
     planType: 'coffee',
     startAt: start,
-    endAt: start.add(const Duration(hours: 1)),
+    endAt: endAt ?? start.add(const Duration(hours: 1)),
     status: status,
     kind: BookingKind.scheduled,
     creditCost: 5,
+    checkedInUids: checkedInUids,
+    feedbackUids: feedbackUids,
   );
 }
 
@@ -756,10 +846,7 @@ class FakeReelsRepository implements ReelsRepository {
     final error = failure;
     if (error != null) return Err(error);
     posted.add((uid: uid, reelId: reelId, localFile: localFile, caption: caption));
-    all = [
-      testReel(reelId, author: uid, name: 'Me', caption: caption, isMine: true),
-      ...all,
-    ];
+    all = [testReel(reelId, author: uid, name: 'Me', caption: caption, isMine: true), ...all];
     return const Ok(null);
   }
 

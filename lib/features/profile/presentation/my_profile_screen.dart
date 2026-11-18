@@ -165,6 +165,18 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: AppSpacing.md),
+            AppCard(
+              onTap: () => context.push(AppRoutes.safety),
+              child: Row(
+                children: [
+                  const Icon(Icons.shield_outlined, color: AppColors.accent),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: Text(l10n.safetyTitle, style: textTheme.titleMedium)),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
             const SizedBox(height: AppSpacing.xl),
             AppButton(label: l10n.signOut, onPressed: controller.signOut, variant: AppButtonVariant.outline),
             const SizedBox(height: AppSpacing.sm),

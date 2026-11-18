@@ -29,7 +29,9 @@ dependencies:
   just_audio: ^0.10.6
   latlong2: ^0.10.1
   riverpod_annotation: ^3.0.3
+  share_plus: ^13.3.1
   supabase_flutter: ^2.18.3
+  url_launcher: ^6.3.2
   video_player: ^2.11.1
 
 dev_dependencies:

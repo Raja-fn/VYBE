@@ -533,7 +533,7 @@
   },
   "bookingsCancel": "Cancel",
   "bookingsCancelTitle": "Cancel this booking?",
-  "bookingsCancelBody": "Your table is released. Credits are not refunded.",
+  "bookingsCancelBody": "The table is released and they will see it is cancelled.",
   "bookingsCancelConfirm": "Cancel booking",
   "bookingsKeep": "Keep it",
   "bookingsCancelled": "Booking cancelled.",
@@ -977,5 +977,109 @@
   "newReelCaptionHint": "Say something about it (optional)",
   "newReelRules": "Keep it friendly: no nudity, hate or contact details. Reels that break the rules are removed.",
   "newReelPost": "Post",
-  "newReelPosted": "Your reel is posted"
+  "newReelPosted": "Your reel is posted",
+  "bookingAccept": "Accept",
+  "bookingDecline": "Decline",
+  "bookingAcceptedNote": "Confirmed. See you there!",
+  "bookingDeclinedNote": "You declined this request.",
+  "bookingCheckIn": "I'm here",
+  "bookingCheckedInNote": "Checked in. Enjoy, and stay safe.",
+  "bookingFeedback": "How did it go?",
+  "bookingsStatusYourReply": "Waiting for your reply",
+  "feedbackTitle": "How did it go with {name}?",
+  "@feedbackTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackPrivate": "Only our safety team sees this. {name} won't.",
+  "@feedbackPrivate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackGood": "Good, I felt comfortable",
+  "feedbackOkay": "Okay",
+  "feedbackUnsafe": "I felt unsafe",
+  "feedbackNoteHint": "Anything to add? (optional)",
+  "feedbackSend": "Send",
+  "feedbackThanks": "Thanks for telling us.",
+  "safetyTitle": "Safety",
+  "safetySubtitle": "Your safety, on every meetup.",
+  "safetySos": "SOS",
+  "safetySosHint": "Press and hold for {seconds} seconds to call {number}.",
+  "@safetySosHint": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "safetySosSemantics": "Emergency call to {number}",
+  "@safetySosSemantics": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "safetySosConfirmTitle": "Call {number} now?",
+  "@safetySosConfirmTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "safetySosCall": "Call",
+  "safetyCallFailed": "Couldn't open the phone app. Call {number} yourself.",
+  "@safetyCallFailed": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "safetyContactTitle": "Trusted contact",
+  "safetyContactEmpty": "Add someone you trust. You can send them where you are in one tap.",
+  "safetyContactAdd": "Add",
+  "safetyContactEdit": "Change",
+  "safetyContactRemove": "Remove contact",
+  "safetyContactName": "Name",
+  "safetyContactPhone": "Phone number (add the country code if abroad)",
+  "safetyContactNameInvalid": "Enter a name.",
+  "safetyContactPhoneInvalid": "Enter a valid phone number.",
+  "safetyContactSave": "Save",
+  "safetySendLocation": "Send my location",
+  "safetySendLocationTo": "Opens a text to {name} with a map link to where you are.",
+  "@safetySendLocationTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "safetySendLocationAnyone": "Share a map link to where you are with anyone.",
+  "safetyLocationMessage": "I'm at a VYBE meetup. This is where I am: {link}",
+  "@safetyLocationMessage": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "safetyShareFailed": "Couldn't open sharing on this phone.",
+  "safetyTipsTitle": "Meet safely",
+  "safetyTipPublic": "Meet in a public place the first time. VYBE only books public venues.",
+  "safetyTipTell": "Tell a friend where you're going and when you'll be back.",
+  "safetyTipTravel": "Arrange your own way there and back.",
+  "safetyTipMoney": "Never send money, payment details or codes to someone you met here.",
+  "safetyTipLeave": "If something feels wrong, leave. You can report or block from their profile or chat."
 }

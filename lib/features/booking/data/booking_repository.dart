@@ -28,6 +28,15 @@ abstract interface class BookingRepository {
 
   Future<Result<void>> cancel(String bookingId);
 
+  /// The invited person says yes or no.
+  Future<Result<void>> respond(String bookingId, {required bool accept});
+
+  /// "I'm here" at the venue.
+  Future<Result<void>> checkIn(String bookingId);
+
+  /// Private "How did it go?" after the meetup.
+  Future<Result<void>> feedback(String bookingId, {required MeetFeeling felt, String? note});
+
   /// Bookings the person is part of, newest first.
   Stream<List<Booking>> watchMyBookings(String uid);
 }
@@ -88,6 +97,21 @@ class SupabaseBookingRepository implements BookingRepository {
     await _functions.call('cancelBooking', {'bookingId': bookingId});
   });
 
+  @override
+  Future<Result<void>> respond(String bookingId, {required bool accept}) => runGuarded(() async {
+    await _functions.call('respondBooking', {'bookingId': bookingId, 'accept': accept});
+  });
+
+  @override
+  Future<Result<void>> checkIn(String bookingId) => runGuarded(() async {
+    await _functions.call('checkInBooking', {'bookingId': bookingId});
+  });
+
+  @override
+  Future<Result<void>> feedback(String bookingId, {required MeetFeeling felt, String? note}) => runGuarded(() async {
+    await _functions.call('meetFeedback', {'bookingId': bookingId, 'felt': felt.name, 'note': ?note});
+  });
+
   /// Row-level security returns only bookings the person is part of.
   @override
   Stream<List<Booking>> watchMyBookings(String uid) => _tables
@@ -115,5 +139,9 @@ Booking bookingFromRow(Map<String, Object?> row) {
     ),
     kind: row['kind'] == 'instant' ? BookingKind.instant : BookingKind.scheduled,
     creditCost: (row['credit_cost'] as num?)?.toInt() ?? 0,
+    checkedInUids: _uids(row['checked_in_uids']),
+    feedbackUids: _uids(row['feedback_uids']),
   );
 }
+
+List<String> _uids(Object? value) => [for (final v in (value as List?) ?? const []) v.toString()];

@@ -16,6 +16,8 @@ import '../../../core/widgets/initials_avatar.dart';
 import '../../booking/domain/booking_models.dart';
 import '../../booking/presentation/booking_cost.dart';
 import '../../booking/presentation/booking_providers.dart';
+import '../../booking/presentation/bookings_screen.dart' show bookingStatusOf;
+import '../../booking/presentation/widgets/booking_actions.dart';
 import '../../discover/presentation/widgets/labels.dart';
 import '../../onboarding/presentation/session_providers.dart';
 import '../domain/chat_models.dart';
@@ -215,6 +217,7 @@ class _Conversation extends ConsumerWidget {
       MessageType.bookingCard => _BookingCard(
         message: m,
         booking: bookings.where((b) => b.id == m.bookingId).firstOrNull,
+        myUid: myUid,
       ),
     };
   }
@@ -258,10 +261,11 @@ class _Bubble extends StatelessWidget {
 }
 
 class _BookingCard extends StatelessWidget {
-  const _BookingCard({required this.message, required this.booking});
+  const _BookingCard({required this.message, required this.booking, required this.myUid});
 
   final ChatMessage message;
   final Booking? booking;
+  final String? myUid;
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +276,8 @@ class _BookingCard extends StatelessWidget {
     final when = start == null
         ? ''
         : '${DateFormat.E(Localizations.localeOf(context).toLanguageTag()).format(start.toLocal())} · ${clockTime(context, start)}';
-    final status = booking == null ? null : _statusText(l10n, booking!);
+    final b = booking;
+    final status = b == null ? null : bookingStatusOf(l10n, b, myUid, DateTime.now()).$1;
     return AppCard(
       tone: AppCardTone.dark,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -285,22 +290,10 @@ class _BookingCard extends StatelessWidget {
             style: textTheme.bodyMedium?.copyWith(color: AppColors.onInkMuted),
           ),
           if (status != null) Text(status, style: textTheme.titleSmall?.copyWith(color: AppColors.gold)),
+          if (b != null) BookingActions(booking: b, myUid: myUid, showCancel: false, onDark: true),
         ],
       ),
     );
-  }
-
-  static String _statusText(AppLocalizations l10n, Booking b) {
-    if (b.timePassed(DateTime.now())) return l10n.bookingsStatusTimePassed;
-    return switch (b.status) {
-      BookingStatus.requested => l10n.bookingsStatusRequested,
-      BookingStatus.accepted => l10n.bookingsStatusAccepted,
-      BookingStatus.declined => l10n.bookingsStatusDeclined,
-      BookingStatus.cancelled => l10n.bookingsStatusCancelled,
-      BookingStatus.checkedIn => l10n.bookingsStatusCheckedIn,
-      BookingStatus.completed => l10n.bookingsStatusCompleted,
-      BookingStatus.disputed => l10n.bookingsStatusDisputed,
-    };
   }
 }
 

@@ -73,6 +73,8 @@ export const appConfigSchema = z.object({
   safetyCheckIntervalMinutes: z.number().int().positive(),
   safetyMissedCheckInsToEscalate: z.number().int().positive(),
   sosHoldSeconds: z.number().int().positive(),
+  /** Dialled by the SOS button (112 works in India, the EU and many other countries). */
+  emergencyNumber: z.string().regex(/^[0-9]{2,6}$/),
   autoCompleteGraceMinutes: z.number().int().nonnegative(),
   moderationStrikesForReport: z.number().int().positive(),
   moderationStrikeWindowHours: z.number().int().positive(),

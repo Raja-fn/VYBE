@@ -19,6 +19,7 @@ What's left needs your accounts. Do the steps in order. Never paste secrets
 | Venue "Hot / Busy" | No data source yet: every venue shows as quiet, and spots are ranked by distance. | Connect a popularity source. |
 | Companion earnings and payouts | Not offered. | Needs a payout provider. |
 | Phone OTP | Off (Google sign-in only). | See `docs/supabase-setup.md`. |
+| SOS number | Calls **112** (works in India, the EU and many other countries). | Set `emergencyNumber` in app_config overrides per country. |
 
 ## 1. The Supabase project (live)
 
@@ -54,7 +55,14 @@ Still to do:
    ```
    Until then the Reels tab shows "Something went wrong" and booking still
    costs credits.
-5. **Reels moderation.** Reported reels land in the `reports` table
+5. **Meetups and safety (server update, 19 Nov).** Apply the `meetups`
+   migration (check-in, private feedback) and deploy the API, the same three
+   commands as item 4. Until then Accept/Decline, "I'm here" and "How did it
+   go?" show an error.
+6. **Safety reports from meetups.** "I felt unsafe" answers land in the
+   `reports` table (context `meetup`, source `feedback`) next to normal
+   reports; the private answers are in `meet_feedback`. Review them daily.
+7. **Reels moderation.** Reported reels land in the `reports` table
    (context `reel`). To remove one: Table Editor → `reels` → delete the row,
    and delete its file in Storage → `reels`. Google Play requires that
    reported content is reviewed.

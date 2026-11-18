@@ -60,5 +60,8 @@ abstract final class AppRoutes {
   /// Post a reel; the picked video's file path goes in `extra`.
   static const newReel = '/new-reel';
 
+  /// SOS, trusted contact and safety tips.
+  static const safety = '/safety';
+
   /// Test builds only.
 }

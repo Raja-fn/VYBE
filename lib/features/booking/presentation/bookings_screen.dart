@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n.dart';
+import '../../../core/router/routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_pill_button.dart';
 import '../../../core/widgets/async_state_view.dart';
 import '../../../core/widgets/initials_avatar.dart';
 import '../../discover/presentation/widgets/labels.dart';
 import '../../onboarding/presentation/session_providers.dart';
 import '../domain/booking_models.dart';
 import 'booking_providers.dart';
+import 'widgets/booking_actions.dart';
 
 /// Bookings tab: the person's requests and meetups, newest first.
 class BookingsScreen extends ConsumerWidget {
@@ -31,9 +33,20 @@ class BookingsScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.screenGutter, AppSpacing.md, AppSpacing.screenGutter, 0),
-              child: Semantics(
-                header: true,
-                child: Text(l10n.bookingsTitle, style: Theme.of(context).textTheme.headlineLarge),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(l10n.bookingsTitle, style: Theme.of(context).textTheme.headlineLarge),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.safetyTitle,
+                    onPressed: () => context.push(AppRoutes.safety),
+                    icon: const Icon(Icons.shield_outlined, color: AppColors.accent),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -78,31 +91,10 @@ class BookingCard extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final now = DateTime.now();
     final b = booking;
-    final otherName = b.seekerUid == myUid ? b.companionName : b.seekerName;
+    final otherName = otherNameIn(b, myUid);
     final plan = planLabelFromWire(l10n, b.planType) ?? b.planType;
     final when = '${DateFormat.MMMEd(locale).format(b.startAt.toLocal())}, ${clockTime(context, b.startAt)}';
-    final (statusText, statusColor) = _status(l10n, b, now);
-    final cancelling = ref.watch(cancelBookingProvider).isLoading;
-
-    Future<void> cancel() async {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.bookingsCancelTitle),
-          content: Text(l10n.bookingsCancelBody),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(l10n.bookingsKeep)),
-            TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(l10n.bookingsCancelConfirm)),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-      final failure = await ref.read(cancelBookingProvider.notifier).cancel(b.id);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure == null ? l10n.bookingsCancelled : failureMessage(l10n, failure))));
-    }
+    final (statusText, statusColor) = bookingStatusOf(l10n, b, myUid, now);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -120,14 +112,7 @@ class BookingCard extends ConsumerWidget {
                 Text(b.venueName, style: textTheme.bodyMedium?.copyWith(color: AppColors.muted)),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(statusText, style: textTheme.titleSmall?.copyWith(color: statusColor)),
-                if (b.seekerUid == myUid && b.canCancel(now)) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  AppPillButton(
-                    label: l10n.bookingsCancel,
-                    tone: AppPillTone.accentText,
-                    onPressed: cancelling ? null : cancel,
-                  ),
-                ],
+                BookingActions(booking: b, myUid: myUid),
               ],
             ),
           ),
@@ -135,17 +120,19 @@ class BookingCard extends ConsumerWidget {
       ),
     );
   }
+}
 
-  static (String, Color) _status(AppLocalizations l10n, Booking b, DateTime now) {
-    if (b.timePassed(now)) return (l10n.bookingsStatusTimePassed, AppColors.muted);
-    return switch (b.status) {
-      BookingStatus.requested => (l10n.bookingsStatusRequested, AppColors.accentText),
-      BookingStatus.accepted => (l10n.bookingsStatusAccepted, AppColors.successText),
-      BookingStatus.declined => (l10n.bookingsStatusDeclined, AppColors.muted),
-      BookingStatus.cancelled => (l10n.bookingsStatusCancelled, AppColors.muted),
-      BookingStatus.checkedIn => (l10n.bookingsStatusCheckedIn, AppColors.successText),
-      BookingStatus.completed => (l10n.bookingsStatusCompleted, AppColors.successText),
-      BookingStatus.disputed => (l10n.bookingsStatusDisputed, AppColors.danger),
-    };
-  }
+/// The status line for a booking, from [myUid]'s side.
+(String, Color) bookingStatusOf(AppLocalizations l10n, Booking b, String? myUid, DateTime now) {
+  if (b.timePassed(now)) return (l10n.bookingsStatusTimePassed, AppColors.muted);
+  return switch (b.status) {
+    BookingStatus.requested when b.companionUid == myUid => (l10n.bookingsStatusYourReply, AppColors.accentText),
+    BookingStatus.requested => (l10n.bookingsStatusRequested, AppColors.accentText),
+    BookingStatus.accepted => (l10n.bookingsStatusAccepted, AppColors.successText),
+    BookingStatus.declined => (l10n.bookingsStatusDeclined, AppColors.muted),
+    BookingStatus.cancelled => (l10n.bookingsStatusCancelled, AppColors.muted),
+    BookingStatus.checkedIn => (l10n.bookingsStatusCheckedIn, AppColors.successText),
+    BookingStatus.completed => (l10n.bookingsStatusCompleted, AppColors.successText),
+    BookingStatus.disputed => (l10n.bookingsStatusDisputed, AppColors.danger),
+  };
 }

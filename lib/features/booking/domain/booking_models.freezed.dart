@@ -588,7 +588,9 @@ as SlotState,
 /// @nodoc
 mixin _$Booking {
 
- String get id; String get seekerUid; String get companionUid; String get companionName; String get seekerName; String get venueName; String get venueCategory; String get planType; DateTime get startAt; DateTime get endAt; BookingStatus get status; BookingKind get kind; int get creditCost;
+ String get id; String get seekerUid; String get companionUid; String get companionName; String get seekerName; String get venueName; String get venueCategory; String get planType; DateTime get startAt; DateTime get endAt; BookingStatus get status; BookingKind get kind; int get creditCost;/// Who has tapped "I'm here" at the venue.
+ List<String> get checkedInUids;/// Who has said how the meetup went (the answers themselves stay private).
+ List<String> get feedbackUids;
 /// Create a copy of Booking
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -599,16 +601,16 @@ $BookingCopyWith<Booking> get copyWith => _$BookingCopyWithImpl<Booking>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Booking&&(identical(other.id, id) || other.id == id)&&(identical(other.seekerUid, seekerUid) || other.seekerUid == seekerUid)&&(identical(other.companionUid, companionUid) || other.companionUid == companionUid)&&(identical(other.companionName, companionName) || other.companionName == companionName)&&(identical(other.seekerName, seekerName) || other.seekerName == seekerName)&&(identical(other.venueName, venueName) || other.venueName == venueName)&&(identical(other.venueCategory, venueCategory) || other.venueCategory == venueCategory)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.creditCost, creditCost) || other.creditCost == creditCost));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Booking&&(identical(other.id, id) || other.id == id)&&(identical(other.seekerUid, seekerUid) || other.seekerUid == seekerUid)&&(identical(other.companionUid, companionUid) || other.companionUid == companionUid)&&(identical(other.companionName, companionName) || other.companionName == companionName)&&(identical(other.seekerName, seekerName) || other.seekerName == seekerName)&&(identical(other.venueName, venueName) || other.venueName == venueName)&&(identical(other.venueCategory, venueCategory) || other.venueCategory == venueCategory)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.creditCost, creditCost) || other.creditCost == creditCost)&&const DeepCollectionEquality().equals(other.checkedInUids, checkedInUids)&&const DeepCollectionEquality().equals(other.feedbackUids, feedbackUids));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,seekerUid,companionUid,companionName,seekerName,venueName,venueCategory,planType,startAt,endAt,status,kind,creditCost);
+int get hashCode => Object.hash(runtimeType,id,seekerUid,companionUid,companionName,seekerName,venueName,venueCategory,planType,startAt,endAt,status,kind,creditCost,const DeepCollectionEquality().hash(checkedInUids),const DeepCollectionEquality().hash(feedbackUids));
 
 @override
 String toString() {
-  return 'Booking(id: $id, seekerUid: $seekerUid, companionUid: $companionUid, companionName: $companionName, seekerName: $seekerName, venueName: $venueName, venueCategory: $venueCategory, planType: $planType, startAt: $startAt, endAt: $endAt, status: $status, kind: $kind, creditCost: $creditCost)';
+  return 'Booking(id: $id, seekerUid: $seekerUid, companionUid: $companionUid, companionName: $companionName, seekerName: $seekerName, venueName: $venueName, venueCategory: $venueCategory, planType: $planType, startAt: $startAt, endAt: $endAt, status: $status, kind: $kind, creditCost: $creditCost, checkedInUids: $checkedInUids, feedbackUids: $feedbackUids)';
 }
 
 
@@ -619,7 +621,7 @@ abstract mixin class $BookingCopyWith<$Res>  {
   factory $BookingCopyWith(Booking value, $Res Function(Booking) _then) = _$BookingCopyWithImpl;
 @useResult
 $Res call({
- String id, String seekerUid, String companionUid, String companionName, String seekerName, String venueName, String venueCategory, String planType, DateTime startAt, DateTime endAt, BookingStatus status, BookingKind kind, int creditCost
+ String id, String seekerUid, String companionUid, String companionName, String seekerName, String venueName, String venueCategory, String planType, DateTime startAt, DateTime endAt, BookingStatus status, BookingKind kind, int creditCost, List<String> checkedInUids, List<String> feedbackUids
 });
 
 
@@ -636,7 +638,7 @@ class _$BookingCopyWithImpl<$Res>
 
 /// Create a copy of Booking
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? seekerUid = null,Object? companionUid = null,Object? companionName = null,Object? seekerName = null,Object? venueName = null,Object? venueCategory = null,Object? planType = null,Object? startAt = null,Object? endAt = null,Object? status = null,Object? kind = null,Object? creditCost = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? seekerUid = null,Object? companionUid = null,Object? companionName = null,Object? seekerName = null,Object? venueName = null,Object? venueCategory = null,Object? planType = null,Object? startAt = null,Object? endAt = null,Object? status = null,Object? kind = null,Object? creditCost = null,Object? checkedInUids = null,Object? feedbackUids = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,seekerUid: null == seekerUid ? _self.seekerUid : seekerUid // ignore: cast_nullable_to_non_nullable
@@ -651,7 +653,9 @@ as DateTime,endAt: null == endAt ? _self.endAt : endAt // ignore: cast_nullable_
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as BookingStatus,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as BookingKind,creditCost: null == creditCost ? _self.creditCost : creditCost // ignore: cast_nullable_to_non_nullable
-as int,
+as int,checkedInUids: null == checkedInUids ? _self.checkedInUids : checkedInUids // ignore: cast_nullable_to_non_nullable
+as List<String>,feedbackUids: null == feedbackUids ? _self.feedbackUids : feedbackUids // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -736,10 +740,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost,  List<String> checkedInUids,  List<String> feedbackUids)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Booking() when $default != null:
-return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost);case _:
+return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost,_that.checkedInUids,_that.feedbackUids);case _:
   return orElse();
 
 }
@@ -757,10 +761,10 @@ return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost,  List<String> checkedInUids,  List<String> feedbackUids)  $default,) {final _that = this;
 switch (_that) {
 case _Booking():
-return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost);case _:
+return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost,_that.checkedInUids,_that.feedbackUids);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -777,10 +781,10 @@ return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String seekerUid,  String companionUid,  String companionName,  String seekerName,  String venueName,  String venueCategory,  String planType,  DateTime startAt,  DateTime endAt,  BookingStatus status,  BookingKind kind,  int creditCost,  List<String> checkedInUids,  List<String> feedbackUids)?  $default,) {final _that = this;
 switch (_that) {
 case _Booking() when $default != null:
-return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost);case _:
+return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,_that.seekerName,_that.venueName,_that.venueCategory,_that.planType,_that.startAt,_that.endAt,_that.status,_that.kind,_that.creditCost,_that.checkedInUids,_that.feedbackUids);case _:
   return null;
 
 }
@@ -792,7 +796,7 @@ return $default(_that.id,_that.seekerUid,_that.companionUid,_that.companionName,
 
 
 class _Booking extends Booking {
-  const _Booking({required this.id, required this.seekerUid, required this.companionUid, required this.companionName, required this.seekerName, required this.venueName, required this.venueCategory, required this.planType, required this.startAt, required this.endAt, required this.status, required this.kind, required this.creditCost}): super._();
+  const _Booking({required this.id, required this.seekerUid, required this.companionUid, required this.companionName, required this.seekerName, required this.venueName, required this.venueCategory, required this.planType, required this.startAt, required this.endAt, required this.status, required this.kind, required this.creditCost, final  List<String> checkedInUids = const <String>[], final  List<String> feedbackUids = const <String>[]}): _checkedInUids = checkedInUids,_feedbackUids = feedbackUids,super._();
   
 
 @override final  String id;
@@ -808,6 +812,24 @@ class _Booking extends Booking {
 @override final  BookingStatus status;
 @override final  BookingKind kind;
 @override final  int creditCost;
+/// Who has tapped "I'm here" at the venue.
+ final  List<String> _checkedInUids;
+/// Who has tapped "I'm here" at the venue.
+@override@JsonKey() List<String> get checkedInUids {
+  if (_checkedInUids is EqualUnmodifiableListView) return _checkedInUids;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_checkedInUids);
+}
+
+/// Who has said how the meetup went (the answers themselves stay private).
+ final  List<String> _feedbackUids;
+/// Who has said how the meetup went (the answers themselves stay private).
+@override@JsonKey() List<String> get feedbackUids {
+  if (_feedbackUids is EqualUnmodifiableListView) return _feedbackUids;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_feedbackUids);
+}
+
 
 /// Create a copy of Booking
 /// with the given fields replaced by the non-null parameter values.
@@ -819,16 +841,16 @@ _$BookingCopyWith<_Booking> get copyWith => __$BookingCopyWithImpl<_Booking>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Booking&&(identical(other.id, id) || other.id == id)&&(identical(other.seekerUid, seekerUid) || other.seekerUid == seekerUid)&&(identical(other.companionUid, companionUid) || other.companionUid == companionUid)&&(identical(other.companionName, companionName) || other.companionName == companionName)&&(identical(other.seekerName, seekerName) || other.seekerName == seekerName)&&(identical(other.venueName, venueName) || other.venueName == venueName)&&(identical(other.venueCategory, venueCategory) || other.venueCategory == venueCategory)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.creditCost, creditCost) || other.creditCost == creditCost));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Booking&&(identical(other.id, id) || other.id == id)&&(identical(other.seekerUid, seekerUid) || other.seekerUid == seekerUid)&&(identical(other.companionUid, companionUid) || other.companionUid == companionUid)&&(identical(other.companionName, companionName) || other.companionName == companionName)&&(identical(other.seekerName, seekerName) || other.seekerName == seekerName)&&(identical(other.venueName, venueName) || other.venueName == venueName)&&(identical(other.venueCategory, venueCategory) || other.venueCategory == venueCategory)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.creditCost, creditCost) || other.creditCost == creditCost)&&const DeepCollectionEquality().equals(other._checkedInUids, _checkedInUids)&&const DeepCollectionEquality().equals(other._feedbackUids, _feedbackUids));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,seekerUid,companionUid,companionName,seekerName,venueName,venueCategory,planType,startAt,endAt,status,kind,creditCost);
+int get hashCode => Object.hash(runtimeType,id,seekerUid,companionUid,companionName,seekerName,venueName,venueCategory,planType,startAt,endAt,status,kind,creditCost,const DeepCollectionEquality().hash(_checkedInUids),const DeepCollectionEquality().hash(_feedbackUids));
 
 @override
 String toString() {
-  return 'Booking(id: $id, seekerUid: $seekerUid, companionUid: $companionUid, companionName: $companionName, seekerName: $seekerName, venueName: $venueName, venueCategory: $venueCategory, planType: $planType, startAt: $startAt, endAt: $endAt, status: $status, kind: $kind, creditCost: $creditCost)';
+  return 'Booking(id: $id, seekerUid: $seekerUid, companionUid: $companionUid, companionName: $companionName, seekerName: $seekerName, venueName: $venueName, venueCategory: $venueCategory, planType: $planType, startAt: $startAt, endAt: $endAt, status: $status, kind: $kind, creditCost: $creditCost, checkedInUids: $checkedInUids, feedbackUids: $feedbackUids)';
 }
 
 
@@ -839,7 +861,7 @@ abstract mixin class _$BookingCopyWith<$Res> implements $BookingCopyWith<$Res> {
   factory _$BookingCopyWith(_Booking value, $Res Function(_Booking) _then) = __$BookingCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String seekerUid, String companionUid, String companionName, String seekerName, String venueName, String venueCategory, String planType, DateTime startAt, DateTime endAt, BookingStatus status, BookingKind kind, int creditCost
+ String id, String seekerUid, String companionUid, String companionName, String seekerName, String venueName, String venueCategory, String planType, DateTime startAt, DateTime endAt, BookingStatus status, BookingKind kind, int creditCost, List<String> checkedInUids, List<String> feedbackUids
 });
 
 
@@ -856,7 +878,7 @@ class __$BookingCopyWithImpl<$Res>
 
 /// Create a copy of Booking
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? seekerUid = null,Object? companionUid = null,Object? companionName = null,Object? seekerName = null,Object? venueName = null,Object? venueCategory = null,Object? planType = null,Object? startAt = null,Object? endAt = null,Object? status = null,Object? kind = null,Object? creditCost = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? seekerUid = null,Object? companionUid = null,Object? companionName = null,Object? seekerName = null,Object? venueName = null,Object? venueCategory = null,Object? planType = null,Object? startAt = null,Object? endAt = null,Object? status = null,Object? kind = null,Object? creditCost = null,Object? checkedInUids = null,Object? feedbackUids = null,}) {
   return _then(_Booking(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,seekerUid: null == seekerUid ? _self.seekerUid : seekerUid // ignore: cast_nullable_to_non_nullable
@@ -871,7 +893,9 @@ as DateTime,endAt: null == endAt ? _self.endAt : endAt // ignore: cast_nullable_
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as BookingStatus,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as BookingKind,creditCost: null == creditCost ? _self.creditCost : creditCost // ignore: cast_nullable_to_non_nullable
-as int,
+as int,checkedInUids: null == checkedInUids ? _self._checkedInUids : checkedInUids // ignore: cast_nullable_to_non_nullable
+as List<String>,feedbackUids: null == feedbackUids ? _self._feedbackUids : feedbackUids // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

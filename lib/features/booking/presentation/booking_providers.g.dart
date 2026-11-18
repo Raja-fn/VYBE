@@ -435,15 +435,15 @@ abstract class _$BookSpotController extends $Notifier<BookSpotState> {
   }
 }
 
-/// Seeker-side cancel. Credits are not refunded.
+/// Either person cancels before the start. Credits are not refunded.
 
 @ProviderFor(CancelBooking)
 const cancelBookingProvider = CancelBookingProvider._();
 
-/// Seeker-side cancel. Credits are not refunded.
+/// Either person cancels before the start. Credits are not refunded.
 final class CancelBookingProvider
     extends $AsyncNotifierProvider<CancelBooking, void> {
-  /// Seeker-side cancel. Credits are not refunded.
+  /// Either person cancels before the start. Credits are not refunded.
   const CancelBookingProvider._()
     : super(
         from: null,
@@ -465,9 +465,64 @@ final class CancelBookingProvider
 
 String _$cancelBookingHash() => r'c2578f172af73823da5cbf33ed0514cac860a685';
 
-/// Seeker-side cancel. Credits are not refunded.
+/// Either person cancels before the start. Credits are not refunded.
 
 abstract class _$CancelBooking extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    build();
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, null);
+  }
+}
+
+/// Accept or decline, "I'm here" and "How did it go?". Each returns the
+/// failure, or null when it worked; the bookings stream shows the result.
+
+@ProviderFor(MeetupActions)
+const meetupActionsProvider = MeetupActionsProvider._();
+
+/// Accept or decline, "I'm here" and "How did it go?". Each returns the
+/// failure, or null when it worked; the bookings stream shows the result.
+final class MeetupActionsProvider
+    extends $AsyncNotifierProvider<MeetupActions, void> {
+  /// Accept or decline, "I'm here" and "How did it go?". Each returns the
+  /// failure, or null when it worked; the bookings stream shows the result.
+  const MeetupActionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'meetupActionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$meetupActionsHash();
+
+  @$internal
+  @override
+  MeetupActions create() => MeetupActions();
+}
+
+String _$meetupActionsHash() => r'2a58db3de8ebc7e1d03832992c77b9527358a587';
+
+/// Accept or decline, "I'm here" and "How did it go?". Each returns the
+/// failure, or null when it worked; the bookings stream shows the result.
+
+abstract class _$MeetupActions extends $AsyncNotifier<void> {
   FutureOr<void> build();
   @$mustCallSuper
   @override

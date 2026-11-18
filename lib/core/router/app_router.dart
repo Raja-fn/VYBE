@@ -24,6 +24,7 @@ import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/my_profile_screen.dart';
 import '../../features/reels/presentation/new_reel_screen.dart';
 import '../../features/reels/presentation/reels_screen.dart';
+import '../../features/safety/presentation/safety_hub_screen.dart';
 import '../../features/verification/presentation/verification_screen.dart';
 import 'routes.dart';
 import 'screens/not_found_screen.dart';
@@ -103,6 +104,7 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) => CompanionProfileScreen(uid: state.pathParameters['uid']!),
       ),
       GoRoute(path: AppRoutes.credits, builder: (context, state) => const CreditsScreen()),
+      GoRoute(path: AppRoutes.safety, builder: (context, state) => const SafetyHubScreen()),
       GoRoute(
         path: AppRoutes.newReel,
         builder: (context, state) {

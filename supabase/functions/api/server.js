@@ -20298,6 +20298,7 @@ var app_config_defaults_default = {
   safetyCheckIntervalMinutes: 30,
   safetyMissedCheckInsToEscalate: 1,
   sosHoldSeconds: 3,
+  emergencyNumber: "112",
   autoCompleteGraceMinutes: 30,
   moderationStrikesForReport: 3,
   moderationStrikeWindowHours: 24,
@@ -20392,6 +20393,8 @@ var appConfigSchema = external_exports.object({
   safetyCheckIntervalMinutes: external_exports.number().int().positive(),
   safetyMissedCheckInsToEscalate: external_exports.number().int().positive(),
   sosHoldSeconds: external_exports.number().int().positive(),
+  /** Dialled by the SOS button (112 works in India, the EU and many other countries). */
+  emergencyNumber: external_exports.string().regex(/^[0-9]{2,6}$/),
   autoCompleteGraceMinutes: external_exports.number().int().nonnegative(),
   moderationStrikesForReport: external_exports.number().int().positive(),
   moderationStrikeWindowHours: external_exports.number().int().positive(),
@@ -20498,11 +20501,17 @@ var booking_exports = {};
 __export(booking_exports, {
   cancelBookingInput: () => cancelBookingInput,
   cancelBookingLogic: () => cancelBookingLogic,
+  checkInBookingInput: () => checkInBookingInput,
+  checkInBookingLogic: () => checkInBookingLogic,
+  meetFeedbackInput: () => meetFeedbackInput,
+  meetFeedbackLogic: () => meetFeedbackLogic,
   nearbyVenuesInput: () => nearbyVenuesInput,
   nearbyVenuesLogic: () => nearbyVenuesLogic,
   releaseSlot: () => releaseSlot,
   requestBookingInput: () => requestBookingInput,
   requestBookingLogic: () => requestBookingLogic,
+  respondBookingInput: () => respondBookingInput,
+  respondBookingLogic: () => respondBookingLogic,
   venueSlotsInput: () => venueSlotsInput,
   venueSlotsLogic: () => venueSlotsLogic,
   visibleCompanion: () => visibleCompanion
@@ -20583,8 +20592,20 @@ function slotState(input2) {
   if (!input2.companionFree || input2.companionBusy) return "companion_unavailable";
   return "available";
 }
-function canSeekerCancel(status, startAt, now) {
+function canCancel(status, startAt, now) {
   return (status === "requested" || status === "accepted") && startAt.getTime() > now.getTime();
+}
+function canRespond(status, startAt, now) {
+  return status === "requested" && startAt.getTime() > now.getTime();
+}
+function checkInOpen(startAt, now, beforeMin, afterMin) {
+  const t = now.getTime();
+  return t >= startAt.getTime() - beforeMin * 6e4 && t <= startAt.getTime() + afterMin * 6e4;
+}
+var FEEDBACK_DAYS = 14;
+function feedbackOpen(status, startAt, endAt, now) {
+  const confirmed = status === "accepted" || status === "checked_in" || status === "completed";
+  return confirmed && now.getTime() >= startAt.getTime() && now.getTime() <= endAt.getTime() + FEEDBACK_DAYS * 864e5;
 }
 
 // src/domain/geo.ts
@@ -21458,22 +21479,100 @@ async function releaseSlot(tx, venueId, slotId) {
       status = case when status = 'closed' then 'closed' else 'open' end
     where venue_id = ${venueId} and id = ${slotId}`;
 }
+async function lockBooking(tx, bookingId, uid) {
+  const [booking] = await tx`
+    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids
+    from bookings where id = ${bookingId} for update`;
+  if (!booking || booking.seeker_uid !== uid && booking.companion_uid !== uid) {
+    throw appError(ErrorCodes.notFound, "Booking not found.");
+  }
+  return booking;
+}
 async function cancelBookingLogic(deps, caller, input2) {
   const now = deps.now();
   await deps.sql.begin(async (tx) => {
-    const [booking] = await tx`
-      select seeker_uid, status, start_at, venue_id, slot_id from bookings where id = ${input2.bookingId} for update`;
-    if (!booking || booking.seeker_uid !== caller.uid) throw appError(ErrorCodes.notFound, "Booking not found.");
-    if (!canSeekerCancel(booking.status, booking.start_at, now)) {
+    const booking = await lockBooking(tx, input2.bookingId, caller.uid);
+    if (!canCancel(booking.status, booking.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, "This booking can no longer be cancelled.");
     }
     await releaseSlot(tx, booking.venue_id, booking.slot_id);
+    const reason = booking.seeker_uid === caller.uid ? "seeker_cancelled" : "companion_cancelled";
     await tx`
-      update bookings set status = 'cancelled', status_reason = 'seeker_cancelled', cancelled_by = ${caller.uid},
+      update bookings set status = 'cancelled', status_reason = ${reason}, cancelled_by = ${caller.uid},
         updated_at = ${now}
       where id = ${input2.bookingId}`;
   });
   return { status: "cancelled" };
+}
+var respondBookingInput = external_exports.object({ bookingId: external_exports.string().min(1), accept: external_exports.boolean() });
+async function respondBookingLogic(deps, caller, input2) {
+  const now = deps.now();
+  const target = input2.accept ? "accepted" : "declined";
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input2.bookingId, caller.uid);
+    if (booking.companion_uid !== caller.uid) throw appError(ErrorCodes.notFound, "Booking not found.");
+    if (booking.status === target) return;
+    if (!canRespond(booking.status, booking.start_at, now)) {
+      throw appError(ErrorCodes.invalidInput, "This request can no longer be answered.");
+    }
+    if (!input2.accept) await releaseSlot(tx, booking.venue_id, booking.slot_id);
+    await tx`
+      update bookings set status = ${target}, status_reason = ${input2.accept ? null : "companion_declined"},
+        updated_at = ${now}
+      where id = ${input2.bookingId}`;
+  });
+  return { status: target };
+}
+var checkInBookingInput = external_exports.object({ bookingId: external_exports.string().min(1) });
+async function checkInBookingLogic(deps, caller, input2) {
+  const now = deps.now();
+  const { checkInWindowMinutesBefore: before, checkInWindowMinutesAfter: after } = deps.config;
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input2.bookingId, caller.uid);
+    if (booking.checked_in_uids.includes(caller.uid)) return;
+    if (booking.status !== "accepted" && booking.status !== "checked_in") {
+      throw appError(ErrorCodes.invalidInput, "Only a confirmed meetup can be checked in.");
+    }
+    if (!checkInOpen(booking.start_at, now, before, after)) {
+      throw appError(ErrorCodes.invalidInput, "Check-in is not open now.");
+    }
+    await tx`
+      update bookings set status = 'checked_in', checked_in_uids = array_append(checked_in_uids, ${caller.uid}::uuid),
+        updated_at = ${now}
+      where id = ${input2.bookingId}`;
+  });
+  return { status: "checked_in" };
+}
+var meetFeedbackInput = external_exports.object({
+  bookingId: external_exports.string().min(1),
+  felt: external_exports.enum(["good", "okay", "unsafe"]),
+  note: external_exports.string().optional()
+});
+async function meetFeedbackLogic(deps, caller, input2) {
+  const now = deps.now();
+  const note = (input2.note ?? "").trim();
+  if (note.length > deps.config.reportDetailsMaxLength) throw appError(ErrorCodes.invalidInput, "The note is too long.");
+  await deps.sql.begin(async (tx) => {
+    const booking = await lockBooking(tx, input2.bookingId, caller.uid);
+    if (booking.feedback_uids.includes(caller.uid)) return;
+    if (!feedbackOpen(booking.status, booking.start_at, booking.end_at, now)) {
+      throw appError(ErrorCodes.invalidInput, "Feedback is not open for this booking.");
+    }
+    const other = booking.seeker_uid === caller.uid ? booking.companion_uid : booking.seeker_uid;
+    await tx`
+      insert into meet_feedback (booking_id, uid, about_uid, felt, note, created_at)
+      values (${input2.bookingId}, ${caller.uid}, ${other}, ${input2.felt}, ${note || null}, ${now})
+      on conflict do nothing`;
+    await tx`
+      update bookings set feedback_uids = array_append(feedback_uids, ${caller.uid}::uuid), updated_at = ${now}
+      where id = ${input2.bookingId}`;
+    if (input2.felt === "unsafe") {
+      await tx`
+        insert into reports (reporter_uid, reported_uid, context_type, context_ref_id, reason, details, source, status, created_at)
+        values (${caller.uid}, ${other}, 'meetup', ${input2.bookingId}, 'safety_concern', ${note || null}, 'feedback', 'open', ${now})`;
+    }
+  });
+  return { saved: true };
 }
 
 // src/handlers/account.ts
@@ -22449,6 +22548,9 @@ var signedIn = {
   venueSlots: { kind: "user", schema: booking_exports.venueSlotsInput, run: booking_exports.venueSlotsLogic },
   requestBooking: { kind: "user", schema: booking_exports.requestBookingInput, run: booking_exports.requestBookingLogic },
   cancelBooking: { kind: "user", schema: booking_exports.cancelBookingInput, run: booking_exports.cancelBookingLogic },
+  respondBooking: { kind: "user", schema: booking_exports.respondBookingInput, run: booking_exports.respondBookingLogic },
+  checkInBooking: { kind: "user", schema: booking_exports.checkInBookingInput, run: booking_exports.checkInBookingLogic },
+  meetFeedback: { kind: "user", schema: booking_exports.meetFeedbackInput, run: booking_exports.meetFeedbackLogic },
   startChat: { kind: "user", schema: chat_exports.startChatInput, run: chat_exports.startChatLogic },
   sendMessage: { kind: "user", schema: chat_exports.sendMessageInput, run: chat_exports.sendMessageLogic },
   markChatRead: { kind: "user", schema: chat_exports.markChatReadInput, run: chat_exports.markChatReadLogic },

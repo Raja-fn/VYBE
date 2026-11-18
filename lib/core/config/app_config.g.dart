@@ -48,6 +48,7 @@ _AppConfig _$AppConfigFromJson(Map<String, dynamic> json) => _AppConfig(
   safetyMissedCheckInsToEscalate:
       (json['safetyMissedCheckInsToEscalate'] as num).toInt(),
   sosHoldSeconds: (json['sosHoldSeconds'] as num).toInt(),
+  emergencyNumber: json['emergencyNumber'] as String,
   autoCompleteGraceMinutes: (json['autoCompleteGraceMinutes'] as num).toInt(),
   moderationStrikesForReport: (json['moderationStrikesForReport'] as num)
       .toInt(),
@@ -113,6 +114,7 @@ Map<String, dynamic> _$AppConfigToJson(
   'safetyCheckIntervalMinutes': instance.safetyCheckIntervalMinutes,
   'safetyMissedCheckInsToEscalate': instance.safetyMissedCheckInsToEscalate,
   'sosHoldSeconds': instance.sosHoldSeconds,
+  'emergencyNumber': instance.emergencyNumber,
   'autoCompleteGraceMinutes': instance.autoCompleteGraceMinutes,
   'moderationStrikesForReport': instance.moderationStrikesForReport,
   'moderationStrikeWindowHours': instance.moderationStrikeWindowHours,

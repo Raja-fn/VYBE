@@ -44,6 +44,7 @@ abstract class AppConfig with _$AppConfig {
     required int safetyCheckIntervalMinutes,
     required int safetyMissedCheckInsToEscalate,
     required int sosHoldSeconds,
+    required String emergencyNumber,
     required int autoCompleteGraceMinutes,
     required int moderationStrikesForReport,
     required int moderationStrikeWindowHours,
