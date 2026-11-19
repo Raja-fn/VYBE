@@ -12,10 +12,12 @@ import 'package:vybe/core/config/app_env.dart';
 import 'package:vybe/core/connectivity/connectivity_service.dart';
 import 'package:vybe/core/l10n/l10n.dart';
 import 'package:vybe/core/location/location_service.dart';
+import 'package:vybe/core/push/push_notifications.dart';
 import 'package:vybe/core/services/identity_verification/identity_verification_providers.dart';
 import 'package:vybe/core/services/image_capture/image_capture_service.dart';
 import 'package:vybe/core/services/image_capture/photo_picker_service.dart';
 import 'package:vybe/core/theme/app_theme.dart';
+import 'package:vybe/core/widgets/legal_links.dart';
 import 'package:vybe/features/booking/presentation/booking_providers.dart';
 import 'package:vybe/features/chat/presentation/chat_providers.dart';
 import 'package:vybe/features/credits/data/store_client.dart';
@@ -69,6 +71,9 @@ class TestBackend {
   final FakeVideoPicker videos = FakeVideoPicker();
   final FakeTrustedContactRepository trustedContact = FakeTrustedContactRepository();
   final FakeSafetyLauncher launcher = FakeSafetyLauncher();
+  final FakePushClient push = FakePushClient();
+  final FakeLinkOpener links = FakeLinkOpener();
+  final FakeCallableClient functions = FakeCallableClient();
   LocationService location = const FixedLocationService(DevicePosition(lat: 19.0596, lng: 72.8295, accuracyM: 5));
 
   List<Override> get overrides => [
@@ -92,6 +97,9 @@ class TestBackend {
     videoPickerProvider.overrideWithValue(videos),
     trustedContactRepositoryProvider.overrideWithValue(trustedContact),
     safetyLauncherProvider.overrideWithValue(launcher),
+    pushClientProvider.overrideWithValue(push),
+    linkOpenerProvider.overrideWithValue(links),
+    callableClientProvider.overrideWithValue(functions),
     // No video engine in widget tests.
     videoPlaybackProvider.overrideWithValue(false),
   ];
@@ -119,6 +127,8 @@ List<Override> baseOverrides({AppEnv env = AppEnv.dev, bool online = true, TestB
     [
       appEnvProvider.overrideWithValue(env),
       appConfigProvider.overrideWithValue(config ?? loadTestConfig()),
+      // As if the rules screen was filled in during this session.
+      signupBirthDateProvider.overrideWith(_TestBirthDate.new),
       connectivityServiceProvider.overrideWithValue(FakeConnectivityService(online: online)),
       ...(backend ?? TestBackend()).overrides,
     ];
@@ -192,4 +202,9 @@ Future<void> settle(WidgetTester tester) async {
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 200));
   }
+}
+
+class _TestBirthDate extends SignupBirthDate {
+  @override
+  DateTime? build() => DateTime(2000, 1, 15);
 }

@@ -41,6 +41,7 @@ const _serverCodes = <String, FailureKind>{
   'otp_wrong': FailureKind.wrongCode,
   'otp_expired': FailureKind.codeExpired,
   'otp_send_failed': FailureKind.otpSendFailed,
+  'underage': FailureKind.underage,
 };
 
 /// Generic statuses of server actions.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
 import 'core/l10n/l10n.dart';
+import 'core/push/push_notifications.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_dimens.dart';
@@ -24,6 +25,8 @@ class VybeApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    // Registers this phone for notifications and opens tapped ones.
+    ref.watch(pushRegistrationProvider);
     final maxTextScale = ref.watch(appConfigProvider).maxTextScale;
 
     return MaterialApp.router(

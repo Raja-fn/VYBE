@@ -33,6 +33,7 @@ String failureMessage(AppLocalizations l10n, AppFailure failure) {
     FailureKind.signInCanceled => l10n.failureSignInCanceled,
     FailureKind.googleSignInUnavailable => l10n.failureGoogleSignInUnavailable,
     FailureKind.purchaseInvalid => l10n.failurePurchaseInvalid,
+    FailureKind.underage => l10n.failureUnderage,
     FailureKind.storeUnavailable => l10n.failureStoreUnavailable,
     FailureKind.unknown => l10n.failureUnknown,
   };

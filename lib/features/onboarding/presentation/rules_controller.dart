@@ -17,7 +17,8 @@ class RulesController extends _$RulesController {
     ref.listen(authUserProvider, (_, _) {});
   }
 
-  Future<void> accept() async {
+  Future<void> accept({required DateTime dateOfBirth}) async {
+    ref.read(signupBirthDateProvider.notifier).set(dateOfBirth);
     ref.read(consentGivenProvider.notifier).give();
     // Signed out: consent is recorded right after the phone is verified.
     final user = await ref.read(authUserProvider.future);
@@ -27,7 +28,7 @@ class RulesController extends _$RulesController {
     state = const AsyncLoading();
     final result = await ref
         .read(accountRepositoryProvider)
-        .acceptRules(rulesVersion: ref.read(appConfigProvider).rulesVersion);
+        .acceptRules(rulesVersion: ref.read(appConfigProvider).rulesVersion, dateOfBirth: dateOfBirth);
     // Accepting moves the app on, which can close this screen first.
     if (!ref.mounted) return;
     state = switch (result) {

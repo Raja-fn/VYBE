@@ -333,18 +333,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifyTakeIdPhoto => 'Take ID photo';
 
   @override
-  String get verifyReviewTitle => 'We are checking your photo';
+  String get verifyReviewTitle => 'A person is checking your photos';
 
   @override
   String get verifyReviewBody =>
-      'This usually takes a few minutes. You can close the app and come back.';
+      'Someone on the VYBE team compares your selfie with your ID, usually within 24 hours. We\'ll send you a notification when it\'s done.';
 
   @override
   String get verifyRejectedTitle => 'We could not verify this photo';
 
   @override
   String get verifyRejectedBody =>
-      'Make sure it is clear, well lit and not cut off, then try again.';
+      'We could not match it. Make sure your face or ID is clear, well lit and not cut off, then try again.';
 
   @override
   String get verifyTryAgain => 'Try again';
@@ -1778,4 +1778,39 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get safetyTipLeave =>
       'If something feels wrong, leave. You can report or block from their profile or chat.';
+
+  @override
+  String get rulesBirthDate => 'Your date of birth';
+
+  @override
+  String get rulesBirthDateHint =>
+      'Tap to enter it. We check it against your ID.';
+
+  @override
+  String rulesTooYoung(int age) {
+    return 'VYBE is only for people aged $age or older.';
+  }
+
+  @override
+  String get failureUnderage => 'VYBE is only for people aged 18 or older.';
+
+  @override
+  String get legalTerms => 'Terms';
+
+  @override
+  String get legalPrivacy => 'Privacy policy';
+
+  @override
+  String linkOpenFailed(String link) {
+    return 'Couldn\'t open $link on this phone.';
+  }
+
+  @override
+  String get aboutTitle => 'About and legal';
+
+  @override
+  String get aboutSupport => 'Contact support';
+
+  @override
+  String get aboutGrievance => 'Grievance Officer';
 }

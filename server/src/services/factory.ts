@@ -2,6 +2,7 @@ import type { AppConfig } from '../config/appConfig';
 import { env, fakeServicesAllowed } from '../config/env';
 import { FakeIdentityVerificationService } from './identity/fakeIdentityVerificationService';
 import type { IdentityVerificationService } from './identity/identityVerificationService';
+import { ManualReviewIdentityService } from './identity/manualReviewIdentityService';
 import { FakeModerationService } from './moderation/fakeModerationService';
 import type { ModerationService } from './moderation/moderationService';
 import { FakePaymentPayoutService } from './payout/fakePaymentPayoutService';
@@ -12,6 +13,8 @@ import { FakePurchaseVerificationService } from './purchases/fakePurchaseVerific
 import { GooglePlayPurchaseVerificationService, type ServiceAccountKey } from './purchases/googlePlayPurchaseVerificationService';
 import type { PurchaseVerificationService } from './purchases/purchaseVerificationService';
 import { NoPublicPlaces, type PublicPlacesSource } from './places/publicPlacesSource';
+import { FcmPushService } from './push/fcmPushService';
+import { FakePushService, NoPush, type PushService } from './push/pushService';
 import { fakeDateOfBirthFor, FAKE_MODERATION_TERMS, FAKE_REJECTED_UIDS } from './fakeFixtures';
 
 export interface Services {
@@ -22,6 +25,8 @@ export interface Services {
   purchases: PurchaseVerificationService;
   /** Public places (cafes, parks, cinemas…) that become meeting spots. */
   publicPlaces: PublicPlacesSource;
+  /** Phone notifications. */
+  push: PushService;
 }
 
 export class ProviderNotConfiguredError extends Error {
@@ -32,21 +37,21 @@ export class ProviderNotConfiguredError extends Error {
 
 /** Production settings, from Edge Function secrets. */
 export interface ProductionSettings {
-  /** Owner decision (launch): approve selfie and ID checks automatically until a provider is chosen. */
-  identityAutoApprove: boolean;
   /** Google Play: package name and service-account key (JSON). */
   playPackageName?: string;
   playServiceAccountJson?: string;
   /** Secret in the Play notification push URL. */
   playNotificationSecret?: string;
+  /** Firebase service-account key (JSON) for phone notifications. */
+  fcmServiceAccountJson?: string;
 }
 
 export function productionSettingsFromEnv(): ProductionSettings {
   return {
-    identityAutoApprove: env('FINDX_IDENTITY_AUTO_APPROVE') === 'true',
     playPackageName: env('GOOGLE_PLAY_PACKAGE'),
     playServiceAccountJson: env('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON'),
     playNotificationSecret: env('FINDX_PLAY_NOTIFICATION_SECRET'),
+    fcmServiceAccountJson: env('FINDX_FCM_SERVICE_ACCOUNT_JSON'),
   };
 }
 
@@ -81,7 +86,7 @@ function productIds(config: AppConfig) {
  * Production uses real providers, and a call fails loudly when one is not
  * configured instead of silently approving users, granting credits or paying out:
  * - purchases: Google Play (needs GOOGLE_PLAY_PACKAGE and GOOGLE_PLAY_SERVICE_ACCOUNT_JSON);
- * - identity: automatic approval only with FINDX_IDENTITY_AUTO_APPROVE=true (owner decision);
+ * - identity: a person on the team reviews each selfie and ID (owner decision, launch);
  * - moderation: VYBE's own rules (contact details are blocked in chat itself);
  * - places: no popularity data yet (all quiet); payouts: not offered.
  */
@@ -92,12 +97,8 @@ export function createServices(
 ): Services {
   if (useFakes) return fakeServices(config);
 
-  if (!production.identityAutoApprove) throw new ProviderNotConfiguredError('identity');
   return {
-    identity: new FakeIdentityVerificationService({
-      sessionMinutes: config.verificationSessionMinutes,
-      dateOfBirthFor: fakeDateOfBirthFor,
-    }),
+    identity: new ManualReviewIdentityService({ sessionMinutes: config.verificationSessionMinutes }),
     payout: new PayoutsNotAvailable(),
     moderation: new FakeModerationService([]),
     places: new NoPopularityData(),
@@ -106,7 +107,30 @@ export function createServices(
     // the free public Overpass servers do not allow app traffic. A self-hosted Overpass can be
     // plugged in here later with new OpenStreetMapPlaces({ endpoints: [...] }).
     publicPlaces: new NoPublicPlaces(),
+    push: firebasePush(production),
   };
+}
+
+/**
+ * A service-account key from a secret: the JSON itself, or the JSON in
+ * base64 (easier to pass from PowerShell, which mangles quotes).
+ */
+export function parseServiceAccountSecret(value: string): ServiceAccountKey {
+  const text = value.trim().startsWith('{') ? value : new TextDecoder().decode(Uint8Array.from(atob(value.trim()), (c) => c.charCodeAt(0)));
+  return JSON.parse(text) as ServiceAccountKey;
+}
+
+/** Phone notifications through Firebase. Without the key nothing is sent (the app still works). */
+function firebasePush(production: ProductionSettings): PushService {
+  if (!production.fcmServiceAccountJson) return new NoPush();
+  try {
+    const account = parseServiceAccountSecret(production.fcmServiceAccountJson);
+    if (!account.project_id || !account.client_email || !account.private_key) return new NoPush();
+    return new FcmPushService({ serviceAccount: { ...account, project_id: account.project_id } });
+  } catch {
+    console.error('FINDX_FCM_SERVICE_ACCOUNT_JSON is not valid JSON (or base64 JSON); notifications are off.');
+    return new NoPush();
+  }
 }
 
 /**
@@ -121,7 +145,7 @@ function googlePlay(config: AppConfig, production: ProductionSettings): Purchase
     reason = 'purchases (Google Play keys are not set)';
   } else {
     try {
-      serviceAccount = JSON.parse(production.playServiceAccountJson) as ServiceAccountKey;
+      serviceAccount = parseServiceAccountSecret(production.playServiceAccountJson);
     } catch {
       reason = 'purchases (GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is not valid JSON)';
     }
@@ -155,5 +179,6 @@ function fakeServices(config: AppConfig): Services {
       subscriptionPeriodDays: config.subscriptionPeriodDays,
     }),
     publicPlaces: new NoPublicPlaces(),
+    push: new FakePushService(),
   };
 }

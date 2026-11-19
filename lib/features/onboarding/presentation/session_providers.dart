@@ -53,5 +53,19 @@ class ConsentGiven extends _$ConsentGiven {
 
   void give() => state = true;
 
-  void reset() => state = false;
+  void reset() {
+    state = false;
+    ref.read(signupBirthDateProvider.notifier).set(null);
+  }
+}
+
+/// The date of birth typed on the rules screen, sent when the account is created.
+@Riverpod(keepAlive: true)
+class SignupBirthDate extends _$SignupBirthDate {
+  @override
+  DateTime? build() => null;
+
+  // A setter would need a getter; this reads better at the call sites.
+  // ignore: use_setters_to_change_properties
+  void set(DateTime? value) => state = value;
 }

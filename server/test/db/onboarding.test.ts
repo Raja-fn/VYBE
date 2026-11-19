@@ -38,7 +38,8 @@ async function upload(path: string) {
   await sql`insert into storage.objects (bucket_id, name) values (${bucket}, ${name})`;
 }
 
-const accept = (caller: Caller, d = deps()) => acceptRulesLogic(d, caller, { rulesVersion: defaultAppConfig.rulesVersion, ageConfirmed: true });
+const accept = (caller: Caller, d = deps(), dateOfBirth = '2000-01-15') =>
+  acceptRulesLogic(d, caller, { rulesVersion: defaultAppConfig.rulesVersion, ageConfirmed: true, dateOfBirth });
 
 async function verifyStep(caller: Caller, step: 'selfie' | 'id', d = deps()) {
   const session = await startVerificationLogic(d, caller, { step, ...(step === 'id' ? { documentType: 'aadhaar' as const } : {}) });
@@ -78,7 +79,7 @@ describe('acceptRules', () => {
 
   it('rejects an outdated rules version and a caller with neither a phone nor a verified email', async () => {
     const caller = await newCaller('a');
-    await expectAppError(acceptRulesLogic(deps(), caller, { rulesVersion: 0, ageConfirmed: true }), 'invalid_input');
+    await expectAppError(acceptRulesLogic(deps(), caller, { rulesVersion: 0, ageConfirmed: true, dateOfBirth: '2000-01-15' }), 'invalid_input');
     await expectAppError(accept({ ...caller, phoneNumber: undefined }), 'invalid_input');
   });
 
@@ -89,6 +90,20 @@ describe('acceptRules', () => {
       phone_e164: null,
       email: 'someone@example.com',
     });
+  });
+
+  it('keeps the date of birth privately; under 18 and impossible dates are refused', async () => {
+    const caller = await newCaller('a');
+    await expectAppError(accept(caller, deps(), '2008-11-11'), 'underage');
+    await expectAppError(accept(caller, deps(), '2001-02-30'), 'invalid_input');
+    await expectAppError(accept(caller, deps(), '2030-01-01'), 'invalid_input');
+    expect(await sql`select 1 from users where id = ${caller.uid}`).toHaveLength(0);
+
+    await accept(caller, deps(), '2008-11-10');
+    expect((await sql`select date_of_birth from private_profiles where id = ${caller.uid}`)[0].date_of_birth).toBe('2008-11-10');
+    // Accepting again later never changes it.
+    await accept(caller, deps(), '1990-01-01');
+    expect((await sql`select date_of_birth from private_profiles where id = ${caller.uid}`)[0].date_of_birth).toBe('2008-11-10');
   });
 
   it('refuses a banned account', async () => {

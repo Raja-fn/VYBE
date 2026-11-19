@@ -47,7 +47,7 @@ void main() {
       final backend = TestBackend();
       final container = _container(backend);
       await _flush();
-      await container.read(rulesControllerProvider.notifier).accept();
+      await container.read(rulesControllerProvider.notifier).accept(dateOfBirth: DateTime(2000, 1, 15));
       expect(container.read(consentGivenProvider), isTrue);
       expect(backend.accounts.acceptedVersions, isEmpty);
     });
@@ -59,8 +59,9 @@ void main() {
       final container = _container(backend);
       await _flush();
       expect(container.read(sessionStageProvider).value, isA<NeedsAccount>());
-      await container.read(rulesControllerProvider.notifier).accept();
+      await container.read(rulesControllerProvider.notifier).accept(dateOfBirth: DateTime(2000, 1, 15));
       expect(backend.accounts.acceptedVersions, [1]);
+      expect(backend.accounts.birthDates, [DateTime(2000, 1, 15)]);
     });
 
     test('surfaces a server failure', () async {
@@ -69,7 +70,7 @@ void main() {
       )..accounts.acceptFailure = const AppFailure(FailureKind.network);
       final container = _container(backend);
       await _flush();
-      await container.read(rulesControllerProvider.notifier).accept();
+      await container.read(rulesControllerProvider.notifier).accept(dateOfBirth: DateTime(2000, 1, 15));
       expect(container.read(rulesControllerProvider).error, const AppFailure(FailureKind.network));
     });
   });
@@ -118,6 +119,7 @@ void main() {
       await controller.confirmCode(validOtp);
       await _flush();
       expect(backend.accounts.acceptedVersions, [1]);
+      expect(backend.accounts.birthDates, [DateTime(2000, 1, 15)]);
       expect(container.read(sessionStageProvider).value, isA<NeedsVerification>());
     });
 
@@ -199,6 +201,19 @@ void main() {
       await container.read(verificationControllerProvider.notifier).captureAndSubmit();
       expect(container.read(verificationControllerProvider).failure?.kind, FailureKind.network);
       expect(backend.accounts.account.value!.verificationSteps.selfie, StepStatus.notStarted);
+    });
+
+    test('after an app restart without a date of birth, the rules are asked again', () async {
+      final backend = TestBackend(
+        auth: FakeAuthRepository(signedIn: const AuthUser(uid: testUid)),
+      );
+      final container = _container(backend);
+      await _flush();
+      container.read(consentGivenProvider.notifier).give();
+      container.read(signupBirthDateProvider.notifier).set(null);
+      await container.read(verificationControllerProvider.notifier).createAccount();
+      expect(container.read(consentGivenProvider), isFalse);
+      expect(backend.accounts.acceptedVersions, isEmpty);
     });
 
     test('sign out clears consent and local state', () async {

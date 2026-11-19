@@ -655,13 +655,13 @@ abstract class AppLocalizations {
   /// No description provided for @verifyReviewTitle.
   ///
   /// In en, this message translates to:
-  /// **'We are checking your photo'**
+  /// **'A person is checking your photos'**
   String get verifyReviewTitle;
 
   /// No description provided for @verifyReviewBody.
   ///
   /// In en, this message translates to:
-  /// **'This usually takes a few minutes. You can close the app and come back.'**
+  /// **'Someone on the VYBE team compares your selfie with your ID, usually within 24 hours. We\'ll send you a notification when it\'s done.'**
   String get verifyReviewBody;
 
   /// No description provided for @verifyRejectedTitle.
@@ -673,7 +673,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifyRejectedBody.
   ///
   /// In en, this message translates to:
-  /// **'Make sure it is clear, well lit and not cut off, then try again.'**
+  /// **'We could not match it. Make sure your face or ID is clear, well lit and not cut off, then try again.'**
   String get verifyRejectedBody;
 
   /// No description provided for @verifyTryAgain.
@@ -3093,6 +3093,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If something feels wrong, leave. You can report or block from their profile or chat.'**
   String get safetyTipLeave;
+
+  /// No description provided for @rulesBirthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Your date of birth'**
+  String get rulesBirthDate;
+
+  /// No description provided for @rulesBirthDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enter it. We check it against your ID.'**
+  String get rulesBirthDateHint;
+
+  /// No description provided for @rulesTooYoung.
+  ///
+  /// In en, this message translates to:
+  /// **'VYBE is only for people aged {age} or older.'**
+  String rulesTooYoung(int age);
+
+  /// No description provided for @failureUnderage.
+  ///
+  /// In en, this message translates to:
+  /// **'VYBE is only for people aged 18 or older.'**
+  String get failureUnderage;
+
+  /// No description provided for @legalTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get legalTerms;
+
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get legalPrivacy;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open {link} on this phone.'**
+  String linkOpenFailed(String link);
+
+  /// No description provided for @aboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About and legal'**
+  String get aboutTitle;
+
+  /// No description provided for @aboutSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get aboutSupport;
+
+  /// No description provided for @aboutGrievance.
+  ///
+  /// In en, this message translates to:
+  /// **'Grievance Officer'**
+  String get aboutGrievance;
 }
 
 class _AppLocalizationsDelegate

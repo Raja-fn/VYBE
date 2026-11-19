@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/push/push_notifications.dart';
 import '../../../core/services/identity_verification/identity_verification_providers.dart';
 import '../../../core/services/identity_verification/identity_verification_service.dart';
 import '../../../core/services/image_capture/image_capture_service.dart';
@@ -128,8 +129,16 @@ class VerificationController extends _$VerificationController {
   /// Records consent and creates the account. Called right after sign-in,
   /// and from the "Continue" button if the app was closed in between.
   Future<void> createAccount() async {
+    final dateOfBirth = ref.read(signupBirthDateProvider);
+    if (dateOfBirth == null) {
+      // The app restarted after the rules screen: ask again (the router shows the rules).
+      ref.read(consentGivenProvider.notifier).reset();
+      return;
+    }
     state = state.copyWith(busy: true, failure: null);
-    final result = await ref.read(accountRepositoryProvider).acceptRules(rulesVersion: _config.rulesVersion);
+    final result = await ref
+        .read(accountRepositoryProvider)
+        .acceptRules(rulesVersion: _config.rulesVersion, dateOfBirth: dateOfBirth);
     // A new account moves the app on to the next step, which closes this screen.
     if (!ref.mounted) return;
     state = state.copyWith(busy: false, failure: result.failureOrNull);
@@ -185,6 +194,7 @@ class VerificationController extends _$VerificationController {
   Future<void> signOut() async {
     state = state.copyWith(busy: true);
     final consent = ref.read(consentGivenProvider.notifier);
+    await ref.read(pushRegistrationProvider.notifier).unregister();
     await ref.read(authRepositoryProvider).signOut();
     consent.reset();
     if (!ref.mounted) return;

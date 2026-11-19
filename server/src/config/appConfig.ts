@@ -75,6 +75,12 @@ export const appConfigSchema = z.object({
   sosHoldSeconds: z.number().int().positive(),
   /** Dialled by the SOS button (112 works in India, the EU and many other countries). */
   emergencyNumber: z.string().regex(/^[0-9]{2,6}$/),
+  privacyPolicyUrl: z.string().url(),
+  termsUrl: z.string().url(),
+  supportEmail: z.string().email(),
+  /** Grievance Officer (India IT Rules 2021); set before launch. */
+  grievanceOfficerName: z.string(),
+  grievanceOfficerEmail: z.string().email(),
   autoCompleteGraceMinutes: z.number().int().nonnegative(),
   moderationStrikesForReport: z.number().int().positive(),
   moderationStrikeWindowHours: z.number().int().positive(),

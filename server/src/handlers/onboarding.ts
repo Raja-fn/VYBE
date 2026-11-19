@@ -21,7 +21,15 @@ export const UNDERAGE_REASON = 'underage';
 export const acceptRulesInput = z.object({
   rulesVersion: z.number().int(),
   ageConfirmed: z.literal(true),
+  /** yyyy-MM-dd, typed by the person. Checked against their ID by a reviewer. */
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
+
+/** A real calendar day, not in the future. */
+function validBirthDate(value: string, now: Date): boolean {
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value && date.getTime() <= now.getTime();
+}
 
 /**
  * Records consent and, the first time, creates the member account:
@@ -41,6 +49,12 @@ export async function acceptRulesLogic(
   }
   const { config } = deps;
   const now = deps.now();
+  if (!validBirthDate(input.dateOfBirth, now) || ageOn(input.dateOfBirth, now) > 120) {
+    throw appError(ErrorCodes.invalidInput, 'Enter your real date of birth.');
+  }
+  if (ageOn(input.dateOfBirth, now) < config.ageMinimum) {
+    throw appError(ErrorCodes.underage, `VYBE is only for people aged ${config.ageMinimum} or older.`);
+  }
   const consent = { rulesVersion: input.rulesVersion, ageConfirmed: true, acceptedAt: now.toISOString() };
   const uid = caller.uid;
 
@@ -57,11 +71,13 @@ export async function acceptRulesLogic(
       const [user] = await tx<{ account_status: string }[]>`select account_status from users where id = ${uid} for update`;
       if (user.account_status === 'banned') throw appError(ErrorCodes.blocked, 'This account is suspended.');
       await tx`update users set consent = ${tx.json(consent)}, updated_at = ${now} where id = ${uid}`;
+      // The first date of birth stays; a reviewer corrects it from the ID if needed.
+      await tx`update private_profiles set date_of_birth = ${input.dateOfBirth} where id = ${uid} and date_of_birth is null`;
       return { created: false };
     }
     await tx`
-      insert into private_profiles (id, phone_e164, email)
-      values (${uid}, ${caller.phoneNumber ?? null}, ${caller.verifiedEmail ?? null})`;
+      insert into private_profiles (id, phone_e164, email, date_of_birth)
+      values (${uid}, ${caller.phoneNumber ?? null}, ${caller.verifiedEmail ?? null}, ${input.dateOfBirth})`;
     await tx`insert into credit_accounts (uid, balance, updated_at) values (${uid}, ${config.signupBonusCredits}, ${now})`;
     await tx`
       insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)

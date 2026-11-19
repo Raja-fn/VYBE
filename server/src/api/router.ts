@@ -1,13 +1,14 @@
 import type { z } from 'zod';
 
 import { loadAppConfig, type AppConfig } from '../config/appConfig';
-import { account, booking, chat, discovery, onboarding, phoneLogin, purchases, reels, safety } from '../handlers';
+import { account, admin, booking, chat, discovery, onboarding, phoneLogin, purchases, push, reels, safety } from '../handlers';
 import type { Deps } from '../handlers/deps';
 import type { AuthAdmin } from '../services/auth/authAdmin';
 import type { Services } from '../services/factory';
 import type { OtpSender } from '../services/otp/otpSender';
 import { parseInput, type Caller } from '../shared/callable';
 import type { Db } from '../shared/db';
+import { sameSecret } from '../shared/constantTime';
 import { AppError, httpStatusFor } from '../shared/errorCodes';
 
 /** What the router needs from the outside world. Tests pass fakes. */
@@ -20,7 +21,30 @@ export interface ApiContext {
   otpSender(config: AppConfig): OtpSender;
   /** Shared secret the scheduled renewal job sends in `x-cron-secret`. */
   cronSecret: string | undefined;
+  /** Shared secret the review page sends in `x-admin-secret`. Unset: the admin actions are off. */
+  adminSecret?: string | undefined;
+  /** A link to a private storage file ("bucket/name") that works for [seconds]. */
+  signStorageUrl?(path: string, seconds: number): Promise<string>;
   now?: () => Date;
+}
+
+/** Actions for the VYBE team's review page (not the app). */
+const adminActions: Record<string, { schema: z.ZodType; run: (deps: admin.AdminDeps, input: never) => Promise<unknown> }> = {
+  adminReviewQueue: { schema: admin.adminReviewQueueInput, run: (deps) => admin.adminReviewQueueLogic(deps) },
+  adminDecideVerification: { schema: admin.adminDecideVerificationInput, run: admin.adminDecideVerificationLogic },
+};
+
+/** The review page is a local file in a browser, so admin answers allow any origin; the secret is the guard. */
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'content-type, x-admin-secret',
+};
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(CORS_HEADERS)) headers.set(key, value);
+  return new Response(response.body, { status: response.status, headers });
 }
 
 type SignedIn = { kind: 'user'; schema: z.ZodType; run: (deps: Deps, caller: Caller, input: never) => Promise<unknown> };
@@ -55,6 +79,8 @@ const signedIn: Record<string, SignedIn> = {
   reelFeed: { kind: 'user', schema: reels.reelFeedInput, run: reels.reelFeedLogic },
   postReel: { kind: 'user', schema: reels.postReelInput, run: reels.postReelLogic },
   deleteReel: { kind: 'user', schema: reels.deleteReelInput, run: reels.deleteReelLogic },
+  registerPushToken: { kind: 'user', schema: push.registerPushTokenInput, run: push.registerPushTokenLogic },
+  unregisterPushToken: { kind: 'user', schema: push.unregisterPushTokenInput, run: push.unregisterPushTokenLogic },
 };
 
 const json = (status: number, body: unknown) =>
@@ -87,6 +113,34 @@ async function readJson(req: Request): Promise<unknown> {
 /** Handles one HTTP request to the `api` Edge Function. */
 export async function handleApiRequest(req: Request, ctx: ApiContext): Promise<Response> {
   const name = routeName(req.url);
+  if (name in adminActions) {
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return withCors(await handleAdmin(name, req, ctx));
+  }
+  return handleAppRequest(name, req, ctx);
+}
+
+async function handleAdmin(name: string, req: Request, ctx: ApiContext): Promise<Response> {
+  const now = ctx.now ?? (() => new Date());
+  try {
+    if (req.method !== 'POST') return json(405, { error: { status: 'invalid-argument', code: null, message: 'Use POST.' } });
+    const given = req.headers.get('x-admin-secret') ?? '';
+    if (!ctx.adminSecret || !given || !sameSecret(given, ctx.adminSecret)) throw new AppError('permission-denied', 'Not allowed.');
+    const signStorageUrl = ctx.signStorageUrl;
+    if (!signStorageUrl) throw new AppError('failed-precondition', 'Storage links are not available.');
+    const action = adminActions[name];
+    const config = await loadAppConfig(ctx.sql);
+    const input = parseInput(action.schema, await readJson(req));
+    const deps: admin.AdminDeps = { sql: ctx.sql, config, services: ctx.services(config), now, signUrl: signStorageUrl };
+    return json(200, (await action.run(deps, input as never)) ?? {});
+  } catch (error) {
+    if (error instanceof AppError) return errorResponse(error);
+    console.error(`api/${name} failed`, error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+    return errorResponse(new AppError('internal', 'Something went wrong.'));
+  }
+}
+
+async function handleAppRequest(name: string, req: Request, ctx: ApiContext): Promise<Response> {
   const now = ctx.now ?? (() => new Date());
   try {
     if (name === 'storeNotification') return await storeNotification(req, ctx, now);

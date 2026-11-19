@@ -11,7 +11,8 @@ abstract interface class AccountRepository {
 
   /// Records consent and, the first time, creates the account (with the
   /// signup credits). Safe to call more than once.
-  Future<Result<void>> acceptRules({required int rulesVersion});
+  /// [dateOfBirth] is the day the person typed (only the date part is sent).
+  Future<Result<void>> acceptRules({required int rulesVersion, required DateTime dateOfBirth});
 }
 
 class SupabaseAccountRepository implements AccountRepository {
@@ -28,9 +29,24 @@ class SupabaseAccountRepository implements AccountRepository {
       .map((rows) => rows.isEmpty ? null : accountFromRow(rows.first));
 
   @override
-  Future<Result<void>> acceptRules({required int rulesVersion}) => runGuarded(() async {
-    await _functions.call('acceptRules', {'rulesVersion': rulesVersion, 'ageConfirmed': true});
+  Future<Result<void>> acceptRules({required int rulesVersion, required DateTime dateOfBirth}) => runGuarded(() async {
+    await _functions.call('acceptRules', {
+      'rulesVersion': rulesVersion,
+      'ageConfirmed': true,
+      'dateOfBirth': birthDateKey(dateOfBirth),
+    });
   });
+}
+
+/// yyyy-MM-dd for a date of birth.
+String birthDateKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+/// Whole years between [dateOfBirth] and [today].
+int ageOnDay(DateTime dateOfBirth, DateTime today) {
+  var age = today.year - dateOfBirth.year;
+  if (today.month < dateOfBirth.month || (today.month == dateOfBirth.month && today.day < dateOfBirth.day)) age -= 1;
+  return age;
 }
 
 /// Builds an [Account] from a `users` row.

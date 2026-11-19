@@ -11,6 +11,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/badges.dart';
 import '../../../core/widgets/content_rows.dart';
+import '../../../core/widgets/legal_links.dart';
 import '../../../core/widgets/storage_photo.dart';
 import '../../onboarding/domain/phone_number.dart';
 import '../../onboarding/domain/session_stage.dart';
@@ -177,6 +178,8 @@ class _MyProfileScreenState extends ConsumerState<MyProfileScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: AppSpacing.md),
+            const _AboutCard(),
             const SizedBox(height: AppSpacing.xl),
             AppButton(label: l10n.signOut, onPressed: controller.signOut, variant: AppButtonVariant.outline),
             const SizedBox(height: AppSpacing.sm),
@@ -213,4 +216,74 @@ Future<void> _confirmDelete(BuildContext context, MyProfileController controller
     ),
   );
   if (confirmed ?? false) await controller.deleteAccount();
+}
+
+/// Privacy policy, terms, support and the Grievance Officer (India IT Rules 2021).
+class _AboutCard extends ConsumerWidget {
+  const _AboutCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final textTheme = Theme.of(context).textTheme;
+    final config = ref.watch(appConfigProvider);
+    final grievanceName = config.grievanceOfficerName.trim();
+
+    Widget row(IconData icon, String label, VoidCallback onTap, {String? detail}) => InkWell(
+      onTap: onTap,
+      borderRadius: AppRadii.cardBorder,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: AppSizes.minTouchTarget),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.accent),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: textTheme.titleMedium),
+                    if (detail != null) Text(detail, style: textTheme.bodySmall?.copyWith(color: AppColors.muted)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.open_in_new, size: AppSizes.iconSmall, color: AppColors.muted),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionLabel(l10n.aboutTitle),
+          const SizedBox(height: AppSpacing.xs),
+          row(
+            Icons.privacy_tip_outlined,
+            l10n.legalPrivacy,
+            () => openLink(context, ref, Uri.parse(config.privacyPolicyUrl)),
+          ),
+          row(Icons.description_outlined, l10n.legalTerms, () => openLink(context, ref, Uri.parse(config.termsUrl))),
+          row(
+            Icons.mail_outline,
+            l10n.aboutSupport,
+            () => openLink(context, ref, mailTo(config.supportEmail, subject: 'VYBE support')),
+            detail: config.supportEmail,
+          ),
+          row(
+            Icons.gavel_outlined,
+            l10n.aboutGrievance,
+            () => openLink(context, ref, mailTo(config.grievanceOfficerEmail, subject: 'Grievance')),
+            detail: grievanceName.isEmpty
+                ? config.grievanceOfficerEmail
+                : '$grievanceName · ${config.grievanceOfficerEmail}',
+          ),
+        ],
+      ),
+    );
+  }
 }

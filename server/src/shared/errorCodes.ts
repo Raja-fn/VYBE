@@ -17,6 +17,7 @@ export const ErrorCodes = {
   otpWrong: 'otp_wrong',
   otpExpired: 'otp_expired',
   otpSendFailed: 'otp_send_failed',
+  underage: 'underage',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -58,6 +59,7 @@ const statusFor: Record<ErrorCode, ErrorStatus> = {
   otp_wrong: 'invalid-argument',
   otp_expired: 'failed-precondition',
   otp_send_failed: 'unavailable',
+  underage: 'failed-precondition',
 };
 
 /** An error the app is meant to see. Anything else becomes "internal". */

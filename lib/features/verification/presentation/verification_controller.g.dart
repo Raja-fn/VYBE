@@ -42,7 +42,7 @@ final class VerificationControllerProvider
 }
 
 String _$verificationControllerHash() =>
-    r'17d7450d969dc3197cf508b35faaf250a348d78f';
+    r'44468903a01aa321f8eb3369cc820bf7e39e9abe';
 
 abstract class _$VerificationController
     extends $Notifier<VerificationFlowState> {

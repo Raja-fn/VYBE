@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/backend/backend_providers.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/push/push_notifications.dart';
 import '../../../core/utils/app_failure.dart';
 import '../../onboarding/presentation/session_providers.dart';
 import '../data/profile_repository.dart';
@@ -55,6 +56,7 @@ class MyProfileController extends _$MyProfileController {
   }
 
   Future<void> signOut() async {
+    await ref.read(pushRegistrationProvider.notifier).unregister();
     await ref.read(authRepositoryProvider).signOut();
     ref.read(consentGivenProvider.notifier).reset();
   }

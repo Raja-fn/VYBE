@@ -13,12 +13,7 @@ part of 'my_profile_controller.dart';
 const profileRepositoryProvider = ProfileRepositoryProvider._();
 
 final class ProfileRepositoryProvider
-    extends
-        $FunctionalProvider<
-          ProfileRepository,
-          ProfileRepository,
-          ProfileRepository
-        >
+    extends $FunctionalProvider<ProfileRepository, ProfileRepository, ProfileRepository>
     with $Provider<ProfileRepository> {
   const ProfileRepositoryProvider._()
     : super(
@@ -36,9 +31,7 @@ final class ProfileRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<ProfileRepository> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<ProfileRepository> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   ProfileRepository create(Ref ref) {
@@ -47,10 +40,7 @@ final class ProfileRepositoryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ProfileRepository value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ProfileRepository>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ProfileRepository>(value));
   }
 }
 
@@ -59,8 +49,7 @@ String _$profileRepositoryHash() => r'20b1d30432b532a99ae0dd6e5f0329fa47d58f67';
 @ProviderFor(MyProfileController)
 const myProfileControllerProvider = MyProfileControllerProvider._();
 
-final class MyProfileControllerProvider
-    extends $NotifierProvider<MyProfileController, MyProfileState> {
+final class MyProfileControllerProvider extends $NotifierProvider<MyProfileController, MyProfileState> {
   const MyProfileControllerProvider._()
     : super(
         from: null,
@@ -81,15 +70,11 @@ final class MyProfileControllerProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(MyProfileState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<MyProfileState>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<MyProfileState>(value));
   }
 }
 
-String _$myProfileControllerHash() =>
-    r'14f5b6dafdf1ac2fe187744fbfa2cb1ec61a60a8';
+String _$myProfileControllerHash() => r'f50e554bc01ac1dc8ff9b6f93a906af56c56eb6d';
 
 abstract class _$MyProfileController extends $Notifier<MyProfileState> {
   MyProfileState build();
@@ -100,12 +85,7 @@ abstract class _$MyProfileController extends $Notifier<MyProfileState> {
     final ref = this.ref as $Ref<MyProfileState, MyProfileState>;
     final element =
         ref.element
-            as $ClassProviderElement<
-              AnyNotifier<MyProfileState, MyProfileState>,
-              MyProfileState,
-              Object?,
-              Object?
-            >;
+            as $ClassProviderElement<AnyNotifier<MyProfileState, MyProfileState>, MyProfileState, Object?, Object?>;
     element.handleValue(ref, created);
   }
 }

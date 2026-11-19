@@ -42,6 +42,20 @@ const ctx: ApiContext = {
     return { send: () => Promise.reject(new OtpSendError('RENFLAIR_API_KEY is not set.')) };
   },
   cronSecret: env('FINDX_CRON_SECRET'),
+  adminSecret: env('FINDX_ADMIN_SECRET'),
+  async signStorageUrl(path, seconds) {
+    const slash = path.indexOf('/');
+    const objectPath = `${path.slice(0, slash)}/${path.slice(slash + 1).split('/').map(encodeURIComponent).join('/')}`;
+    const key = required('SUPABASE_SERVICE_ROLE_KEY');
+    const response = await fetch(`${supabaseUrl}/storage/v1/object/sign/${objectPath}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, apikey: key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: seconds }),
+    });
+    if (!response.ok) throw new Error(`Signing ${path} failed: HTTP ${response.status}`);
+    const { signedURL } = (await response.json()) as { signedURL: string };
+    return `${supabaseUrl}/storage/v1${signedURL}`;
+  },
 };
 
 (globalThis as unknown as { Deno: { serve(handler: (req: Request) => Promise<Response>): void } }).Deno.serve((req) =>

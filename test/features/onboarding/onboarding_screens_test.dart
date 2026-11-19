@@ -39,20 +39,41 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 
 Future<void> _tapText(WidgetTester tester, String text) => _tap(tester, find.text(text));
 
+/// Types a date of birth (MM/DD/YYYY in English) into the date picker.
+Future<void> _enterBirthDate(WidgetTester tester, String date) async {
+  await _tapText(tester, 'Your date of birth');
+  await tester.enterText(find.byType(TextField).last, date);
+  await _tapText(tester, 'OK');
+}
+
 /// Phone OTP login switched on (it is off by default for now).
 AppConfig _phoneOn() => loadTestConfig().copyWith(phoneLoginEnabled: true);
 
 void main() {
   group('Rules screen', () {
-    testWidgets('shows both lists and needs the 18+ consent before continuing', (tester) async {
+    testWidgets('shows both lists and needs a date of birth and consent before continuing', (tester) async {
       await pumpInApp(tester, const RulesScreen(), wrapInScaffold: false);
       expect(find.text('THIS APP IS FOR'), findsOneWidget);
       expect(find.text('NOT FOR'), findsOneWidget);
       expect(find.text('Sexual services or any kind of solicitation'), findsOneWidget);
+      expect(find.text('Terms'), findsOneWidget);
+      expect(find.text('Privacy policy'), findsOneWidget);
       expect(_primary(tester).onPressed, isNull);
 
       await _tapText(tester, 'I am 18 or older and I agree to these rules. Breaking them means a permanent ban.');
+      expect(_primary(tester).onPressed, isNull);
+      await _enterBirthDate(tester, '01/15/2000');
       expect(_primary(tester).onPressed, isNotNull);
+    });
+
+    testWidgets('under 18 cannot continue', (tester) async {
+      await pumpInApp(tester, const RulesScreen(), wrapInScaffold: false);
+      final now = DateTime.now();
+      final sixteen = '${now.month.toString().padLeft(2, '0')}/01/${now.year - 16}';
+      await _enterBirthDate(tester, sixteen);
+      await _tapText(tester, 'I am 18 or older and I agree to these rules. Breaking them means a permanent ban.');
+      expect(find.text('VYBE is only for people aged 18 or older.'), findsOneWidget);
+      expect(_primary(tester).onPressed, isNull);
     });
 
     testWidgets('shows a server failure when recording consent fails', (tester) async {
@@ -60,6 +81,7 @@ void main() {
         ..accounts.acceptFailure = const AppFailure(FailureKind.network);
       await pumpInApp(tester, const RulesScreen(), wrapInScaffold: false, backend: backend);
       await settle(tester);
+      await _enterBirthDate(tester, '01/15/2000');
       await _tap(tester, find.byType(Checkbox));
       await _tapText(tester, 'I agree, continue');
       expect(find.text('We could not reach VYBE. Check your connection and try again.'), findsOneWidget);
@@ -173,7 +195,7 @@ void main() {
         backend: _verifying(testAccount(selfie: StepStatus.inReview)),
       );
       await settle(tester);
-      expect(find.text('We are checking your photo'), findsOneWidget);
+      expect(find.text('A person is checking your photos'), findsOneWidget);
       expect(find.text('Sign out'), findsOneWidget);
     });
 
@@ -262,6 +284,7 @@ void main() {
     await pumpFullApp(tester, backend: backend);
     expect(find.byType(RulesScreen), findsOneWidget);
 
+    await _enterBirthDate(tester, '01/15/2000');
     await _tap(tester, find.byType(Checkbox));
     await _tapText(tester, 'I agree, continue');
     expect(find.byType(VerificationScreen), findsOneWidget);

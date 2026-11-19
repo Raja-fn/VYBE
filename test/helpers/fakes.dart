@@ -4,11 +4,13 @@ import 'dart:typed_data';
 import 'package:vybe/core/backend/callable_client.dart';
 import 'package:vybe/core/backend/file_storage.dart';
 import 'package:vybe/core/location/location_service.dart';
+import 'package:vybe/core/push/push_notifications.dart';
 import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
 import 'package:vybe/core/services/image_capture/image_capture_service.dart';
 import 'package:vybe/core/services/image_capture/photo_picker_service.dart';
 import 'package:vybe/core/utils/app_failure.dart';
 import 'package:vybe/core/utils/result.dart';
+import 'package:vybe/core/widgets/legal_links.dart';
 import 'package:vybe/features/booking/data/booking_repository.dart';
 import 'package:vybe/features/booking/domain/booking_models.dart';
 import 'package:vybe/features/chat/data/chat_repository.dart';
@@ -165,15 +167,17 @@ class FakeAccountRepository implements AccountRepository {
   final LiveValue<Account?> account;
   AppFailure? acceptFailure;
   final List<int> acceptedVersions = [];
+  final List<DateTime> birthDates = [];
 
   @override
   Stream<Account?> watchAccount(String uid) => account.stream();
 
   @override
-  Future<Result<void>> acceptRules({required int rulesVersion}) async {
+  Future<Result<void>> acceptRules({required int rulesVersion, required DateTime dateOfBirth}) async {
     final failure = acceptFailure;
     if (failure != null) return Err(failure);
     acceptedVersions.add(rulesVersion);
+    birthDates.add(dateOfBirth);
     account.value ??= testAccount();
     return const Ok(null);
   }
@@ -888,3 +892,43 @@ Reel testReel(
   createdAt: DateTime(2026, 11, 17),
   isMine: isMine,
 );
+
+/// Notifications on a phone that allows them, without Firebase.
+class FakePushClient implements PushClient {
+  bool allowed = true;
+  String? currentToken = 'test-push-token';
+  String? startRoute;
+  final refreshes = StreamController<String>.broadcast();
+  final opened = StreamController<String>.broadcast();
+  int permissionRequests = 0;
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return allowed;
+  }
+
+  @override
+  Future<String?> token() async => currentToken;
+
+  @override
+  Stream<String> get tokenRefresh => refreshes.stream;
+
+  @override
+  Stream<String> get openedRoutes => opened.stream;
+
+  @override
+  Future<String?> initialRoute() async => startRoute;
+}
+
+/// Records links instead of opening them.
+class FakeLinkOpener implements LinkOpener {
+  bool opens = true;
+  final List<Uri> opened = [];
+
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return opens;
+  }
+}

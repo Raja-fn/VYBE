@@ -3,7 +3,7 @@
 Everything in the code is ready for the first production release:
 - a separate production Supabase project;
 - real Google Play payments, checked by the server;
-- auto-approved ID checks (owner decision, see below);
+- a person on the team reviews every new member's selfie and ID (see below);
 - a release signing key, a VYBE icon and splash screen, and version 1.0.0.
 
 What's left needs your accounts. Do the steps in order. Never paste secrets
@@ -13,12 +13,13 @@ What's left needs your accounts. Do the steps in order. Never paste secrets
 
 | Topic | Launch behaviour | Later |
 |---|---|---|
-| Selfie and ID checks | **Approved automatically.** Every account gets the same placeholder date of birth (age 26), so ages on profiles are not real. | Connect a provider (HyperVerge, IDfy, Digio) to read real ages. |
+| Selfie and ID checks | **Reviewed by a person.** People type their date of birth at sign-up (under 18 is refused). A reviewer compares selfie, ID and date of birth in `admin/review.html` and approves or rejects. Ages on profiles come from the reviewed date of birth. | Connect a provider (HyperVerge, IDfy, Digio) to check automatically. |
 | Payments | Real Google Play Billing: credit packs and Plus/Premium plans, verified by the server. Refunds take credits back. | — |
 | Booking a meetup | **Free**, no credits (client decision). Credits are only used to start a new chat. | Set `creditCostBookSpot` / `creditCostInstantRequest` in app_config overrides to charge again. |
 | Venue "Hot / Busy" | No data source yet: every venue shows as quiet, and spots are ranked by distance. | Connect a popularity source. |
 | Companion earnings and payouts | Not offered. | Needs a payout provider. |
 | Phone OTP | Off (Google sign-in only). | See `docs/supabase-setup.md`. |
+| Notifications | Booking requests, answers, cancellations, new chats and messages, and the verification result. Needs `FINDX_FCM_SERVICE_ACCOUNT_JSON` (step 1.8); without it nothing is sent and the app still works. | — |
 | SOS number | Calls **112** (works in India, the EU and many other countries). | Set `emergencyNumber` in app_config overrides per country. |
 
 ## 1. The Supabase project (live)
@@ -67,6 +68,42 @@ Still to do:
    and delete its file in Storage → `reels`. Google Play requires that
    reported content is reviewed.
 
+8. **Launch requirements update (20 Nov): manual review, notifications,
+   legal links.** Apply the new code the usual way (item 4's three commands;
+   there is no new migration this time, so `db push` just says it is up to
+   date). Then set two secrets. Run each line on its own in PowerShell:
+   ```powershell
+   npx supabase secrets set --project-ref stgfjguoytqzmliurbvp FINDX_ADMIN_SECRET=<a long random text, 40+ letters and digits>
+   $key = [Convert]::ToBase64String([IO.File]::ReadAllBytes("firebase-service-account.json"))
+   npx supabase secrets set --project-ref stgfjguoytqzmliurbvp FINDX_FCM_SERVICE_ACCOUNT_JSON=$key
+   npx supabase secrets unset --project-ref stgfjguoytqzmliurbvp FINDX_IDENTITY_AUTO_APPROVE
+   ```
+   (The key is passed as base64 because PowerShell breaks the quotes in
+   JSON; the server accepts either form.)
+   - The Firebase key: Firebase console → project `findx-dev-b5f6b` →
+     Project settings → Service accounts → **Generate new private key**. Save
+     it as `firebase-service-account.json` in the project folder, run the
+     command, then **delete the file** (it is a password).
+   - The last line removes the old auto-approve switch (it does nothing any
+     more).
+   - Keep the admin secret in your password manager.
+9. **Review new members every day.** Open `admin/review.html` from the
+   project folder in a browser (double-click it), paste the admin secret and
+   click **Load waiting members**. For each person: same face in selfie, ID
+   and profile photo? Date of birth matches the ID (fix it if not)? Then
+   **Approve**, **Reject selfie** or **Reject ID**. They get a notification.
+   Never copy ID numbers anywhere.
+10. **Grievance Officer.** Choose the person, then in Table Editor →
+    app_config → overrides add `"grievanceOfficerName": "<their name>"` and,
+    if different from the support email, `"grievanceOfficerEmail": "<email>"`.
+    Put the same name in `site/privacy.html` and `site/terms.html` (they say
+    "VYBE Grievance Officer" now).
+11. **Publish the updated website** (privacy policy and terms now cover
+    reels, meetups, the Safety Hub, notifications and the Grievance Officer):
+    ```sh
+    npx firebase-tools deploy --only hosting --project findx-dev-b5f6b
+    ```
+
 ## 2. Google Play Console
 
 1. Create a developer account at https://play.google.com/console. It costs
@@ -97,8 +134,9 @@ Still to do:
 4. Store the key as a server secret. Run this in your own terminal; the file
    never goes into the project:
 
-```sh
-npx supabase secrets set --project-ref <prod ref> GOOGLE_PLAY_SERVICE_ACCOUNT_JSON="$(cat path/to/key.json)"
+```powershell
+$key = [Convert]::ToBase64String([IO.File]::ReadAllBytes("play-key.json"))
+npx supabase secrets set --project-ref stgfjguoytqzmliurbvp GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=$key
 ```
 
 Until this secret exists, the production server refuses every purchase

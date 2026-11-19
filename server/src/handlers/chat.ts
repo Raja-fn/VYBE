@@ -7,6 +7,7 @@ import { appError, ErrorCodes } from '../shared/errorCodes';
 import { visibleCompanion } from './booking';
 import { bumpUnread, chatIdFor } from './chatCards';
 import type { Deps } from './deps';
+import { notify } from './push';
 
 export async function isBlockedEitherWay(sql: Sql, a: string, b: string): Promise<boolean> {
   const rows = await sql`
@@ -34,7 +35,7 @@ export async function startChatLogic(
   const cost = config.creditCostStartChat;
   const now = deps.now();
 
-  return sql.begin(async (tx) => {
+  const result = await sql.begin(async (tx) => {
     const people = await tx<{ id: string; display_name: string | null }[]>`
       select id, display_name from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [account] = await tx<{ balance: number }[]>`select balance from credit_accounts where uid = ${caller.uid} for update`;
@@ -69,8 +70,18 @@ export async function startChatLogic(
     await tx`
       insert into messages (chat_id, id, sender_uid, type, system_kind, credits, text, created_at)
       values (${chatId}, 'start', null, 'system', 'chat_started', ${cost}, null, ${now})`;
-    return { chatId, charged: true, balance: after };
+    return { chatId, charged: true, balance: after, myName: name(caller.uid) };
   });
+  if ('myName' in result) {
+    const { myName, ...reply } = result;
+    await notify(deps, companion.uid, {
+      title: myName || 'VYBE',
+      body: 'Started a chat with you. Say hi!',
+      route: `/chat/${chatId}`,
+    });
+    return reply;
+  }
+  return result;
 }
 
 // ---------- sendMessage ----------
@@ -156,16 +167,22 @@ export async function sendMessageLogic(
   const messageId = `${caller.uid}_${input.clientId}`;
   const now = deps.now();
   const last = { type: 'text', text, senderUid: caller.uid, at: now.toISOString() };
-  await sql.begin(async (tx) => {
+  const posted = await sql.begin(async (tx) => {
     const inserted = await tx`
       insert into messages (chat_id, id, sender_uid, type, text, created_at)
       values (${input.chatId}, ${messageId}, ${caller.uid}, 'text', ${text}, ${now})
       on conflict do nothing returning id`;
-    if (inserted.length === 0) return;
+    if (inserted.length === 0) return false;
     await tx`
       update chats set last_message = ${tx.json(last)}, last_message_at = ${now}, unread = ${bumpUnread(tx, other)}
       where id = ${input.chatId}`;
+    return true;
   });
+  if (posted) {
+    // The text itself stays off the lock screen.
+    const [me] = await sql<{ display_name: string | null }[]>`select display_name from users where id = ${caller.uid}`;
+    await notify(deps, other, { title: me?.display_name || 'VYBE', body: 'Sent you a message.', route: `/chat/${input.chatId}` });
+  }
   return { messageId };
 }
 

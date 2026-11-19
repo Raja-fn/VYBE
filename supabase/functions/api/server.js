@@ -108,6 +108,27 @@ var FakeIdentityVerificationService = class {
   }
 };
 
+// src/services/identity/manualReviewIdentityService.ts
+var PREFIX2 = "manual";
+var ManualReviewIdentityService = class {
+  constructor(options) {
+    this.options = options;
+  }
+  name = "manual";
+  async createSession(uid, step) {
+    const now = this.options.now?.() ?? /* @__PURE__ */ new Date();
+    const providerRef = [PREFIX2, uid, step, now.getTime().toString(36)].join(":");
+    return { providerRef, step, expiresAt: new Date(now.getTime() + this.options.sessionMinutes * 6e4) };
+  }
+  async getResult(providerRef) {
+    const [prefix, , step] = providerRef.split(":");
+    if (prefix !== PREFIX2 || step !== "selfie" && step !== "government_id") {
+      throw new Error(`Unknown verification session ${providerRef}`);
+    }
+    return { providerRef, step, decision: step === "selfie" ? "approved" : "pending" };
+  }
+};
+
 // src/services/moderation/fakeModerationService.ts
 var FakeModerationService = class {
   terms;
@@ -207,9 +228,7 @@ function sameSecret(a, b) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-// src/services/purchases/googlePlayPurchaseVerificationService.ts
-var API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications";
-var SCOPE = "https://www.googleapis.com/auth/androidpublisher";
+// src/services/google/serviceAccountToken.ts
 var base64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 var base64urlJson = (value) => base64url(new TextEncoder().encode(JSON.stringify(value)));
 async function importKey(pem) {
@@ -217,32 +236,29 @@ async function importKey(pem) {
   const der = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
   return crypto.subtle.importKey("pkcs8", der, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
 }
-var ACTIVE_STATES = /* @__PURE__ */ new Set(["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", "SUBSCRIPTION_STATE_CANCELED"]);
-var GooglePlayPurchaseVerificationService = class {
-  constructor(options) {
-    this.options = options;
-    this.fetchFn = options.fetchFn ?? fetch;
-    this.now = options.now ?? (() => /* @__PURE__ */ new Date());
+var ServiceAccountToken = class {
+  constructor(account, scope, fetchFn = fetch, now = () => /* @__PURE__ */ new Date(), purpose = "Google") {
+    this.account = account;
+    this.scope = scope;
+    this.fetchFn = fetchFn;
+    this.now = now;
+    this.purpose = purpose;
   }
   token;
   key;
-  fetchFn;
-  now;
-  /** An OAuth access token for the service account (cached until shortly before it expires). */
-  async accessToken() {
+  async get() {
     const nowMs = this.now().getTime();
     if (this.token && this.token.expiresAt - 6e4 > nowMs) return this.token.value;
-    const account = this.options.serviceAccount;
-    const tokenUri = account.token_uri ?? "https://oauth2.googleapis.com/token";
+    const tokenUri = this.account.token_uri ?? "https://oauth2.googleapis.com/token";
     const iat = Math.floor(nowMs / 1e3);
     const unsigned = `${base64urlJson({ alg: "RS256", typ: "JWT" })}.${base64urlJson({
-      iss: account.client_email,
-      scope: SCOPE,
+      iss: this.account.client_email,
+      scope: this.scope,
       aud: tokenUri,
       iat,
       exp: iat + 3600
     })}`;
-    this.key ??= importKey(account.private_key);
+    this.key ??= importKey(this.account.private_key);
     const signature = new Uint8Array(
       await crypto.subtle.sign("RSASSA-PKCS1-v1_5", await this.key, new TextEncoder().encode(unsigned))
     );
@@ -254,10 +270,30 @@ var GooglePlayPurchaseVerificationService = class {
         assertion: `${unsigned}.${base64url(signature)}`
       }).toString()
     });
-    if (!response.ok) throw new Error(`Google sign-in for Play checks failed: HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`Google sign-in for ${this.purpose} failed: HTTP ${response.status}`);
     const json3 = await response.json();
     this.token = { value: json3.access_token, expiresAt: nowMs + json3.expires_in * 1e3 };
     return json3.access_token;
+  }
+};
+
+// src/services/purchases/googlePlayPurchaseVerificationService.ts
+var API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications";
+var SCOPE = "https://www.googleapis.com/auth/androidpublisher";
+var ACTIVE_STATES = /* @__PURE__ */ new Set(["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", "SUBSCRIPTION_STATE_CANCELED"]);
+var GooglePlayPurchaseVerificationService = class {
+  constructor(options) {
+    this.options = options;
+    this.fetchFn = options.fetchFn ?? fetch;
+    this.now = options.now ?? (() => /* @__PURE__ */ new Date());
+    this.token = new ServiceAccountToken(options.serviceAccount, SCOPE, this.fetchFn, this.now, "Play checks");
+  }
+  token;
+  fetchFn;
+  now;
+  /** An OAuth access token for the service account (cached until shortly before it expires). */
+  accessToken() {
+    return this.token.get();
   }
   async get(path) {
     const response = await this.fetchFn(`${API}/${encodeURIComponent(this.options.packageName)}/${path}`, {
@@ -332,6 +368,61 @@ var NoPublicPlaces = class {
   }
 };
 
+// src/services/push/fcmPushService.ts
+var FcmPushService = class {
+  constructor(options) {
+    this.options = options;
+    this.fetchFn = options.fetchFn ?? fetch;
+    this.token = new ServiceAccountToken(
+      options.serviceAccount,
+      "https://www.googleapis.com/auth/firebase.messaging",
+      this.fetchFn,
+      options.now,
+      "notifications"
+    );
+  }
+  token;
+  fetchFn;
+  async send(tokens, message) {
+    if (tokens.length === 0) return { invalidTokens: [] };
+    const access = await this.token.get();
+    const url2 = `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(this.options.serviceAccount.project_id)}/messages:send`;
+    const results = await Promise.all(
+      tokens.map(async (token) => {
+        const response = await this.fetchFn(url2, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${access}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: {
+              token,
+              notification: { title: message.title, body: message.body },
+              data: { route: message.route },
+              android: { priority: "high" }
+            }
+          })
+        });
+        return response.status === 404 || response.status === 400 ? token : null;
+      })
+    );
+    return { invalidTokens: results.filter((t) => t !== null) };
+  }
+};
+
+// src/services/push/pushService.ts
+var NoPush = class {
+  async send() {
+    return { invalidTokens: [] };
+  }
+};
+var FakePushService = class {
+  sent = [];
+  invalid = /* @__PURE__ */ new Set();
+  async send(tokens, message) {
+    this.sent.push({ tokens: [...tokens], message });
+    return { invalidTokens: tokens.filter((t) => this.invalid.has(t)) };
+  }
+};
+
 // src/services/seedIds.ts
 import { createHash } from "node:crypto";
 function seedUid(name) {
@@ -358,10 +449,10 @@ var ProviderNotConfiguredError = class extends Error {
 };
 function productionSettingsFromEnv() {
   return {
-    identityAutoApprove: env("FINDX_IDENTITY_AUTO_APPROVE") === "true",
     playPackageName: env("GOOGLE_PLAY_PACKAGE"),
     playServiceAccountJson: env("GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"),
-    playNotificationSecret: env("FINDX_PLAY_NOTIFICATION_SECRET")
+    playNotificationSecret: env("FINDX_PLAY_NOTIFICATION_SECRET"),
+    fcmServiceAccountJson: env("FINDX_FCM_SERVICE_ACCOUNT_JSON")
   };
 }
 var NoPopularityData = class {
@@ -385,12 +476,8 @@ function productIds(config2) {
 }
 function createServices(config2, useFakes = fakeServicesAllowed(), production = productionSettingsFromEnv()) {
   if (useFakes) return fakeServices(config2);
-  if (!production.identityAutoApprove) throw new ProviderNotConfiguredError("identity");
   return {
-    identity: new FakeIdentityVerificationService({
-      sessionMinutes: config2.verificationSessionMinutes,
-      dateOfBirthFor: fakeDateOfBirthFor
-    }),
+    identity: new ManualReviewIdentityService({ sessionMinutes: config2.verificationSessionMinutes }),
     payout: new PayoutsNotAvailable(),
     moderation: new FakeModerationService([]),
     places: new NoPopularityData(),
@@ -398,8 +485,24 @@ function createServices(config2, useFakes = fakeServicesAllowed(), production = 
     // Public places are imported in bulk from the OpenStreetMap India file (server/scripts/import-places.ts):
     // the free public Overpass servers do not allow app traffic. A self-hosted Overpass can be
     // plugged in here later with new OpenStreetMapPlaces({ endpoints: [...] }).
-    publicPlaces: new NoPublicPlaces()
+    publicPlaces: new NoPublicPlaces(),
+    push: firebasePush(production)
   };
+}
+function parseServiceAccountSecret(value) {
+  const text = value.trim().startsWith("{") ? value : new TextDecoder().decode(Uint8Array.from(atob(value.trim()), (c) => c.charCodeAt(0)));
+  return JSON.parse(text);
+}
+function firebasePush(production) {
+  if (!production.fcmServiceAccountJson) return new NoPush();
+  try {
+    const account = parseServiceAccountSecret(production.fcmServiceAccountJson);
+    if (!account.project_id || !account.client_email || !account.private_key) return new NoPush();
+    return new FcmPushService({ serviceAccount: { ...account, project_id: account.project_id } });
+  } catch {
+    console.error("FINDX_FCM_SERVICE_ACCOUNT_JSON is not valid JSON (or base64 JSON); notifications are off.");
+    return new NoPush();
+  }
 }
 function googlePlay(config2, production) {
   let reason = "";
@@ -408,7 +511,7 @@ function googlePlay(config2, production) {
     reason = "purchases (Google Play keys are not set)";
   } else {
     try {
-      serviceAccount = JSON.parse(production.playServiceAccountJson);
+      serviceAccount = parseServiceAccountSecret(production.playServiceAccountJson);
     } catch {
       reason = "purchases (GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is not valid JSON)";
     }
@@ -440,7 +543,8 @@ function fakeServices(config2) {
       ...productIds(config2),
       subscriptionPeriodDays: config2.subscriptionPeriodDays
     }),
-    publicPlaces: new NoPublicPlaces()
+    publicPlaces: new NoPublicPlaces(),
+    push: new FakePushService()
   };
 }
 
@@ -20299,6 +20403,11 @@ var app_config_defaults_default = {
   safetyMissedCheckInsToEscalate: 1,
   sosHoldSeconds: 3,
   emergencyNumber: "112",
+  privacyPolicyUrl: "https://findx-dev-b5f6b.web.app/privacy",
+  termsUrl: "https://findx-dev-b5f6b.web.app/terms",
+  supportEmail: "rk7033688851@gmail.com",
+  grievanceOfficerName: "",
+  grievanceOfficerEmail: "rk7033688851@gmail.com",
   autoCompleteGraceMinutes: 30,
   moderationStrikesForReport: 3,
   moderationStrikeWindowHours: 24,
@@ -20395,6 +20504,12 @@ var appConfigSchema = external_exports.object({
   sosHoldSeconds: external_exports.number().int().positive(),
   /** Dialled by the SOS button (112 works in India, the EU and many other countries). */
   emergencyNumber: external_exports.string().regex(/^[0-9]{2,6}$/),
+  privacyPolicyUrl: external_exports.string().url(),
+  termsUrl: external_exports.string().url(),
+  supportEmail: external_exports.string().email(),
+  /** Grievance Officer (India IT Rules 2021); set before launch. */
+  grievanceOfficerName: external_exports.string(),
+  grievanceOfficerEmail: external_exports.string().email(),
   autoCompleteGraceMinutes: external_exports.number().int().nonnegative(),
   moderationStrikesForReport: external_exports.number().int().positive(),
   moderationStrikeWindowHours: external_exports.number().int().positive(),
@@ -20457,7 +20572,8 @@ var ErrorCodes = {
   purchaseInvalid: "purchase_invalid",
   otpWrong: "otp_wrong",
   otpExpired: "otp_expired",
-  otpSendFailed: "otp_send_failed"
+  otpSendFailed: "otp_send_failed",
+  underage: "underage"
 };
 var httpStatusFor = {
   "invalid-argument": 400,
@@ -20483,7 +20599,8 @@ var statusFor = {
   purchase_invalid: "failed-precondition",
   otp_wrong: "invalid-argument",
   otp_expired: "failed-precondition",
-  otp_send_failed: "unavailable"
+  otp_send_failed: "unavailable",
+  underage: "failed-precondition"
 };
 var AppError = class extends Error {
   constructor(status, message, code = null) {
@@ -20712,6 +20829,56 @@ async function postBookingCard(sql2, booking, now) {
         unread = ${bumpUnread(tx, booking.companionUid)}
       where id = ${chatId}`;
   });
+}
+
+// src/handlers/push.ts
+var push_exports = {};
+__export(push_exports, {
+  notify: () => notify,
+  registerPushTokenInput: () => registerPushTokenInput,
+  registerPushTokenLogic: () => registerPushTokenLogic,
+  unregisterPushTokenInput: () => unregisterPushTokenInput,
+  unregisterPushTokenLogic: () => unregisterPushTokenLogic
+});
+var MAX_TOKENS = 5;
+async function notify(deps, uid, message) {
+  try {
+    const [row] = await deps.sql`select fcm_tokens from private_profiles where id = ${uid}`;
+    const tokens = row?.fcm_tokens ?? [];
+    if (tokens.length === 0) return;
+    const { invalidTokens } = await deps.services.push.send(tokens, message);
+    if (invalidTokens.length > 0) {
+      await deps.sql`
+        update private_profiles
+        set fcm_tokens = array(select t from unnest(fcm_tokens) as t where not t = any(${invalidTokens}::text[]))
+        where id = ${uid}`;
+    }
+  } catch (error62) {
+    console.error("notify failed", error62 instanceof Error ? error62.message : String(error62));
+  }
+}
+var tokenSchema = external_exports.string().min(10).max(4096);
+var registerPushTokenInput = external_exports.object({ token: tokenSchema });
+async function registerPushTokenLogic(deps, caller, input2) {
+  await deps.sql.begin(async (tx) => {
+    await tx`
+      update private_profiles set fcm_tokens = array_remove(fcm_tokens, ${input2.token})
+      where ${input2.token} = any(fcm_tokens) and id <> ${caller.uid}`;
+    await tx`
+      update private_profiles set fcm_tokens = (
+        select coalesce(array_agg(t order by ord), '{}') from (
+          select t, ord from unnest(array_append(array_remove(fcm_tokens, ${input2.token}), ${input2.token}))
+            with ordinality as u(t, ord)
+          order by ord desc limit ${MAX_TOKENS}
+        ) latest)
+      where id = ${caller.uid}`;
+  });
+  return { registered: true };
+}
+var unregisterPushTokenInput = external_exports.object({ token: tokenSchema });
+async function unregisterPushTokenLogic(deps, caller, input2) {
+  await deps.sql`update private_profiles set fcm_tokens = array_remove(fcm_tokens, ${input2.token}) where id = ${caller.uid}`;
+  return { registered: false };
 }
 
 // src/handlers/discovery.ts
@@ -21454,9 +21621,14 @@ async function requestBookingLogic(deps, caller, input2) {
         ${them?.display_name ?? ""}, ${companion.ageYears}, ${venue.venueId}, ${venue.name}, ${venue.category},
         ${venue.ownerUid}, ${input2.slotId}, ${slot.day_key}, ${span.startAt}, ${span.endAt}, ${input2.planType},
         ${input2.kind}, 'requested', null, ${cost}, ${ledgerId}, ${[caller.uid, companion.uid]}::uuid[], null, ${now}, ${now})`;
-    return { balance: after, startAt: span.startAt };
+    return { balance: after, startAt: span.startAt, seekerName: me?.display_name ?? "" };
   });
   if (!result) return { bookingId, balance: await balanceOf(sql2, caller.uid) };
+  await notify(deps, companion.uid, {
+    title: "New meetup request",
+    body: `${result.seekerName || "Someone"} wants to meet you at ${venue.name}.`,
+    route: "/bookings"
+  });
   await postBookingCard(
     sql2,
     {
@@ -21481,7 +21653,8 @@ async function releaseSlot(tx, venueId, slotId) {
 }
 async function lockBooking(tx, bookingId, uid) {
   const [booking] = await tx`
-    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids
+    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids,
+      seeker_name, companion_name, venue_name
     from bookings where id = ${bookingId} for update`;
   if (!booking || booking.seeker_uid !== uid && booking.companion_uid !== uid) {
     throw appError(ErrorCodes.notFound, "Booking not found.");
@@ -21490,17 +21663,24 @@ async function lockBooking(tx, bookingId, uid) {
 }
 async function cancelBookingLogic(deps, caller, input2) {
   const now = deps.now();
-  await deps.sql.begin(async (tx) => {
-    const booking = await lockBooking(tx, input2.bookingId, caller.uid);
-    if (!canCancel(booking.status, booking.start_at, now)) {
+  const booking = await deps.sql.begin(async (tx) => {
+    const booking2 = await lockBooking(tx, input2.bookingId, caller.uid);
+    if (!canCancel(booking2.status, booking2.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, "This booking can no longer be cancelled.");
     }
-    await releaseSlot(tx, booking.venue_id, booking.slot_id);
-    const reason = booking.seeker_uid === caller.uid ? "seeker_cancelled" : "companion_cancelled";
+    await releaseSlot(tx, booking2.venue_id, booking2.slot_id);
+    const reason = booking2.seeker_uid === caller.uid ? "seeker_cancelled" : "companion_cancelled";
     await tx`
       update bookings set status = 'cancelled', status_reason = ${reason}, cancelled_by = ${caller.uid},
         updated_at = ${now}
       where id = ${input2.bookingId}`;
+    return booking2;
+  });
+  const iAmSeeker = booking.seeker_uid === caller.uid;
+  await notify(deps, iAmSeeker ? booking.companion_uid : booking.seeker_uid, {
+    title: "Meetup cancelled",
+    body: `${(iAmSeeker ? booking.seeker_name : booking.companion_name) || "They"} cancelled your meetup at ${booking.venue_name}.`,
+    route: "/bookings"
   });
   return { status: "cancelled" };
 }
@@ -21508,10 +21688,10 @@ var respondBookingInput = external_exports.object({ bookingId: external_exports.
 async function respondBookingLogic(deps, caller, input2) {
   const now = deps.now();
   const target = input2.accept ? "accepted" : "declined";
-  await deps.sql.begin(async (tx) => {
+  const answered = await deps.sql.begin(async (tx) => {
     const booking = await lockBooking(tx, input2.bookingId, caller.uid);
     if (booking.companion_uid !== caller.uid) throw appError(ErrorCodes.notFound, "Booking not found.");
-    if (booking.status === target) return;
+    if (booking.status === target) return null;
     if (!canRespond(booking.status, booking.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, "This request can no longer be answered.");
     }
@@ -21520,7 +21700,16 @@ async function respondBookingLogic(deps, caller, input2) {
       update bookings set status = ${target}, status_reason = ${input2.accept ? null : "companion_declined"},
         updated_at = ${now}
       where id = ${input2.bookingId}`;
+    return booking;
   });
+  if (answered) {
+    const name = answered.companion_name || "They";
+    await notify(
+      deps,
+      answered.seeker_uid,
+      input2.accept ? { title: "Meetup confirmed", body: `${name} said yes. See you at ${answered.venue_name}!`, route: "/bookings" } : { title: "Request declined", body: `${name} can't make it this time.`, route: "/bookings" }
+    );
+  }
   return { status: target };
 }
 var checkInBookingInput = external_exports.object({ bookingId: external_exports.string().min(1) });
@@ -21607,6 +21796,355 @@ async function deleteAccountLogic(deps, caller) {
   }
   await deps.authAdmin.deleteUser(caller.uid);
   return { deleted: true };
+}
+
+// src/handlers/admin.ts
+var admin_exports = {};
+__export(admin_exports, {
+  adminDecideVerificationInput: () => adminDecideVerificationInput,
+  adminDecideVerificationLogic: () => adminDecideVerificationLogic,
+  adminReviewQueueInput: () => adminReviewQueueInput,
+  adminReviewQueueLogic: () => adminReviewQueueLogic
+});
+
+// src/domain/verification.ts
+var INITIAL_STEPS = {
+  phone: "approved",
+  selfie: "not_started",
+  id: "not_started"
+};
+function overallStatus(steps, permanentlyRejected) {
+  if (permanentlyRejected) return "rejected";
+  if (steps.phone === "approved" && steps.selfie === "approved" && steps.id === "approved") return "approved";
+  return "pending";
+}
+function canStartStep(steps, step, permanentlyRejected) {
+  if (permanentlyRejected) return false;
+  if (steps[step] === "approved" || steps[step] === "in_review") return false;
+  if (step === "id") return steps.selfie === "approved";
+  return steps.phone === "approved";
+}
+function ageOn(dateOfBirth, on) {
+  const [y, m, d] = dateOfBirth.split("-").map(Number);
+  let age = on.getUTCFullYear() - y;
+  if (on.getUTCMonth() + 1 < m || on.getUTCMonth() + 1 === m && on.getUTCDate() < d) age -= 1;
+  return age;
+}
+
+// src/shared/db.ts
+var asJson = (value) => value;
+
+// src/handlers/onboarding.ts
+var onboarding_exports = {};
+__export(onboarding_exports, {
+  UNDERAGE_REASON: () => UNDERAGE_REASON,
+  acceptRulesInput: () => acceptRulesInput,
+  acceptRulesLogic: () => acceptRulesLogic,
+  startVerificationInput: () => startVerificationInput,
+  startVerificationLogic: () => startVerificationLogic,
+  submitVerificationInput: () => submitVerificationInput,
+  submitVerificationLogic: () => submitVerificationLogic
+});
+
+// src/handlers/deps.ts
+function splitStoragePath(path) {
+  const slash = path.indexOf("/");
+  return { bucket: path.slice(0, slash), name: path.slice(slash + 1) };
+}
+async function storageFileExists(sql2, path) {
+  const { bucket, name } = splitStoragePath(path);
+  const rows = await sql2`select 1 from storage.objects where bucket_id = ${bucket} and name = ${name} limit 1`;
+  return rows.length > 0;
+}
+
+// src/handlers/onboarding.ts
+var UNDERAGE_REASON = "underage";
+var acceptRulesInput = external_exports.object({
+  rulesVersion: external_exports.number().int(),
+  ageConfirmed: external_exports.literal(true),
+  /** yyyy-MM-dd, typed by the person. Checked against their ID by a reviewer. */
+  dateOfBirth: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+});
+function validBirthDate(value, now) {
+  const date5 = /* @__PURE__ */ new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date5.getTime()) && date5.toISOString().slice(0, 10) === value && date5.getTime() <= now.getTime();
+}
+async function acceptRulesLogic(deps, caller, input2) {
+  if (!caller.phoneNumber && !caller.verifiedEmail) {
+    throw appError(ErrorCodes.invalidInput, "Sign in with Google or a verified phone number first.");
+  }
+  if (input2.rulesVersion !== deps.config.rulesVersion) {
+    throw appError(ErrorCodes.invalidInput, "Please review the latest rules.");
+  }
+  const { config: config2 } = deps;
+  const now = deps.now();
+  if (!validBirthDate(input2.dateOfBirth, now) || ageOn(input2.dateOfBirth, now) > 120) {
+    throw appError(ErrorCodes.invalidInput, "Enter your real date of birth.");
+  }
+  if (ageOn(input2.dateOfBirth, now) < config2.ageMinimum) {
+    throw appError(ErrorCodes.underage, `VYBE is only for people aged ${config2.ageMinimum} or older.`);
+  }
+  const consent = { rulesVersion: input2.rulesVersion, ageConfirmed: true, acceptedAt: now.toISOString() };
+  const uid = caller.uid;
+  return deps.sql.begin(async (tx) => {
+    const inserted = await tx`
+      insert into users (id, account_type, display_name, photo_paths, active_mode, consent, verification_status,
+        verification_steps, verification_reason, age_years, account_status, created_at, updated_at)
+      values (${uid}, 'member', null, '{}', 'seeker', ${tx.json(consent)}, 'pending',
+        ${tx.json(asJson(INITIAL_STEPS))}, null, null, 'active', ${now}, ${now})
+      on conflict (id) do nothing
+      returning id`;
+    if (inserted.length === 0) {
+      const [user] = await tx`select account_status from users where id = ${uid} for update`;
+      if (user.account_status === "banned") throw appError(ErrorCodes.blocked, "This account is suspended.");
+      await tx`update users set consent = ${tx.json(consent)}, updated_at = ${now} where id = ${uid}`;
+      await tx`update private_profiles set date_of_birth = ${input2.dateOfBirth} where id = ${uid} and date_of_birth is null`;
+      return { created: false };
+    }
+    await tx`
+      insert into private_profiles (id, phone_e164, email, date_of_birth)
+      values (${uid}, ${caller.phoneNumber ?? null}, ${caller.verifiedEmail ?? null}, ${input2.dateOfBirth})`;
+    await tx`insert into credit_accounts (uid, balance, updated_at) values (${uid}, ${config2.signupBonusCredits}, ${now})`;
+    await tx`
+      insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
+      values (${`signup_${uid}`}, ${uid}, ${config2.signupBonusCredits}, ${config2.signupBonusCredits}, 'signup_bonus',
+        'user', ${uid}, ${`signup_${uid}`}, ${now})`;
+    await tx`
+      insert into subscriptions (uid, tier, status, auto_renew, updated_at) values (${uid}, 'free', 'active', false, ${now})`;
+    return { created: true };
+  });
+}
+var startVerificationInput = external_exports.object({
+  step: external_exports.enum(["selfie", "id"]),
+  documentType: external_exports.enum(["aadhaar", "passport", "driving_licence"]).optional()
+});
+async function loadMember(deps, uid) {
+  const [user] = await deps.sql`
+    select verification_steps, verification_reason, account_status from users where id = ${uid}`;
+  if (!user) throw appError(ErrorCodes.notFound, "Accept the rules first.");
+  if (user.account_status === "banned") throw appError(ErrorCodes.blocked, "This account is suspended.");
+  return user;
+}
+async function startVerificationLogic(deps, caller, input2) {
+  if (input2.step === "id" && !input2.documentType) {
+    throw appError(ErrorCodes.invalidInput, "Choose an ID type.");
+  }
+  const user = await loadMember(deps, caller.uid);
+  const permanentlyRejected = user.verification_reason === UNDERAGE_REASON;
+  if (!canStartStep(user.verification_steps, input2.step, permanentlyRejected)) {
+    throw appError(ErrorCodes.invalidInput, "This step is not available right now.");
+  }
+  const identity = deps.services.identity;
+  const session = await identity.createSession(caller.uid, input2.step === "id" ? "government_id" : "selfie");
+  const sessionId = crypto.randomUUID();
+  const uploadPath = `verification/${caller.uid}/${sessionId}.jpg`;
+  await deps.sql`
+    insert into verification_sessions (id, uid, step, document_type, provider, provider_ref, status, upload_path,
+      created_at, expires_at)
+    values (${sessionId}, ${caller.uid}, ${input2.step}, ${input2.documentType ?? null}, ${identity.name},
+      ${session.providerRef}, 'awaiting_upload', ${uploadPath}, ${deps.now()}, ${session.expiresAt})`;
+  return { sessionId, uploadPath, expiresAt: session.expiresAt.toISOString() };
+}
+var submitVerificationInput = external_exports.object({ sessionId: uidSchema });
+async function submitVerificationLogic(deps, caller, input2) {
+  const { sql: sql2 } = deps;
+  const [session] = await sql2`
+    select uid, step, status, expires_at, upload_path, provider_ref
+    from verification_sessions where id = ${input2.sessionId}`;
+  if (!session || session.uid !== caller.uid) throw appError(ErrorCodes.notFound, "Unknown session.");
+  if (session.status !== "awaiting_upload") throw appError(ErrorCodes.invalidInput, "This session is already used.");
+  const now = deps.now();
+  if (session.expires_at.getTime() <= now.getTime()) {
+    throw appError(ErrorCodes.invalidInput, "This session expired. Start again.");
+  }
+  if (!await storageFileExists(sql2, session.upload_path)) throw appError(ErrorCodes.invalidInput, "Upload the photo first.");
+  const step = session.step;
+  const identity = deps.services.identity;
+  const result = await identity.getResult(session.provider_ref);
+  return sql2.begin(async (tx) => {
+    const [user] = await tx`
+      select verification_steps, verification_reason from users where id = ${caller.uid} for update`;
+    if (!user) throw appError(ErrorCodes.notFound, "Accept the rules first.");
+    const claimed = await tx`
+      update verification_sessions set status = 'deciding'
+      where id = ${input2.sessionId} and status = 'awaiting_upload' returning id`;
+    if (claimed.length === 0) throw appError(ErrorCodes.invalidInput, "This session is already used.");
+    const steps = { ...user.verification_steps };
+    let stepStatus;
+    let reason = null;
+    let ageYears = null;
+    let permanentlyRejected = user.verification_reason === UNDERAGE_REASON;
+    if (result.decision === "pending") {
+      stepStatus = "in_review";
+    } else if (result.decision === "rejected") {
+      stepStatus = "rejected";
+      reason = result.reason ?? "not_verified";
+    } else if (step === "id") {
+      const dob = result.dateOfBirth;
+      ageYears = dob ? ageOn(dob, now) : null;
+      if (ageYears === null) {
+        stepStatus = "rejected";
+        reason = "no_date_of_birth";
+      } else if (ageYears < deps.config.ageMinimum) {
+        stepStatus = "rejected";
+        reason = UNDERAGE_REASON;
+        permanentlyRejected = true;
+      } else {
+        stepStatus = "approved";
+      }
+    } else {
+      stepStatus = "approved";
+    }
+    steps[step] = stepStatus;
+    const verificationStatus = overallStatus(steps, permanentlyRejected);
+    const finalReason = permanentlyRejected ? UNDERAGE_REASON : reason;
+    const approvedAge = ageYears !== null && stepStatus === "approved" ? ageYears : null;
+    await tx`
+      update users set
+        verification_steps = ${tx.json(asJson(steps))},
+        verification_status = ${verificationStatus},
+        verification_reason = ${finalReason},
+        age_years = coalesce(${approvedAge}::int, age_years),
+        updated_at = ${now}
+      where id = ${caller.uid}`;
+    const idVerification = {
+      provider: identity.name,
+      providerRef: session.provider_ref,
+      status: stepStatus,
+      reviewedAt: now.toISOString()
+    };
+    const dateOfBirth = step === "id" && stepStatus === "approved" ? result.dateOfBirth ?? null : null;
+    await tx`
+      update private_profiles set
+        id_verification = ${tx.json(idVerification)},
+        date_of_birth = coalesce(${dateOfBirth}::text, date_of_birth)
+      where id = ${caller.uid}`;
+    await tx`update verification_sessions set status = ${stepStatus}, decided_at = ${now} where id = ${input2.sessionId}`;
+    return { step, stepStatus, verificationStatus, reason: finalReason };
+  });
+}
+
+// src/handlers/admin.ts
+var LINK_SECONDS = 15 * 60;
+var adminReviewQueueInput = external_exports.object({});
+async function adminReviewQueueLogic(deps) {
+  const now = deps.now();
+  const rows = await deps.sql`
+    select u.id, u.display_name, u.photo_paths, u.updated_at, p.email, p.phone_e164, p.date_of_birth
+    from users u join private_profiles p on p.id = u.id
+    where u.account_status = 'active' and u.verification_steps ->> 'id' = 'in_review'
+    order by u.updated_at
+    limit 50`;
+  const sign = async (path) => {
+    if (!path) return null;
+    try {
+      return await deps.signUrl(path, LINK_SECONDS);
+    } catch {
+      return null;
+    }
+  };
+  const items = await Promise.all(
+    rows.map(async (row) => {
+      const sessions = await deps.sql`
+        select step, upload_path, document_type from verification_sessions
+        where uid = ${row.id} and status in ('approved', 'in_review')
+        order by created_at desc`;
+      const selfie = sessions.find((s) => s.step === "selfie");
+      const id = sessions.find((s) => s.step === "id");
+      const [selfieUrl, idUrl, profilePhotoUrl] = await Promise.all([
+        sign(selfie?.upload_path),
+        sign(id?.upload_path),
+        sign(row.photo_paths?.[0])
+      ]);
+      return {
+        uid: row.id,
+        displayName: row.display_name ?? "",
+        email: row.email,
+        phone: row.phone_e164,
+        dateOfBirth: row.date_of_birth,
+        ageFromDateOfBirth: row.date_of_birth ? ageOn(row.date_of_birth, now) : null,
+        documentType: id?.document_type ?? null,
+        submittedAt: row.updated_at.toISOString(),
+        selfieUrl,
+        idUrl,
+        profilePhotoUrl
+      };
+    })
+  );
+  return { items };
+}
+var adminDecideVerificationInput = external_exports.object({
+  uid: uidSchema,
+  decision: external_exports.enum(["approve", "reject_selfie", "reject_id"]),
+  /** The date of birth on the ID, when it differs from what the person typed. */
+  dateOfBirth: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  note: external_exports.string().max(300).optional()
+});
+async function adminDecideVerificationLogic(deps, input2) {
+  const now = deps.now();
+  const outcome = await deps.sql.begin(async (tx) => {
+    const [user] = await tx`
+      select verification_steps from users where id = ${input2.uid} for update`;
+    if (!user) throw appError(ErrorCodes.notFound, "No such member.");
+    if (user.verification_steps.id !== "in_review") {
+      throw appError(ErrorCodes.invalidInput, "This member is not waiting for review (already decided?).");
+    }
+    const [privateRow] = await tx`
+      select date_of_birth from private_profiles where id = ${input2.uid}`;
+    const steps = { ...user.verification_steps };
+    let reason = null;
+    let ageYears = null;
+    let permanentlyRejected = false;
+    const dateOfBirth = input2.dateOfBirth ?? privateRow?.date_of_birth ?? null;
+    if (input2.decision === "approve") {
+      if (!dateOfBirth) throw appError(ErrorCodes.invalidInput, "Enter the date of birth from the ID.");
+      ageYears = ageOn(dateOfBirth, now);
+      if (ageYears < deps.config.ageMinimum) {
+        steps.id = "rejected";
+        reason = UNDERAGE_REASON;
+        permanentlyRejected = true;
+      } else {
+        steps.selfie = "approved";
+        steps.id = "approved";
+      }
+    } else if (input2.decision === "reject_selfie") {
+      steps.selfie = "rejected";
+      steps.id = "not_started";
+      reason = "selfie_rejected";
+    } else {
+      steps.id = "rejected";
+      reason = "id_rejected";
+    }
+    const verificationStatus = overallStatus(steps, permanentlyRejected);
+    await tx`
+      update users set
+        verification_steps = ${tx.json(asJson(steps))},
+        verification_status = ${verificationStatus},
+        verification_reason = ${reason},
+        age_years = coalesce(${verificationStatus === "approved" ? ageYears : null}::int, age_years),
+        updated_at = ${now}
+      where id = ${input2.uid}`;
+    await tx`
+      update private_profiles set
+        date_of_birth = coalesce(${dateOfBirth}::text, date_of_birth),
+        id_verification = ${tx.json({ provider: "manual", status: steps.id, reviewedAt: now.toISOString() })}
+      where id = ${input2.uid}`;
+    await tx`
+      update verification_sessions set status = ${steps.id === "approved" ? "approved" : "rejected"}, decided_at = ${now}
+      where uid = ${input2.uid} and status = 'in_review'`;
+    await tx`
+      insert into admin_audit (action, details, at)
+      values (${`verification_${input2.decision}`},
+        ${tx.json({ uid: input2.uid, dateOfBirth, note: input2.note ?? null, result: verificationStatus })}, ${now})`;
+    return { verificationStatus, reason };
+  });
+  const message = outcome.verificationStatus === "approved" ? { title: "You're verified", body: "Welcome to VYBE. Start exploring people near you.", route: "/discover" } : outcome.reason === UNDERAGE_REASON ? null : {
+    title: "Please retake your photo",
+    body: outcome.reason === "selfie_rejected" ? "We could not match your selfie. Take a new one in good light." : "We could not read your ID. Take a new, clear photo of it.",
+    route: "/onboarding/verify"
+  };
+  if (message) await notify(deps, input2.uid, message);
+  return { verificationStatus: outcome.verificationStatus };
 }
 
 // src/handlers/chat.ts
@@ -21727,7 +22265,7 @@ async function startChatLogic(deps, caller, input2) {
   const chatId = chatIdFor(caller.uid, companion.uid);
   const cost = config2.creditCostStartChat;
   const now = deps.now();
-  return sql2.begin(async (tx) => {
+  const result = await sql2.begin(async (tx) => {
     const people2 = await tx`
       select id, display_name from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [account] = await tx`select balance from credit_accounts where uid = ${caller.uid} for update`;
@@ -21761,8 +22299,18 @@ async function startChatLogic(deps, caller, input2) {
     await tx`
       insert into messages (chat_id, id, sender_uid, type, system_kind, credits, text, created_at)
       values (${chatId}, 'start', null, 'system', 'chat_started', ${cost}, null, ${now})`;
-    return { chatId, charged: true, balance: after };
+    return { chatId, charged: true, balance: after, myName: name(caller.uid) };
   });
+  if ("myName" in result) {
+    const { myName, ...reply } = result;
+    await notify(deps, companion.uid, {
+      title: myName || "VYBE",
+      body: "Started a chat with you. Say hi!",
+      route: `/chat/${chatId}`
+    });
+    return reply;
+  }
+  return result;
 }
 var sendMessageInput = external_exports.object({
   chatId: external_exports.string().min(1),
@@ -21824,16 +22372,21 @@ async function sendMessageLogic(deps, caller, input2) {
   const messageId = `${caller.uid}_${input2.clientId}`;
   const now = deps.now();
   const last = { type: "text", text, senderUid: caller.uid, at: now.toISOString() };
-  await sql2.begin(async (tx) => {
+  const posted = await sql2.begin(async (tx) => {
     const inserted = await tx`
       insert into messages (chat_id, id, sender_uid, type, text, created_at)
       values (${input2.chatId}, ${messageId}, ${caller.uid}, 'text', ${text}, ${now})
       on conflict do nothing returning id`;
-    if (inserted.length === 0) return;
+    if (inserted.length === 0) return false;
     await tx`
       update chats set last_message = ${tx.json(last)}, last_message_at = ${now}, unread = ${bumpUnread(tx, other)}
       where id = ${input2.chatId}`;
+    return true;
   });
+  if (posted) {
+    const [me] = await sql2`select display_name from users where id = ${caller.uid}`;
+    await notify(deps, other, { title: me?.display_name || "VYBE", body: "Sent you a message.", route: `/chat/${input2.chatId}` });
+  }
   return { messageId };
 }
 var markChatReadInput = external_exports.object({ chatId: external_exports.string().min(1) });
@@ -21842,210 +22395,6 @@ async function markChatReadLogic(deps, caller, input2) {
   await deps.sql`
     update chats set unread = jsonb_set(unread, ${[caller.uid]}::text[], '0'::jsonb) where id = ${input2.chatId}`;
   return { ok: true };
-}
-
-// src/handlers/onboarding.ts
-var onboarding_exports = {};
-__export(onboarding_exports, {
-  UNDERAGE_REASON: () => UNDERAGE_REASON,
-  acceptRulesInput: () => acceptRulesInput,
-  acceptRulesLogic: () => acceptRulesLogic,
-  startVerificationInput: () => startVerificationInput,
-  startVerificationLogic: () => startVerificationLogic,
-  submitVerificationInput: () => submitVerificationInput,
-  submitVerificationLogic: () => submitVerificationLogic
-});
-
-// src/domain/verification.ts
-var INITIAL_STEPS = {
-  phone: "approved",
-  selfie: "not_started",
-  id: "not_started"
-};
-function overallStatus(steps, permanentlyRejected) {
-  if (permanentlyRejected) return "rejected";
-  if (steps.phone === "approved" && steps.selfie === "approved" && steps.id === "approved") return "approved";
-  return "pending";
-}
-function canStartStep(steps, step, permanentlyRejected) {
-  if (permanentlyRejected) return false;
-  if (steps[step] === "approved" || steps[step] === "in_review") return false;
-  if (step === "id") return steps.selfie === "approved";
-  return steps.phone === "approved";
-}
-function ageOn(dateOfBirth, on) {
-  const [y, m, d] = dateOfBirth.split("-").map(Number);
-  let age = on.getUTCFullYear() - y;
-  if (on.getUTCMonth() + 1 < m || on.getUTCMonth() + 1 === m && on.getUTCDate() < d) age -= 1;
-  return age;
-}
-
-// src/shared/db.ts
-var asJson = (value) => value;
-
-// src/handlers/deps.ts
-function splitStoragePath(path) {
-  const slash = path.indexOf("/");
-  return { bucket: path.slice(0, slash), name: path.slice(slash + 1) };
-}
-async function storageFileExists(sql2, path) {
-  const { bucket, name } = splitStoragePath(path);
-  const rows = await sql2`select 1 from storage.objects where bucket_id = ${bucket} and name = ${name} limit 1`;
-  return rows.length > 0;
-}
-
-// src/handlers/onboarding.ts
-var UNDERAGE_REASON = "underage";
-var acceptRulesInput = external_exports.object({
-  rulesVersion: external_exports.number().int(),
-  ageConfirmed: external_exports.literal(true)
-});
-async function acceptRulesLogic(deps, caller, input2) {
-  if (!caller.phoneNumber && !caller.verifiedEmail) {
-    throw appError(ErrorCodes.invalidInput, "Sign in with Google or a verified phone number first.");
-  }
-  if (input2.rulesVersion !== deps.config.rulesVersion) {
-    throw appError(ErrorCodes.invalidInput, "Please review the latest rules.");
-  }
-  const { config: config2 } = deps;
-  const now = deps.now();
-  const consent = { rulesVersion: input2.rulesVersion, ageConfirmed: true, acceptedAt: now.toISOString() };
-  const uid = caller.uid;
-  return deps.sql.begin(async (tx) => {
-    const inserted = await tx`
-      insert into users (id, account_type, display_name, photo_paths, active_mode, consent, verification_status,
-        verification_steps, verification_reason, age_years, account_status, created_at, updated_at)
-      values (${uid}, 'member', null, '{}', 'seeker', ${tx.json(consent)}, 'pending',
-        ${tx.json(asJson(INITIAL_STEPS))}, null, null, 'active', ${now}, ${now})
-      on conflict (id) do nothing
-      returning id`;
-    if (inserted.length === 0) {
-      const [user] = await tx`select account_status from users where id = ${uid} for update`;
-      if (user.account_status === "banned") throw appError(ErrorCodes.blocked, "This account is suspended.");
-      await tx`update users set consent = ${tx.json(consent)}, updated_at = ${now} where id = ${uid}`;
-      return { created: false };
-    }
-    await tx`
-      insert into private_profiles (id, phone_e164, email)
-      values (${uid}, ${caller.phoneNumber ?? null}, ${caller.verifiedEmail ?? null})`;
-    await tx`insert into credit_accounts (uid, balance, updated_at) values (${uid}, ${config2.signupBonusCredits}, ${now})`;
-    await tx`
-      insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
-      values (${`signup_${uid}`}, ${uid}, ${config2.signupBonusCredits}, ${config2.signupBonusCredits}, 'signup_bonus',
-        'user', ${uid}, ${`signup_${uid}`}, ${now})`;
-    await tx`
-      insert into subscriptions (uid, tier, status, auto_renew, updated_at) values (${uid}, 'free', 'active', false, ${now})`;
-    return { created: true };
-  });
-}
-var startVerificationInput = external_exports.object({
-  step: external_exports.enum(["selfie", "id"]),
-  documentType: external_exports.enum(["aadhaar", "passport", "driving_licence"]).optional()
-});
-async function loadMember(deps, uid) {
-  const [user] = await deps.sql`
-    select verification_steps, verification_reason, account_status from users where id = ${uid}`;
-  if (!user) throw appError(ErrorCodes.notFound, "Accept the rules first.");
-  if (user.account_status === "banned") throw appError(ErrorCodes.blocked, "This account is suspended.");
-  return user;
-}
-async function startVerificationLogic(deps, caller, input2) {
-  if (input2.step === "id" && !input2.documentType) {
-    throw appError(ErrorCodes.invalidInput, "Choose an ID type.");
-  }
-  const user = await loadMember(deps, caller.uid);
-  const permanentlyRejected = user.verification_reason === UNDERAGE_REASON;
-  if (!canStartStep(user.verification_steps, input2.step, permanentlyRejected)) {
-    throw appError(ErrorCodes.invalidInput, "This step is not available right now.");
-  }
-  const identity = deps.services.identity;
-  const session = await identity.createSession(caller.uid, input2.step === "id" ? "government_id" : "selfie");
-  const sessionId = crypto.randomUUID();
-  const uploadPath = `verification/${caller.uid}/${sessionId}.jpg`;
-  await deps.sql`
-    insert into verification_sessions (id, uid, step, document_type, provider, provider_ref, status, upload_path,
-      created_at, expires_at)
-    values (${sessionId}, ${caller.uid}, ${input2.step}, ${input2.documentType ?? null}, ${identity.name},
-      ${session.providerRef}, 'awaiting_upload', ${uploadPath}, ${deps.now()}, ${session.expiresAt})`;
-  return { sessionId, uploadPath, expiresAt: session.expiresAt.toISOString() };
-}
-var submitVerificationInput = external_exports.object({ sessionId: uidSchema });
-async function submitVerificationLogic(deps, caller, input2) {
-  const { sql: sql2 } = deps;
-  const [session] = await sql2`
-    select uid, step, status, expires_at, upload_path, provider_ref
-    from verification_sessions where id = ${input2.sessionId}`;
-  if (!session || session.uid !== caller.uid) throw appError(ErrorCodes.notFound, "Unknown session.");
-  if (session.status !== "awaiting_upload") throw appError(ErrorCodes.invalidInput, "This session is already used.");
-  const now = deps.now();
-  if (session.expires_at.getTime() <= now.getTime()) {
-    throw appError(ErrorCodes.invalidInput, "This session expired. Start again.");
-  }
-  if (!await storageFileExists(sql2, session.upload_path)) throw appError(ErrorCodes.invalidInput, "Upload the photo first.");
-  const step = session.step;
-  const identity = deps.services.identity;
-  const result = await identity.getResult(session.provider_ref);
-  return sql2.begin(async (tx) => {
-    const [user] = await tx`
-      select verification_steps, verification_reason from users where id = ${caller.uid} for update`;
-    if (!user) throw appError(ErrorCodes.notFound, "Accept the rules first.");
-    const claimed = await tx`
-      update verification_sessions set status = 'deciding'
-      where id = ${input2.sessionId} and status = 'awaiting_upload' returning id`;
-    if (claimed.length === 0) throw appError(ErrorCodes.invalidInput, "This session is already used.");
-    const steps = { ...user.verification_steps };
-    let stepStatus;
-    let reason = null;
-    let ageYears = null;
-    let permanentlyRejected = user.verification_reason === UNDERAGE_REASON;
-    if (result.decision === "pending") {
-      stepStatus = "in_review";
-    } else if (result.decision === "rejected") {
-      stepStatus = "rejected";
-      reason = result.reason ?? "not_verified";
-    } else if (step === "id") {
-      const dob = result.dateOfBirth;
-      ageYears = dob ? ageOn(dob, now) : null;
-      if (ageYears === null) {
-        stepStatus = "rejected";
-        reason = "no_date_of_birth";
-      } else if (ageYears < deps.config.ageMinimum) {
-        stepStatus = "rejected";
-        reason = UNDERAGE_REASON;
-        permanentlyRejected = true;
-      } else {
-        stepStatus = "approved";
-      }
-    } else {
-      stepStatus = "approved";
-    }
-    steps[step] = stepStatus;
-    const verificationStatus = overallStatus(steps, permanentlyRejected);
-    const finalReason = permanentlyRejected ? UNDERAGE_REASON : reason;
-    const approvedAge = ageYears !== null && stepStatus === "approved" ? ageYears : null;
-    await tx`
-      update users set
-        verification_steps = ${tx.json(asJson(steps))},
-        verification_status = ${verificationStatus},
-        verification_reason = ${finalReason},
-        age_years = coalesce(${approvedAge}::int, age_years),
-        updated_at = ${now}
-      where id = ${caller.uid}`;
-    const idVerification = {
-      provider: identity.name,
-      providerRef: session.provider_ref,
-      status: stepStatus,
-      reviewedAt: now.toISOString()
-    };
-    const dateOfBirth = step === "id" && stepStatus === "approved" ? result.dateOfBirth ?? null : null;
-    await tx`
-      update private_profiles set
-        id_verification = ${tx.json(idVerification)},
-        date_of_birth = coalesce(${dateOfBirth}::text, date_of_birth)
-      where id = ${caller.uid}`;
-    await tx`update verification_sessions set status = ${stepStatus}, decided_at = ${now} where id = ${input2.sessionId}`;
-    return { step, stepStatus, verificationStatus, reason: finalReason };
-  });
 }
 
 // src/handlers/phoneLogin.ts
@@ -22531,6 +22880,20 @@ async function blockUserLogic(deps, caller, input2) {
 }
 
 // src/api/router.ts
+var adminActions = {
+  adminReviewQueue: { schema: admin_exports.adminReviewQueueInput, run: (deps) => admin_exports.adminReviewQueueLogic(deps) },
+  adminDecideVerification: { schema: admin_exports.adminDecideVerificationInput, run: admin_exports.adminDecideVerificationLogic }
+};
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type, x-admin-secret"
+};
+function withCors(response) {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(CORS_HEADERS)) headers.set(key, value);
+  return new Response(response.body, { status: response.status, headers });
+}
 var signedIn = {
   acceptRules: { kind: "user", schema: onboarding_exports.acceptRulesInput, run: onboarding_exports.acceptRulesLogic },
   startVerification: { kind: "user", schema: onboarding_exports.startVerificationInput, run: onboarding_exports.startVerificationLogic },
@@ -22559,7 +22922,9 @@ var signedIn = {
   verifyPurchase: { kind: "user", schema: purchases_exports.verifyPurchaseInput, run: purchases_exports.verifyPurchaseLogic },
   reelFeed: { kind: "user", schema: reels_exports.reelFeedInput, run: reels_exports.reelFeedLogic },
   postReel: { kind: "user", schema: reels_exports.postReelInput, run: reels_exports.postReelLogic },
-  deleteReel: { kind: "user", schema: reels_exports.deleteReelInput, run: reels_exports.deleteReelLogic }
+  deleteReel: { kind: "user", schema: reels_exports.deleteReelInput, run: reels_exports.deleteReelLogic },
+  registerPushToken: { kind: "user", schema: push_exports.registerPushTokenInput, run: push_exports.registerPushTokenLogic },
+  unregisterPushToken: { kind: "user", schema: push_exports.unregisterPushTokenInput, run: push_exports.unregisterPushTokenLogic }
 };
 var json2 = (status, body) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 var errorResponse = (error62) => json2(httpStatusFor[error62.status], { error: { status: error62.status, code: error62.code, message: error62.message } });
@@ -22582,6 +22947,32 @@ async function readJson(req) {
 }
 async function handleApiRequest(req, ctx2) {
   const name = routeName(req.url);
+  if (name in adminActions) {
+    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return withCors(await handleAdmin(name, req, ctx2));
+  }
+  return handleAppRequest(name, req, ctx2);
+}
+async function handleAdmin(name, req, ctx2) {
+  const now = ctx2.now ?? (() => /* @__PURE__ */ new Date());
+  try {
+    if (req.method !== "POST") return json2(405, { error: { status: "invalid-argument", code: null, message: "Use POST." } });
+    const given = req.headers.get("x-admin-secret") ?? "";
+    if (!ctx2.adminSecret || !given || !sameSecret(given, ctx2.adminSecret)) throw new AppError("permission-denied", "Not allowed.");
+    const signStorageUrl = ctx2.signStorageUrl;
+    if (!signStorageUrl) throw new AppError("failed-precondition", "Storage links are not available.");
+    const action = adminActions[name];
+    const config2 = await loadAppConfig(ctx2.sql);
+    const input2 = parseInput(action.schema, await readJson(req));
+    const deps = { sql: ctx2.sql, config: config2, services: ctx2.services(config2), now, signUrl: signStorageUrl };
+    return json2(200, await action.run(deps, input2) ?? {});
+  } catch (error62) {
+    if (error62 instanceof AppError) return errorResponse(error62);
+    console.error(`api/${name} failed`, error62 instanceof Error ? `${error62.name}: ${error62.message}` : String(error62));
+    return errorResponse(new AppError("internal", "Something went wrong."));
+  }
+}
+async function handleAppRequest(name, req, ctx2) {
   const now = ctx2.now ?? (() => /* @__PURE__ */ new Date());
   try {
     if (name === "storeNotification") return await storeNotification(req, ctx2, now);
@@ -22679,7 +23070,21 @@ var ctx = {
     if (fakeServicesAllowed()) return new FakeOtpSender();
     return { send: () => Promise.reject(new OtpSendError("RENFLAIR_API_KEY is not set.")) };
   },
-  cronSecret: env("FINDX_CRON_SECRET")
+  cronSecret: env("FINDX_CRON_SECRET"),
+  adminSecret: env("FINDX_ADMIN_SECRET"),
+  async signStorageUrl(path, seconds) {
+    const slash = path.indexOf("/");
+    const objectPath = `${path.slice(0, slash)}/${path.slice(slash + 1).split("/").map(encodeURIComponent).join("/")}`;
+    const key = required2("SUPABASE_SERVICE_ROLE_KEY");
+    const response = await fetch(`${supabaseUrl}/storage/v1/object/sign/${objectPath}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
+      body: JSON.stringify({ expiresIn: seconds })
+    });
+    if (!response.ok) throw new Error(`Signing ${path} failed: HTTP ${response.status}`);
+    const { signedURL } = await response.json();
+    return `${supabaseUrl}/storage/v1${signedURL}`;
+  }
 };
 globalThis.Deno.serve(
   (req) => handleApiRequest(req, ctx)

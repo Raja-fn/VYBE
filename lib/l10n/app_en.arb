@@ -179,10 +179,10 @@
   "idDrivingLicence": "Driving licence",
   "verifyIdFrame": "Photograph the front of your ID in good light",
   "verifyTakeIdPhoto": "Take ID photo",
-  "verifyReviewTitle": "We are checking your photo",
-  "verifyReviewBody": "This usually takes a few minutes. You can close the app and come back.",
+  "verifyReviewTitle": "A person is checking your photos",
+  "verifyReviewBody": "Someone on the VYBE team compares your selfie with your ID, usually within 24 hours. We'll send you a notification when it's done.",
   "verifyRejectedTitle": "We could not verify this photo",
-  "verifyRejectedBody": "Make sure it is clear, well lit and not cut off, then try again.",
+  "verifyRejectedBody": "We could not match it. Make sure your face or ID is clear, well lit and not cut off, then try again.",
   "verifyTryAgain": "Try again",
   "verifyUnderageTitle": "VYBE is for adults only",
   "verifyUnderageBody": "Your ID shows you are under 18, so you cannot use VYBE.",
@@ -1081,5 +1081,29 @@
   "safetyTipTell": "Tell a friend where you're going and when you'll be back.",
   "safetyTipTravel": "Arrange your own way there and back.",
   "safetyTipMoney": "Never send money, payment details or codes to someone you met here.",
-  "safetyTipLeave": "If something feels wrong, leave. You can report or block from their profile or chat."
+  "safetyTipLeave": "If something feels wrong, leave. You can report or block from their profile or chat.",
+  "rulesBirthDate": "Your date of birth",
+  "rulesBirthDateHint": "Tap to enter it. We check it against your ID.",
+  "rulesTooYoung": "VYBE is only for people aged {age} or older.",
+  "@rulesTooYoung": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "failureUnderage": "VYBE is only for people aged 18 or older.",
+  "legalTerms": "Terms",
+  "legalPrivacy": "Privacy policy",
+  "linkOpenFailed": "Couldn't open {link} on this phone.",
+  "@linkOpenFailed": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutTitle": "About and legal",
+  "aboutSupport": "Contact support",
+  "aboutGrievance": "Grievance Officer"
 }

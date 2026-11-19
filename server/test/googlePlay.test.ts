@@ -1,7 +1,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 
 import { defaultAppConfig } from '../src/config/appConfig';
-import { createServices, ProviderNotConfiguredError } from '../src/services/factory';
+import { createServices, parseServiceAccountSecret, ProviderNotConfiguredError } from '../src/services/factory';
 import { GooglePlayPurchaseVerificationService } from '../src/services/purchases/googlePlayPurchaseVerificationService';
 
 const NOW = new Date('2026-11-14T10:00:00Z');
@@ -139,7 +139,6 @@ describe('Google Play refund notices', () => {
 
 describe('production services', () => {
   const settings = {
-    identityAutoApprove: true,
     playPackageName: 'com.vybe.app',
     playServiceAccountJson: JSON.stringify(serviceAccount),
     playNotificationSecret: 'push-secret',
@@ -154,8 +153,26 @@ describe('production services', () => {
     );
   });
 
-  it('refuse to start without the owner switch for ID checks', () => {
-    expect(() => createServices(defaultAppConfig, false, { ...settings, identityAutoApprove: false })).toThrow(ProviderNotConfiguredError);
+  it('send every ID to a person for review, never approve it automatically', async () => {
+    const { identity } = createServices(defaultAppConfig, false, settings);
+    expect(identity.name).toBe('manual');
+    const selfie = await identity.createSession('u1', 'selfie');
+    const id = await identity.createSession('u1', 'government_id');
+    expect((await identity.getResult(selfie.providerRef)).decision).toBe('approved');
+    expect(await identity.getResult(id.providerRef)).toEqual({ providerRef: id.providerRef, step: 'government_id', decision: 'pending' });
+  });
+
+  it('accept service-account keys as JSON or as base64 JSON', () => {
+    const json = JSON.stringify(serviceAccount);
+    expect(parseServiceAccountSecret(json)).toEqual(serviceAccount);
+    expect(parseServiceAccountSecret(btoa(json))).toEqual(serviceAccount);
+    const services = createServices(defaultAppConfig, false, { ...settings, playServiceAccountJson: btoa(json) });
+    expect(services.purchases).toBeInstanceOf(GooglePlayPurchaseVerificationService);
+  });
+
+  it('send no notifications without the Firebase key', async () => {
+    const { push } = createServices(defaultAppConfig, false, settings);
+    expect(await push.send(['t'], { title: 'a', body: 'b', route: '/' })).toEqual({ invalidTokens: [] });
   });
 
   it('without Google Play keys, refuse every purchase but keep the rest working', async () => {

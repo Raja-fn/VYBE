@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
@@ -8,6 +9,8 @@ import '../../../core/utils/run_guarded.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/content_rows.dart';
+import '../../../core/widgets/legal_links.dart';
+import '../data/account_repository.dart';
 import 'rules_controller.dart';
 import 'widgets/map_hero.dart';
 import 'widgets/onboarding_scaffold.dart';
@@ -22,6 +25,20 @@ class RulesScreen extends ConsumerStatefulWidget {
 
 class _RulesScreenState extends ConsumerState<RulesScreen> {
   bool _agreed = false;
+  DateTime? _birthDate;
+
+  Future<void> _pickBirthDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthDate ?? DateTime(now.year - 25, now.month, now.day),
+      firstDate: DateTime(now.year - 100),
+      lastDate: now,
+      initialEntryMode: DatePickerEntryMode.input,
+      helpText: context.l10n.rulesBirthDate,
+    );
+    if (picked != null) setState(() => _birthDate = picked);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +46,10 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
     final textTheme = Theme.of(context).textTheme;
     final status = ref.watch(rulesControllerProvider);
     final error = status.error;
+    final config = ref.watch(appConfigProvider);
+    final birthDate = _birthDate;
+    final tooYoung = birthDate != null && ageOnDay(birthDate, DateTime.now()) < config.ageMinimum;
+    final canContinue = _agreed && birthDate != null && !tooYoung;
 
     return OnboardingScaffold(
       eyebrow: l10n.appName,
@@ -37,7 +58,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
       bottom: AppButton(
         label: l10n.rulesContinue,
         isLoading: status.isLoading,
-        onPressed: _agreed ? () => ref.read(rulesControllerProvider.notifier).accept() : null,
+        onPressed: canContinue ? () => ref.read(rulesControllerProvider.notifier).accept(dateOfBirth: birthDate) : null,
       ),
       children: [
         const MapHero(),
@@ -64,6 +85,42 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
+        AppCard(
+          onTap: _pickBirthDate,
+          child: Row(
+            children: [
+              const Icon(Icons.cake_outlined, color: AppColors.accent),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.rulesBirthDate, style: textTheme.titleMedium),
+                    Text(
+                      birthDate == null
+                          ? l10n.rulesBirthDateHint
+                          : MaterialLocalizations.of(context).formatMediumDate(birthDate),
+                      style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+        if (tooYoung)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                l10n.rulesTooYoung(config.ageMinimum),
+                style: textTheme.bodyMedium?.copyWith(color: AppColors.dangerText),
+              ),
+            ),
+          ),
+        const SizedBox(height: AppSpacing.md),
         MergeSemantics(
           child: InkWell(
             onTap: () => setState(() => _agreed = !_agreed),
@@ -86,6 +143,7 @@ class _RulesScreenState extends ConsumerState<RulesScreen> {
             ),
           ),
         ),
+        const LegalLinks(),
         if (error != null) InlineFailure(failureMessage(l10n, mapError(error))),
       ],
     );

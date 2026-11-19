@@ -52,7 +52,7 @@ describe('api router', () => {
   it('runs a signed-in action and returns its result', async () => {
     const uid = people.uid('a');
     await authUser(sql, uid);
-    const response = await call('acceptRules', { rulesVersion: defaultAppConfig.rulesVersion, ageConfirmed: true }, { Authorization: `Bearer good-${uid}` });
+    const response = await call('acceptRules', { rulesVersion: defaultAppConfig.rulesVersion, ageConfirmed: true, dateOfBirth: '2000-01-15' }, { Authorization: `Bearer good-${uid}` });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ created: true });
   });

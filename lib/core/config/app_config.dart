@@ -45,6 +45,13 @@ abstract class AppConfig with _$AppConfig {
     required int safetyMissedCheckInsToEscalate,
     required int sosHoldSeconds,
     required String emergencyNumber,
+    required String privacyPolicyUrl,
+    required String termsUrl,
+    required String supportEmail,
+
+    /// Grievance Officer (India IT Rules 2021). Empty name: the support email is shown.
+    required String grievanceOfficerName,
+    required String grievanceOfficerEmail,
     required int autoCompleteGraceMinutes,
     required int moderationStrikesForReport,
     required int moderationStrikeWindowHours,

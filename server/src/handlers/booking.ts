@@ -22,6 +22,7 @@ import { appError, ErrorCodes } from '../shared/errorCodes';
 import { consumeRateLimit } from '../shared/rateLimit';
 import { postBookingCard } from './chatCards';
 import type { Deps } from './deps';
+import { notify } from './push';
 import { availabilityOf, blockedUids, boundingBox, candidateFrom, indexRows, loadSeeker } from './discovery';
 import { ensureDefaultSlots, ensurePlacesNear } from './places';
 
@@ -347,10 +348,15 @@ export async function requestBookingLogic(
         ${them?.display_name ?? ''}, ${companion.ageYears}, ${venue.venueId}, ${venue.name}, ${venue.category},
         ${venue.ownerUid}, ${input.slotId}, ${slot.day_key}, ${span.startAt}, ${span.endAt}, ${input.planType},
         ${input.kind}, 'requested', null, ${cost}, ${ledgerId}, ${[caller.uid, companion.uid]}::uuid[], null, ${now}, ${now})`;
-    return { balance: after, startAt: span.startAt };
+    return { balance: after, startAt: span.startAt, seekerName: me?.display_name ?? '' };
   });
 
   if (!result) return { bookingId, balance: await balanceOf(sql, caller.uid) };
+  await notify(deps, companion.uid, {
+    title: 'New meetup request',
+    body: `${result.seekerName || 'Someone'} wants to meet you at ${venue.name}.`,
+    route: '/bookings',
+  });
   await postBookingCard(
     sql,
     {
@@ -389,12 +395,16 @@ interface LockedBooking {
   slot_id: string;
   checked_in_uids: string[];
   feedback_uids: string[];
+  seeker_name: string;
+  companion_name: string;
+  venue_name: string;
 }
 
 /** Locks a booking the caller is part of, or "not found". */
 async function lockBooking(tx: Sql, bookingId: string, uid: string): Promise<LockedBooking> {
   const [booking] = await tx<LockedBooking[]>`
-    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids
+    select seeker_uid, companion_uid, status, start_at, end_at, venue_id, slot_id, checked_in_uids, feedback_uids,
+      seeker_name, companion_name, venue_name
     from bookings where id = ${bookingId} for update`;
   if (!booking || (booking.seeker_uid !== uid && booking.companion_uid !== uid)) {
     throw appError(ErrorCodes.notFound, 'Booking not found.');
@@ -409,7 +419,7 @@ export async function cancelBookingLogic(
   input: z.infer<typeof cancelBookingInput>,
 ): Promise<{ status: 'cancelled' }> {
   const now = deps.now();
-  await deps.sql.begin(async (tx) => {
+  const booking = await deps.sql.begin(async (tx) => {
     const booking = await lockBooking(tx, input.bookingId, caller.uid);
     if (!canCancel(booking.status, booking.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, 'This booking can no longer be cancelled.');
@@ -420,6 +430,13 @@ export async function cancelBookingLogic(
       update bookings set status = 'cancelled', status_reason = ${reason}, cancelled_by = ${caller.uid},
         updated_at = ${now}
       where id = ${input.bookingId}`;
+    return booking;
+  });
+  const iAmSeeker = booking.seeker_uid === caller.uid;
+  await notify(deps, iAmSeeker ? booking.companion_uid : booking.seeker_uid, {
+    title: 'Meetup cancelled',
+    body: `${(iAmSeeker ? booking.seeker_name : booking.companion_name) || 'They'} cancelled your meetup at ${booking.venue_name}.`,
+    route: '/bookings',
   });
   return { status: 'cancelled' };
 }
@@ -439,10 +456,10 @@ export async function respondBookingLogic(
 ): Promise<{ status: 'accepted' | 'declined' }> {
   const now = deps.now();
   const target = input.accept ? 'accepted' : 'declined';
-  await deps.sql.begin(async (tx) => {
+  const answered = await deps.sql.begin(async (tx) => {
     const booking = await lockBooking(tx, input.bookingId, caller.uid);
     if (booking.companion_uid !== caller.uid) throw appError(ErrorCodes.notFound, 'Booking not found.');
-    if (booking.status === target) return; // a retry
+    if (booking.status === target) return null; // a retry
     if (!canRespond(booking.status, booking.start_at, now)) {
       throw appError(ErrorCodes.invalidInput, 'This request can no longer be answered.');
     }
@@ -451,7 +468,18 @@ export async function respondBookingLogic(
       update bookings set status = ${target}, status_reason = ${input.accept ? null : 'companion_declined'},
         updated_at = ${now}
       where id = ${input.bookingId}`;
+    return booking;
   });
+  if (answered) {
+    const name = answered.companion_name || 'They';
+    await notify(
+      deps,
+      answered.seeker_uid,
+      input.accept
+        ? { title: 'Meetup confirmed', body: `${name} said yes. See you at ${answered.venue_name}!`, route: '/bookings' }
+        : { title: 'Request declined', body: `${name} can't make it this time.`, route: '/bookings' },
+    );
+  }
   return { status: target };
 }
 

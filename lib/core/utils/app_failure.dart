@@ -46,6 +46,9 @@ enum FailureKind {
   /// The store could not confirm a purchase.
   purchaseInvalid,
 
+  /// Below the minimum age (18).
+  underage,
+
   /// Google Play / the App Store cannot be reached on this device.
   storeUnavailable,
   unknown,

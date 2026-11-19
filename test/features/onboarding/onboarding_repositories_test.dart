@@ -89,15 +89,18 @@ void main() {
     });
 
     test('acceptRules calls the server with the rules version', () async {
-      final result = await repository.acceptRules(rulesVersion: 1);
+      final result = await repository.acceptRules(rulesVersion: 1, dateOfBirth: DateTime(2000, 1, 5));
       expect(result.isOk, isTrue);
       expect(functions.calls.single.$1, 'acceptRules');
-      expect(functions.calls.single.$2, {'rulesVersion': 1, 'ageConfirmed': true});
+      expect(functions.calls.single.$2, {'rulesVersion': 1, 'ageConfirmed': true, 'dateOfBirth': '2000-01-05'});
     });
 
     test('acceptRules returns a typed failure instead of throwing', () async {
       functions.error = const ServerException('unavailable');
-      expect((await repository.acceptRules(rulesVersion: 1)).failureOrNull?.kind, FailureKind.network);
+      expect(
+        (await repository.acceptRules(rulesVersion: 1, dateOfBirth: DateTime(2000))).failureOrNull?.kind,
+        FailureKind.network,
+      );
     });
   });
 

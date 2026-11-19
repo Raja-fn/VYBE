@@ -11,8 +11,12 @@ import { FAKE_PURCHASE_TOKEN_PREFIX } from '../src/services/purchases/fakePurcha
 const services = createServices(defaultAppConfig, true);
 
 describe('service factory', () => {
-  it('refuses to hand out fakes unless they are allowed', () => {
-    expect(() => createServices(defaultAppConfig, false)).toThrow(ProviderNotConfiguredError);
+  it('never hands out fakes unless they are allowed', async () => {
+    const production = createServices(defaultAppConfig, false, {});
+    expect(production.identity.name).toBe('manual');
+    await expect(
+      production.purchases.verify('u', { platform: 'android', productId: 'x', purchaseToken: `${FAKE_PURCHASE_TOKEN_PREFIX}x` }),
+    ).rejects.toThrow(ProviderNotConfiguredError);
   });
 });
 

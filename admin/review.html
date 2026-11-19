@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VYBE member review</title>
+<style>
+  :root { --ink:#1b1b2f; --muted:#6b6b7b; --line:#e4e0da; --bg:#faf7f2; --card:#fff; --ok:#0e7c4a; --bad:#b42318; --accent:#f2542d; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--ink); background:var(--bg); }
+  header { padding:16px; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:1; }
+  header h1 { margin:0 0 8px; font-size:20px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  input, button { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); }
+  input[type=password] { min-width:260px; }
+  button { cursor:pointer; background:var(--card); }
+  button.approve { background:var(--ok); color:#fff; border-color:var(--ok); }
+  button.reject { color:var(--bad); border-color:var(--bad); }
+  button:disabled { opacity:.5; cursor:default; }
+  main { padding:16px; max-width:1100px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+  .photos { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin:12px 0; }
+  .photos figure { margin:0; }
+  .photos img { width:100%; height:260px; object-fit:contain; background:#111; border-radius:10px; }
+  .photos figcaption { color:var(--muted); font-size:13px; margin-top:4px; }
+  .meta { color:var(--muted); }
+  .status { margin:8px 0; min-height:1.4em; }
+  .error { color:var(--bad); }
+  .empty { color:var(--muted); text-align:center; padding:48px 0; }
+  .checklist { color:var(--muted); font-size:14px; margin:4px 0 0 18px; padding:0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>VYBE member review</h1>
+  <div class="row">
+    <input id="api" size="48" value="https://stgfjguoytqzmliurbvp.supabase.co/functions/v1/api" aria-label="API address">
+    <input id="secret" type="password" placeholder="Admin secret (FINDX_ADMIN_SECRET)" aria-label="Admin secret">
+    <button id="load">Load waiting members</button>
+  </div>
+  <div id="status" class="status" role="status"></div>
+</header>
+<main id="list"><p class="empty">Enter the admin secret and load the list.</p></main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  try { $('secret').value = sessionStorage.getItem('vybeAdminSecret') || ''; } catch (_) {}
+
+  function say(text, isError) {
+    $('status').textContent = text;
+    $('status').className = 'status' + (isError ? ' error' : '');
+  }
+
+  async function call(action, body) {
+    const secret = $('secret').value.trim();
+    try { sessionStorage.setItem('vybeAdminSecret', secret); } catch (_) {}
+    const response = await fetch($('api').value.replace(/\/$/, '') + '/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
+      body: JSON.stringify(body || {}),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error((json.error && json.error.message) || ('HTTP ' + response.status));
+    return json;
+  }
+
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => {
+      if (k === 'text') node.textContent = v; else if (k.startsWith('on')) node.addEventListener(k.slice(2), v); else node.setAttribute(k, v);
+    });
+    (children || []).forEach((c) => c && node.appendChild(c));
+    return node;
+  }
+
+  function photo(url, caption) {
+    return el('figure', {}, [
+      url ? el('img', { src: url, alt: caption }) : el('div', { class: 'meta', text: 'No photo' }),
+      el('figcaption', { text: caption }),
+    ]);
+  }
+
+  function render(items) {
+    const list = $('list');
+    list.innerHTML = '';
+    if (items.length === 0) {
+      list.appendChild(el('p', { class: 'empty', text: 'Nobody is waiting. 🎉' }));
+      return;
+    }
+    items.forEach((item) => {
+      const dob = el('input', { type: 'date', value: item.dateOfBirth || '', 'aria-label': 'Date of birth on the ID' });
+      const note = el('input', { placeholder: 'Note (optional, for the log)', size: '32' });
+      const result = el('div', { class: 'status' });
+      const buttons = [];
+      const decide = async (decision) => {
+        buttons.forEach((b) => (b.disabled = true));
+        result.textContent = 'Saving…';
+        result.className = 'status';
+        try {
+          const body = { uid: item.uid, decision };
+          if (dob.value && dob.value !== item.dateOfBirth) body.dateOfBirth = dob.value;
+          if (note.value.trim()) body.note = note.value.trim();
+          const answer = await call('adminDecideVerification', body);
+          result.textContent = decision === 'approve'
+            ? (answer.verificationStatus === 'approved' ? 'Approved. They have been notified.' : 'Rejected: under the minimum age (permanent).')
+            : 'Asked to retake the photo. They have been notified.';
+        } catch (e) {
+          result.textContent = 'Failed: ' + e.message;
+          result.className = 'status error';
+          buttons.forEach((b) => (b.disabled = false));
+        }
+      };
+      buttons.push(
+        el('button', { class: 'approve', text: 'Approve', onclick: () => decide('approve') }),
+        el('button', { class: 'reject', text: 'Reject selfie', onclick: () => decide('reject_selfie') }),
+        el('button', { class: 'reject', text: 'Reject ID', onclick: () => decide('reject_id') }),
+      );
+      list.appendChild(el('section', { class: 'card' }, [
+        el('h2', { text: (item.displayName || '(no name yet)') + (item.ageFromDateOfBirth != null ? ', ' + item.ageFromDateOfBirth : '') }),
+        el('div', { class: 'meta', text: [item.email, item.phone, 'ID: ' + (item.documentType || '?'), 'sent ' + new Date(item.submittedAt).toLocaleString()].filter(Boolean).join(' · ') }),
+        el('div', { class: 'photos' }, [
+          photo(item.selfieUrl, 'Selfie (taken in the app)'),
+          photo(item.idUrl, 'ID photo'),
+          photo(item.profilePhotoUrl, 'Main profile photo'),
+        ]),
+        el('ul', { class: 'checklist' }, [
+          el('li', { text: 'Same person in the selfie, the ID and the profile photo?' }),
+          el('li', { text: 'ID looks real and readable? Date of birth below matches the ID (change it if not)?' }),
+          el('li', { text: 'Never write down or keep ID numbers.' }),
+        ]),
+        el('div', { class: 'row', style: 'margin-top:12px' }, [
+          el('label', { text: 'Date of birth on the ID: ' }), dob, note,
+        ]),
+        el('div', { class: 'row', style: 'margin-top:12px' }, buttons),
+        result,
+      ]));
+    });
+  }
+
+  $('load').addEventListener('click', async () => {
+    say('Loading…');
+    try {
+      const { items } = await call('adminReviewQueue');
+      render(items);
+      say(items.length + ' waiting. Photo links work for 15 minutes; load again after that.');
+    } catch (e) {
+      say('Could not load: ' + e.message, true);
+    }
+  });
+</script>
+</body>
+</html>
