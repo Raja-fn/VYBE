@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vybe/core/config/app_config.dart';
-import 'package:vybe/core/config/app_env.dart';
 import 'package:vybe/core/services/identity_verification/identity_verification_service.dart';
 import 'package:vybe/core/utils/app_failure.dart';
 import 'package:vybe/features/discover/presentation/discover_screen.dart';
@@ -114,20 +113,6 @@ void main() {
       await pumpInApp(tester, const VerificationScreen(), wrapInScaffold: false, backend: backend);
       await _tapText(tester, 'Continue with Google');
       expect(find.textContaining('Google sign-in is not set up on this build yet.'), findsOneWidget);
-    });
-
-    testWidgets('test builds can use a test account', (tester) async {
-      final backend = TestBackend();
-      await pumpInApp(tester, const VerificationScreen(), wrapInScaffold: false, backend: backend);
-      await _tapText(tester, 'Use a test account');
-      await tester.enterText(find.byType(TextField), 'aarav@findx.test');
-      await _tap(tester, find.widgetWithText(TextButton, 'Sign in'));
-      expect(backend.auth.testAccountSignIns, ['aarav@findx.test']);
-    });
-
-    testWidgets('production builds have no test accounts', (tester) async {
-      await pumpInApp(tester, const VerificationScreen(), wrapInScaffold: false, env: AppEnv.production);
-      expect(find.text('Use a test account'), findsNothing);
     });
 
     testWidgets('phone login (when switched on) validates the number, then asks for the code', (tester) async {

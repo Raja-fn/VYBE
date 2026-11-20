@@ -165,23 +165,6 @@ class _Post extends ConsumerWidget {
     final l10n = context.l10n;
     final c = companion;
 
-    if (c.isSample) {
-      void explain() {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(l10n.sampleProfileNotice)));
-      }
-
-      return ReelView(
-        companion: c,
-        saved: false,
-        onOpen: explain,
-        onMessage: explain,
-        onBook: explain,
-        onToggleSave: explain,
-      );
-    }
-
     final saved = ref.watch(savedIdsProvider).value?.contains(c.uid) ?? false;
 
     Future<void> toggleSave() async {

@@ -13,11 +13,14 @@ const planSchema = z.object({
   tier: z.enum(['free', 'plus', 'premium']),
   productId: z.string().nullable(),
   monthlyCredits: z.number().int().nonnegative(),
+  /** Price shown before the store answers (the store's own price wins). */
+  price: z.string().max(20).nullable().optional(),
 });
 
 const topUpSchema = z.object({
   productId: z.string(),
   credits: z.number().int().positive(),
+  price: z.string().max(20).nullable().optional(),
 });
 
 export const appConfigSchema = z.object({
@@ -26,9 +29,6 @@ export const appConfigSchema = z.object({
   distanceLabelStepKm: z.number().int().positive(),
   discoverCallsPerMinute: z.number().int().positive(),
   discoverPageSize: z.number().int().positive(),
-  /** Adds the made-up sample profiles to Discover. Turn off before the public launch. */
-  showSampleProfiles: z.boolean(),
-  samplePhotoBaseUrl: z.string().url(),
   maxPlausibleSpeedKmh: z.number().positive(),
   launchCity: z.object({
     name: z.string(),

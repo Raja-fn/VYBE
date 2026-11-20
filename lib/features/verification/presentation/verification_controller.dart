@@ -49,10 +49,6 @@ class VerificationController extends _$VerificationController {
   /// "Continue with Google". Closing the picker is not an error.
   Future<void> signInWithGoogle() => _signIn(() => ref.read(authRepositoryProvider).signInWithGoogle());
 
-  /// Test builds: sign in as a shared test account.
-  Future<void> signInWithTestAccount(String email) =>
-      _signIn(() => ref.read(authRepositoryProvider).signInWithTestGoogleAccount(email));
-
   Future<void> _signIn(Future<Result<void>> Function() signIn) async {
     if (state.busy) return;
     state = state.copyWith(busy: true, failure: null);

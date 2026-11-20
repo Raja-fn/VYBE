@@ -58,25 +58,6 @@ describe('discoverCompanions', () => {
     expect(people.names(companions)).toEqual(['neha', 'sam']);
   });
 
-  it('adds sample profiles after real people while showSampleProfiles is on, marked as samples', async () => {
-    const { companions } = await discoverCompanionsLogic(deps({ showSampleProfiles: true }), caller('seeker'), {});
-    expect(people.names(companions.filter((c) => !c.isSample))).toEqual(['neha', 'sam']);
-    const samples = companions.filter((c) => c.isSample);
-    expect(samples.length).toBeGreaterThan(0);
-    expect(companions.findIndex((c) => c.isSample)).toBe(2);
-    for (const s of samples) {
-      expect(s.uid).toMatch(/^sample_/);
-      expect(s.photoPaths[0]).toMatch(/^https:\/\/.+\/samples\/.+-1\.jpg$/);
-    }
-  });
-
-  it('sample profiles follow the plan filter, and are off by default in tests', async () => {
-    const walk = await discoverCompanionsLogic(deps({ showSampleProfiles: true }), caller('seeker'), { planType: 'walk' });
-    for (const s of walk.companions.filter((c) => c.isSample)) expect(s.planTypes).toContain('walk');
-    const off = await discoverCompanionsLogic(deps(), caller('seeker'), {});
-    expect(off.companions.some((c) => c.isSample)).toBe(false);
-  });
-
   it('never sends coordinates, only a rounded distance', async () => {
     const { companions } = await discoverCompanionsLogic(deps(), caller('seeker'), {});
     for (const c of companions) {

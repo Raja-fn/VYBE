@@ -6,10 +6,12 @@ import postgres from 'postgres';
 
 import { env, fakeServicesAllowed } from '../config/env';
 import { SupabaseAuthAdmin } from '../services/auth/authAdmin';
+import { googleIdTokenVerifier } from '../services/auth/googleIdToken';
 import { createServices, type Services } from '../services/factory';
 import { FakeOtpSender } from '../services/otp/fakeOtpSender';
 import { OtpSendError, type OtpSender } from '../services/otp/otpSender';
 import { RenflairOtpSender } from '../services/otp/renflairOtpSender';
+import { parseAdminEmails } from '../shared/adminSession';
 import { supabaseCallerResolver } from './caller';
 import { handleApiRequest, type ApiContext } from './router';
 
@@ -43,6 +45,10 @@ const ctx: ApiContext = {
   },
   cronSecret: env('FINDX_CRON_SECRET'),
   adminSecret: env('FINDX_ADMIN_SECRET'),
+  adminEmails: parseAdminEmails(env('FINDX_ADMIN_EMAILS')),
+  adminPassword: env('FINDX_ADMIN_PASSWORD'),
+  // The Google OAuth web client id the admin panel signs in with (same as GOOGLE_WEB_CLIENT_ID in the app config).
+  verifyGoogleIdToken: googleIdTokenVerifier(env('FINDX_ADMIN_GOOGLE_CLIENT_ID') ?? ''),
   async signStorageUrl(path, seconds) {
     const slash = path.indexOf('/');
     const objectPath = `${path.slice(0, slash)}/${path.slice(slash + 1).split('/').map(encodeURIComponent).join('/')}`;

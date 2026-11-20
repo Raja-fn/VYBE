@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import { sampleCompanions } from '../domain/sampleProfiles';
 import { freeSpanFor, localDay, type AvailabilityDoc, type FreeSpan, type FreeWindow } from '../domain/availability';
 import {
   isPlausibleMove,
@@ -42,8 +41,6 @@ export interface CompanionCardDto {
   freeUntil: string | null;
   /** What the companion filled in on "Edit profile" (all optional). */
   details: ProfileDetailsDto;
-  /** A made-up sample profile (see domain/sampleProfiles.ts), not a member. */
-  isSample: boolean;
 }
 
 export interface ProfileDetailsDto {
@@ -255,7 +252,6 @@ async function toDtos(sql: Sql, ranked: RankedCandidate[], spans: Map<string, Fr
       freeNowUntil: freeNow && candidate.freeNowUntil ? candidate.freeNowUntil.toISOString() : null,
       freeFrom: span ? span.from.toISOString() : null,
       freeUntil: span ? span.until.toISOString() : null,
-      isSample: false,
       details: {
         city: row?.city ?? null,
         languages: row?.languages ?? [],
@@ -351,17 +347,7 @@ export async function discoverCompanionsLogic(
   const ctx = await prepare(deps, caller);
   const candidates = await candidatesNear(deps.sql, ctx.seeker, deps.config.discoveryRadiusKm);
   const ranked = rank(deps, ctx, candidates, input.planType ?? null, deps.config.discoverPageSize);
-  const companions = await toDtos(deps.sql, ranked);
-  if (!deps.config.showSampleProfiles) return { companions };
-  // Real people first, then the sample profiles.
-  const samples = sampleCompanions({
-    showMe: ctx.seeker.showMe,
-    planType: input.planType ?? null,
-    venuesNearby: ctx.venues.length,
-    now: ctx.now,
-    photoBaseUrl: deps.config.samplePhotoBaseUrl,
-  });
-  return { companions: [...companions, ...samples] };
+  return { companions: await toDtos(deps.sql, ranked) };
 }
 
 // ---------- freeNowCompanions ----------

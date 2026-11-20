@@ -79,6 +79,63 @@ var SupabaseAuthAdmin = class {
   }
 };
 
+// src/services/auth/googleIdToken.ts
+var CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+var ISSUERS = /* @__PURE__ */ new Set(["accounts.google.com", "https://accounts.google.com"]);
+var SKEW_SECONDS = 60;
+var fromBase64Url = (text) => {
+  const base643 = text.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(text.length / 4) * 4, "=");
+  const binary = atob(base643);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+};
+var decodeJson = (part) => {
+  try {
+    const value = JSON.parse(new TextDecoder().decode(fromBase64Url(part)));
+    return value && typeof value === "object" ? value : null;
+  } catch {
+    return null;
+  }
+};
+function googleIdTokenVerifier(clientId, options = {}) {
+  let cache;
+  const now = options.now ?? (() => /* @__PURE__ */ new Date());
+  const fetchKeys = options.fetchKeys ?? (async () => {
+    const response = await fetch(CERTS_URL);
+    if (!response.ok) throw new Error(`Google keys: HTTP ${response.status}`);
+    return (await response.json()).keys;
+  });
+  const keyFor = async (kid) => {
+    if (!cache || cache.until < Date.now() || !cache.keys.some((k) => k.kid === kid)) {
+      cache = { keys: await fetchKeys(), until: Date.now() + 60 * 6e4 };
+    }
+    return cache.keys.find((k) => k.kid === kid);
+  };
+  return async (idToken) => {
+    const parts = idToken.split(".");
+    if (parts.length !== 3 || !clientId) return null;
+    const header = decodeJson(parts[0]);
+    const claims = decodeJson(parts[1]);
+    if (!header || !claims || header.alg !== "RS256" || typeof header.kid !== "string") return null;
+    const jwk = await keyFor(header.kid);
+    if (!jwk) return null;
+    const key = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, [
+      "verify"
+    ]);
+    const signed2 = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+    if (!await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, fromBase64Url(parts[2]), signed2)) return null;
+    const seconds = now().getTime() / 1e3;
+    if (!ISSUERS.has(String(claims.iss)) || claims.aud !== clientId) return null;
+    if (typeof claims.exp !== "number" || claims.exp + SKEW_SECONDS < seconds) return null;
+    if (claims.email_verified !== true || typeof claims.email !== "string") return null;
+    return {
+      email: claims.email.toLowerCase(),
+      name: typeof claims.name === "string" && claims.name ? claims.name : claims.email
+    };
+  };
+}
+
 // src/services/identity/fakeIdentityVerificationService.ts
 var PREFIX = "fake-idv";
 var FakeIdentityVerificationService = class {
@@ -595,6 +652,32 @@ var RenflairOtpSender = class {
     }
   }
 };
+
+// src/shared/adminSession.ts
+import { createHmac } from "node:crypto";
+var ADMIN_SESSION_HOURS = 12;
+var toBase64Url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+var sign = (key, payload) => toBase64Url(new Uint8Array(createHmac("sha256", key).update(payload).digest()));
+function createAdminSession(key, email3, name, now) {
+  const expiresAt = new Date(now.getTime() + ADMIN_SESSION_HOURS * 36e5);
+  const payload = toBase64Url(new TextEncoder().encode(JSON.stringify({ e: email3, n: name, x: expiresAt.getTime() })));
+  return { token: `v1.${payload}.${sign(key, payload)}`, expiresAt };
+}
+function readAdminSession(key, token, allowedEmails, now) {
+  const [version2, payload, signature] = token.split(".");
+  if (version2 !== "v1" || !payload || !signature || !sameSecret(signature, sign(key, payload))) return null;
+  try {
+    const base643 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(base643.padEnd(Math.ceil(base643.length / 4) * 4, "="));
+    const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(binary, (c) => c.charCodeAt(0))));
+    if (typeof data.e !== "string" || typeof data.x !== "number" || data.x <= now.getTime()) return null;
+    if (!allowedEmails.includes(data.e)) return null;
+    return { email: data.e, name: typeof data.n === "string" ? data.n : data.e, expiresAt: new Date(data.x) };
+  } catch {
+    return null;
+  }
+}
+var parseAdminEmails = (value) => (value ?? "").split(",").map((e) => e.trim().toLowerCase()).filter((e) => e.includes("@"));
 
 // src/api/caller.ts
 function callerFromAuthUser(user) {
@@ -16510,7 +16593,7 @@ function foldIntersection(json3) {
   for (const key of FOLDABLE_KEYS)
     if (key in json3)
       return;
-  const unions = allOf.filter((m) => UNION_KEYS.some((k) => Array.isArray(m[k])));
+  const unions = allOf.filter((m2) => UNION_KEYS.some((k) => Array.isArray(m2[k])));
   let folded = null;
   if (!unions.length) {
     folded = foldObjects(allOf);
@@ -16519,7 +16602,7 @@ function foldIntersection(json3) {
     const keyword = UNION_KEYS.find((k) => Array.isArray(union2[k]));
     if (Object.keys(union2).length !== 1)
       return;
-    const rest = allOf.filter((m) => m !== union2);
+    const rest = allOf.filter((m2) => m2 !== union2);
     const branches = union2[keyword].map((branch) => foldObjects([...rest, branch]));
     if (branches.some((b) => !b))
       return;
@@ -16778,7 +16861,7 @@ var addPattern = (agg, pattern) => {
   agg.patterns.add(pattern);
 };
 var intersectMime = (agg, mime) => {
-  agg.mime = agg.mime ? agg.mime.filter((m) => mime.includes(m)) : [...mime];
+  agg.mime = agg.mime ? agg.mime.filter((m2) => mime.includes(m2)) : [...mime];
 };
 var setFormat = (agg, format) => {
   agg.format = format;
@@ -16928,7 +17011,7 @@ var numberProcessor = (schema, ctx2, _json, params) => {
     if (first !== void 0)
       json3.multipleOf = first;
     if (rest.length)
-      json3.allOf = [...json3.allOf ?? [], ...rest.map((m) => ({ multipleOf: m }))];
+      json3.allOf = [...json3.allOf ?? [], ...rest.map((m2) => ({ multipleOf: m2 }))];
   }
 };
 var booleanProcessor = (_schema, _ctx, json3, _params) => {
@@ -17046,7 +17129,7 @@ var fileProcessor = (schema, _ctx, json3, _params) => {
   else if (mime.length === 1)
     _json.contentMediaType = mime[0];
   else
-    _json.anyOf = mime.map((m) => ({ contentMediaType: m }));
+    _json.anyOf = mime.map((m2) => ({ contentMediaType: m2 }));
 };
 var successProcessor = (_schema, _ctx, json3, _params) => {
   json3.type = "boolean";
@@ -20338,8 +20421,6 @@ var app_config_defaults_default = {
   distanceLabelStepKm: 1,
   discoverCallsPerMinute: 20,
   discoverPageSize: 20,
-  showSampleProfiles: true,
-  samplePhotoBaseUrl: "https://findx-dev-b5f6b.web.app/samples",
   maxPlausibleSpeedKmh: 300,
   launchCity: {
     name: "Mumbai",
@@ -20370,12 +20451,14 @@ var app_config_defaults_default = {
     {
       tier: "plus",
       productId: "vybe_plus_monthly",
-      monthlyCredits: 100
+      monthlyCredits: 100,
+      price: "\u20B9149"
     },
     {
       tier: "premium",
       productId: "vybe_premium_monthly",
-      monthlyCredits: 200
+      monthlyCredits: 300,
+      price: "\u20B9299"
     }
   ],
   topUpPacks: [
@@ -20443,11 +20526,14 @@ var app_config_defaults_default = {
 var planSchema = external_exports.object({
   tier: external_exports.enum(["free", "plus", "premium"]),
   productId: external_exports.string().nullable(),
-  monthlyCredits: external_exports.number().int().nonnegative()
+  monthlyCredits: external_exports.number().int().nonnegative(),
+  /** Price shown before the store answers (the store's own price wins). */
+  price: external_exports.string().max(20).nullable().optional()
 });
 var topUpSchema = external_exports.object({
   productId: external_exports.string(),
-  credits: external_exports.number().int().positive()
+  credits: external_exports.number().int().positive(),
+  price: external_exports.string().max(20).nullable().optional()
 });
 var appConfigSchema = external_exports.object({
   discoveryRadiusKm: external_exports.number().int().positive(),
@@ -20455,9 +20541,6 @@ var appConfigSchema = external_exports.object({
   distanceLabelStepKm: external_exports.number().int().positive(),
   discoverCallsPerMinute: external_exports.number().int().positive(),
   discoverPageSize: external_exports.number().int().positive(),
-  /** Adds the made-up sample profiles to Discover. Turn off before the public launch. */
-  showSampleProfiles: external_exports.boolean(),
-  samplePhotoBaseUrl: external_exports.string().url(),
   maxPlausibleSpeedKmh: external_exports.number().positive(),
   launchCity: external_exports.object({
     name: external_exports.string(),
@@ -20550,6 +20633,9 @@ async function loadAppConfig(sql2, now = Date.now()) {
   }
   return cached2.config;
 }
+function clearAppConfigCache() {
+  cached2 = void 0;
+}
 
 // src/handlers/account.ts
 var account_exports = {};
@@ -20639,14 +20725,14 @@ function utcOffsetMinutes(timeZone, at) {
   const name = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" }).formatToParts(at).find((part) => part.type === "timeZoneName")?.value;
   const match = name?.match(/GMT([+-])(\d{2}):?(\d{2})?/);
   if (!match) return 0;
-  const sign = match[1] === "-" ? -1 : 1;
-  return sign * (Number(match[2]) * 60 + Number(match[3] ?? "0"));
+  const sign2 = match[1] === "-" ? -1 : 1;
+  return sign2 * (Number(match[2]) * 60 + Number(match[3] ?? "0"));
 }
 
 // src/domain/availability.ts
 var toMinutes = (hm) => {
-  const [h, m] = hm.split(":").map(Number);
-  return h * 60 + m;
+  const [h, m2] = hm.split(":").map(Number);
+  return h * 60 + m2;
 };
 var pad = (n) => String(n).padStart(2, "0");
 function localDay(now, dayOffset, timeZone) {
@@ -20682,8 +20768,8 @@ function overlaps(a, b) {
   return a.startAt.getTime() < b.endAt.getTime() && b.startAt.getTime() < a.endAt.getTime();
 }
 var minutesOf = (hm) => {
-  const [h, m] = hm.split(":").map(Number);
-  return h * 60 + m;
+  const [h, m2] = hm.split(":").map(Number);
+  return h * 60 + m2;
 };
 function companionCovers(slot, input2, now, timeZone) {
   if (input2.freeNowUntil && slot.startAt.getTime() >= now.getTime() - 6e4 && slot.endAt <= input2.freeNowUntil) {
@@ -20781,7 +20867,7 @@ function rankVenues(input2) {
   return input2.venues.filter((v) => input2.planType === null || v.planTypes.includes(input2.planType)).map((venue) => ({ venue, exact: distanceKm(input2.seeker, venue) })).filter(({ venue, exact }) => exact <= input2.radiusKm && (!input2.companion || distanceKm(input2.companion, venue) <= input2.radiusKm)).map(({ venue, exact }) => {
     const score = input2.scores.get(venue.venueId) ?? 0;
     return { venue, exact, score };
-  }).sort((a, b) => b.score - a.score || a.exact - b.exact).map(({ venue, exact, score }, i) => ({
+  }).sort((a, b) => Number(b.venue.featured ?? false) - Number(a.venue.featured ?? false) || b.score - a.score || a.exact - b.exact).map(({ venue, exact, score }, i) => ({
     venue,
     distanceKm: Math.round(exact * 10) / 10,
     popularityScore: Math.round(score * 100) / 100,
@@ -20903,167 +20989,6 @@ __export(discovery_exports, {
   updateMyLocationLogic: () => updateMyLocationLogic
 });
 
-// src/domain/sampleProfiles.ts
-var SAMPLE_UID_PREFIX = "sample_";
-var people = [
-  {
-    uid: "ananya",
-    displayName: "Ananya",
-    ageYears: 24,
-    gender: "woman",
-    about: "Weekend caf\xE9 hopper and slow-morning person. Always up for a good book recommendation.",
-    planTypes: ["coffee", "walk", "event"],
-    prompt: "A long breakfast, a used bookshop and an evening walk by the river.",
-    interests: ["coffee", "books", "photography", "nature"],
-    personality: ["calm", "curious"],
-    languages: ["english", "hindi"],
-    profession: "UX designer",
-    distanceKm: 1,
-    freeNow: true
-  },
-  {
-    uid: "rohan",
-    displayName: "Rohan",
-    ageYears: 27,
-    gender: "man",
-    about: "Film buff who will happily debate the ending of any movie. Trying every biryani in town.",
-    planTypes: ["movie", "dinner", "coffee"],
-    prompt: "A morning cricket match, then a double feature at the cinema.",
-    interests: ["movies", "food", "cricket", "music"],
-    personality: ["witty", "easygoing"],
-    languages: ["english", "hindi"],
-    profession: "Software engineer",
-    distanceKm: 2,
-    freeNow: false
-  },
-  {
-    uid: "meera",
-    displayName: "Meera",
-    ageYears: 26,
-    gender: "woman",
-    about: "Trained in Kathak, now mostly dancing in my kitchen. Looking for people to try new places with.",
-    planTypes: ["event", "dinner", "walk"],
-    prompt: "Street food in the old city and a dance workshop in the evening.",
-    interests: ["dance", "food", "travel", "art"],
-    personality: ["cheerful", "adventurous"],
-    languages: ["english", "hindi"],
-    profession: "Teacher",
-    distanceKm: 3,
-    freeNow: true
-  },
-  {
-    uid: "kabir",
-    displayName: "Kabir",
-    ageYears: 29,
-    gender: "man",
-    about: "Runner, amateur photographer, and the friend who knows a quiet caf\xE9 in every neighbourhood.",
-    planTypes: ["walk", "coffee"],
-    prompt: "A 10K at sunrise, then filter coffee and a photo walk.",
-    interests: ["fitness", "photography", "coffee", "nature"],
-    personality: ["thoughtful", "ambitious"],
-    languages: ["english", "hindi"],
-    profession: "Architect",
-    distanceKm: 2,
-    freeNow: false
-  },
-  {
-    uid: "sara",
-    displayName: "Sara",
-    ageYears: 23,
-    gender: "woman",
-    about: "New to the city and keen to find the best momos, open-mic nights and board-game caf\xE9s.",
-    planTypes: ["coffee", "event", "movie"],
-    prompt: "Board games, too much chai and an open-mic night.",
-    interests: ["gaming", "music", "theatre", "coffee"],
-    personality: ["curious", "cheerful"],
-    languages: ["english"],
-    profession: "Content writer",
-    distanceKm: 4,
-    freeNow: true
-  },
-  {
-    uid: "arjun",
-    displayName: "Arjun",
-    ageYears: 31,
-    gender: "man",
-    about: "Home cook and weekend trekker. Happiest in a good conversation over dinner.",
-    planTypes: ["dinner", "walk", "coffee"],
-    prompt: "Cooking a big lunch for friends, then a sunset hike.",
-    interests: ["cooking", "travel", "nature", "books"],
-    personality: ["easygoing", "thoughtful"],
-    languages: ["english", "hindi"],
-    profession: "Product manager",
-    distanceKm: 5,
-    freeNow: false
-  },
-  {
-    uid: "ishita",
-    displayName: "Ishita",
-    ageYears: 28,
-    gender: "woman",
-    about: "Gallery regular, thrift-store fan and a big believer in trying the weird item on the menu.",
-    planTypes: ["event", "coffee", "dinner"],
-    prompt: "A new exhibition, a thrift haul and dinner somewhere new.",
-    interests: ["art", "fashion", "food", "photography"],
-    personality: ["adventurous", "witty"],
-    languages: ["english", "hindi"],
-    profession: "Illustrator",
-    distanceKm: 3,
-    freeNow: false
-  },
-  {
-    uid: "dev",
-    displayName: "Dev",
-    ageYears: 25,
-    gender: "man",
-    about: "Football on Sundays, tech meetups on weekdays. Always looking for a good walking route.",
-    planTypes: ["walk", "event", "movie"],
-    prompt: "Five-a-side in the morning, a long walk and a late movie.",
-    interests: ["football", "tech", "movies", "music"],
-    personality: ["cheerful", "ambitious"],
-    languages: ["english", "hindi"],
-    profession: "Data analyst",
-    distanceKm: 1,
-    freeNow: true
-  }
-];
-function sampleCompanions(query) {
-  return people.filter((p) => showMeIncludes(query.showMe, p.gender)).filter((p) => query.planType === null || p.planTypes.includes(query.planType)).map((p, i) => ({
-    uid: `${SAMPLE_UID_PREFIX}${p.uid}`,
-    displayName: p.displayName,
-    ageYears: p.ageYears,
-    gender: null,
-    photoPaths: [1, 2, 3].map((n) => `${query.photoBaseUrl}/${p.uid}-${n}.jpg`),
-    about: p.about,
-    activityTags: [],
-    planTypes: p.planTypes,
-    prompt: { promptId: "ideal_sunday", answer: p.prompt },
-    voiceIntro: null,
-    ratingAvg: null,
-    ratingCount: 0,
-    meetupCount: 0,
-    distanceKm: p.distanceKm,
-    spotsNearby: Math.min(query.venuesNearby, 3 + i % 4),
-    freeNowUntil: p.freeNow ? new Date(query.now.getTime() + 2 * 60 * 60 * 1e3).toISOString() : null,
-    freeFrom: null,
-    freeUntil: null,
-    isSample: true,
-    details: {
-      city: null,
-      languages: p.languages,
-      education: null,
-      profession: p.profession,
-      interests: p.interests,
-      personality: p.personality,
-      socialEnergy: null,
-      drinking: null,
-      smoking: null,
-      fitness: null
-    }
-  }));
-}
-var sampleIds = people.map((p) => p.uid);
-
 // src/handlers/places.ts
 function placesCell(point, degrees) {
   const row = Math.floor(point.lat / degrees);
@@ -21138,7 +21063,7 @@ async function ensureDefaultSlots(sql2, deps, venueId, dayKey) {
     insert into venue_slots (venue_id, id, day_key, start_at, end_at, capacity, booked, status)
     select ${venueId}, s.id, ${dayKey}, s.start_at, s.end_at, ${config2.defaultSlotCapacity}, 0, 'open'
     from unnest(${ids}::text[], ${starts}::timestamptz[], ${ends}::timestamptz[]) as s (id, start_at, end_at)
-    where exists (select 1 from venues v where v.id = ${venueId} and v.source = 'osm')
+    where exists (select 1 from venues v where v.id = ${venueId} and v.source in ('osm', 'admin'))
       and not exists (select 1 from venue_slots x where x.venue_id = ${venueId} and x.day_key = ${dayKey})
     on conflict do nothing`;
 }
@@ -21278,7 +21203,6 @@ async function toDtos(sql2, ranked, spans = /* @__PURE__ */ new Map()) {
       freeNowUntil: freeNow && candidate.freeNowUntil ? candidate.freeNowUntil.toISOString() : null,
       freeFrom: span ? span.from.toISOString() : null,
       freeUntil: span ? span.until.toISOString() : null,
-      isSample: false,
       details: {
         city: row?.city ?? null,
         languages: row?.languages ?? [],
@@ -21346,16 +21270,7 @@ async function discoverCompanionsLogic(deps, caller, input2) {
   const ctx2 = await prepare(deps, caller);
   const candidates = await candidatesNear(deps.sql, ctx2.seeker, deps.config.discoveryRadiusKm);
   const ranked = rank(deps, ctx2, candidates, input2.planType ?? null, deps.config.discoverPageSize);
-  const companions = await toDtos(deps.sql, ranked);
-  if (!deps.config.showSampleProfiles) return { companions };
-  const samples = sampleCompanions({
-    showMe: ctx2.seeker.showMe,
-    planType: input2.planType ?? null,
-    venuesNearby: ctx2.venues.length,
-    now: ctx2.now,
-    photoBaseUrl: deps.config.samplePhotoBaseUrl
-  });
-  return { companions: [...companions, ...samples] };
+  return { companions: await toDtos(deps.sql, ranked) };
 }
 var freeNowInput = external_exports.object({ window: external_exports.enum(["next_2h", "tonight", "tomorrow"]) });
 async function availabilityOf(sql2, uids) {
@@ -21417,7 +21332,8 @@ function venueFrom(row) {
     category: row.category,
     addressLine: row.address_line,
     ownerUid: row.owner_uid,
-    perk: row.perk?.text ?? null
+    perk: row.perk?.text ?? null,
+    featured: row.featured
   };
 }
 async function visibleCompanion(deps, caller, companionUid) {
@@ -21571,7 +21487,7 @@ async function requestBookingLogic(deps, caller, input2) {
   const cost = input2.kind === "instant" ? config2.creditCostInstantRequest : config2.creditCostBookSpot;
   const ledgerId = cost > 0 ? `${bookingId}_charge` : null;
   const result = await sql2.begin(async (tx) => {
-    const people2 = await tx`
+    const people = await tx`
       select id, display_name, age_years from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [again] = await tx`select 1 from bookings where id = ${bookingId}`;
     if (again) return null;
@@ -21599,8 +21515,8 @@ async function requestBookingLogic(deps, caller, input2) {
     if (cost > 0 && current < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
     const after = current - cost;
     const booked = slot.booked + 1;
-    const me = people2.find((p) => p.id === caller.uid);
-    const them = people2.find((p) => p.id === companion.uid);
+    const me = people.find((p) => p.id === caller.uid);
+    const them = people.find((p) => p.id === companion.uid);
     await tx`
       update venue_slots set booked = ${booked}, status = ${booked >= slot.capacity ? "full" : "open"}
       where venue_id = ${venue.venueId} and id = ${input2.slotId}`;
@@ -21825,13 +21741,14 @@ function canStartStep(steps, step, permanentlyRejected) {
   return steps.phone === "approved";
 }
 function ageOn(dateOfBirth, on) {
-  const [y, m, d] = dateOfBirth.split("-").map(Number);
+  const [y, m2, d] = dateOfBirth.split("-").map(Number);
   let age = on.getUTCFullYear() - y;
-  if (on.getUTCMonth() + 1 < m || on.getUTCMonth() + 1 === m && on.getUTCDate() < d) age -= 1;
+  if (on.getUTCMonth() + 1 < m2 || on.getUTCMonth() + 1 === m2 && on.getUTCDate() < d) age -= 1;
   return age;
 }
 
 // src/shared/db.ts
+var num = (value) => value === null || value === void 0 ? 0 : Number(value);
 var asJson = (value) => value;
 
 // src/handlers/onboarding.ts
@@ -22035,7 +21952,7 @@ async function adminReviewQueueLogic(deps) {
     where u.account_status = 'active' and u.verification_steps ->> 'id' = 'in_review'
     order by u.updated_at
     limit 50`;
-  const sign = async (path) => {
+  const sign2 = async (path) => {
     if (!path) return null;
     try {
       return await deps.signUrl(path, LINK_SECONDS);
@@ -22052,9 +21969,9 @@ async function adminReviewQueueLogic(deps) {
       const selfie = sessions.find((s) => s.step === "selfie");
       const id = sessions.find((s) => s.step === "id");
       const [selfieUrl, idUrl, profilePhotoUrl] = await Promise.all([
-        sign(selfie?.upload_path),
-        sign(id?.upload_path),
-        sign(row.photo_paths?.[0])
+        sign2(selfie?.upload_path),
+        sign2(id?.upload_path),
+        sign2(row.photo_paths?.[0])
       ]);
       return {
         uid: row.id,
@@ -22133,8 +22050,8 @@ async function adminDecideVerificationLogic(deps, input2) {
       update verification_sessions set status = ${steps.id === "approved" ? "approved" : "rejected"}, decided_at = ${now}
       where uid = ${input2.uid} and status = 'in_review'`;
     await tx`
-      insert into admin_audit (action, details, at)
-      values (${`verification_${input2.decision}`},
+      insert into admin_audit (action, actor, details, at)
+      values (${`verification_${input2.decision}`}, ${deps.actor},
         ${tx.json({ uid: input2.uid, dateOfBirth, note: input2.note ?? null, result: verificationStatus })}, ${now})`;
     return { verificationStatus, reason };
   });
@@ -22145,6 +22062,811 @@ async function adminDecideVerificationLogic(deps, input2) {
   };
   if (message) await notify(deps, input2.uid, message);
   return { verificationStatus: outcome.verificationStatus };
+}
+
+// src/handlers/adminManage.ts
+var adminManage_exports = {};
+__export(adminManage_exports, {
+  VENUE_CATEGORIES: () => VENUE_CATEGORIES,
+  adminAdjustCreditsInput: () => adminAdjustCreditsInput,
+  adminAdjustCreditsLogic: () => adminAdjustCreditsLogic,
+  adminAuditInput: () => adminAuditInput,
+  adminAuditLogic: () => adminAuditLogic,
+  adminBookingInput: () => adminBookingInput,
+  adminBookingLogic: () => adminBookingLogic,
+  adminBookingsInput: () => adminBookingsInput,
+  adminBookingsLogic: () => adminBookingsLogic,
+  adminCancelBookingInput: () => adminCancelBookingInput,
+  adminCancelBookingLogic: () => adminCancelBookingLogic,
+  adminDeleteMemberInput: () => adminDeleteMemberInput,
+  adminDeleteMemberLogic: () => adminDeleteMemberLogic,
+  adminDeleteReelInput: () => adminDeleteReelInput,
+  adminDeleteReelLogic: () => adminDeleteReelLogic,
+  adminDeleteVenueInput: () => adminDeleteVenueInput,
+  adminDeleteVenueLogic: () => adminDeleteVenueLogic,
+  adminGetConfigInput: () => adminGetConfigInput,
+  adminGetConfigLogic: () => adminGetConfigLogic,
+  adminMemberInput: () => adminMemberInput,
+  adminMemberLogic: () => adminMemberLogic,
+  adminMembersInput: () => adminMembersInput,
+  adminMembersLogic: () => adminMembersLogic,
+  adminMessageMemberInput: () => adminMessageMemberInput,
+  adminMessageMemberLogic: () => adminMessageMemberLogic,
+  adminOverviewInput: () => adminOverviewInput,
+  adminOverviewLogic: () => adminOverviewLogic,
+  adminReelsInput: () => adminReelsInput,
+  adminReelsLogic: () => adminReelsLogic,
+  adminReportsInput: () => adminReportsInput,
+  adminReportsLogic: () => adminReportsLogic,
+  adminResolveReportInput: () => adminResolveReportInput,
+  adminResolveReportLogic: () => adminResolveReportLogic,
+  adminSaveConfigInput: () => adminSaveConfigInput,
+  adminSaveConfigLogic: () => adminSaveConfigLogic,
+  adminSaveVenueInput: () => adminSaveVenueInput,
+  adminSaveVenueLogic: () => adminSaveVenueLogic,
+  adminSetBanInput: () => adminSetBanInput,
+  adminSetBanLogic: () => adminSetBanLogic,
+  adminSetVenueFlagsInput: () => adminSetVenueFlagsInput,
+  adminSetVenueFlagsLogic: () => adminSetVenueFlagsLogic,
+  adminVenuesInput: () => adminVenuesInput,
+  adminVenuesLogic: () => adminVenuesLogic
+});
+import { randomUUID } from "node:crypto";
+var LINK_SECONDS2 = 15 * 60;
+var DAY_MS2 = 864e5;
+var page = {
+  limit: external_exports.number().int().min(1).max(100).default(50),
+  offset: external_exports.number().int().min(0).max(1e5).default(0)
+};
+var searchText = external_exports.string().trim().max(100).optional();
+var likePattern = (text) => `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+var isUuid = (text) => uidSchema.safeParse(text).success;
+async function audit(deps, tx, action, details) {
+  await tx`
+    insert into admin_audit (action, actor, details, at)
+    values (${action}, ${deps.actor}, ${tx.json(asJson(details))}, ${deps.now()})`;
+}
+async function signed(deps, path) {
+  if (!path) return null;
+  try {
+    return await deps.signUrl(path, LINK_SECONDS2);
+  } catch {
+    return null;
+  }
+}
+var adminOverviewInput = external_exports.object({});
+async function adminOverviewLogic(deps) {
+  const now = deps.now();
+  const weekAgo = new Date(now.getTime() - 7 * DAY_MS2);
+  const monthAgo = new Date(now.getTime() - 30 * DAY_MS2);
+  const tz = deps.config.launchCity.timezone;
+  const [counts] = await deps.sql`
+    select
+      (select count(*) from users where account_type = 'member')::int as members,
+      (select count(*) from users where account_type = 'member' and verification_status = 'approved'
+        and account_status = 'active')::int as verified,
+      (select count(*) from users where account_status = 'active'
+        and verification_steps ->> 'id' = 'in_review')::int as waiting_review,
+      (select count(*) from users where account_status = 'banned')::int as banned,
+      (select count(*) from users where account_type = 'member' and created_at >= ${weekAgo})::int as new_members_7d,
+      (select count(*) from bookings where status in ${deps.sql(ACTIVE_STATUSES)} and end_at >= ${now})::int as upcoming,
+      (select count(*) from bookings where status = 'requested' and end_at >= ${now})::int as awaiting_answer,
+      (select count(*) from bookings where created_at >= ${weekAgo})::int as bookings_7d,
+      (select count(*) from bookings where status in ('checked_in', 'completed')
+        and start_at >= ${monthAgo})::int as meetups_30d,
+      (select count(*) from reports where status = 'open')::int as open_reports,
+      (select count(*) from reports where status = 'open'
+        and (context_type = 'meetup' or reason = 'safety_concern'))::int as open_safety_reports,
+      (select count(*) from reels)::int as reels,
+      (select count(*) from reels where created_at >= ${weekAgo})::int as reels_7d,
+      (select count(*) from venues where is_listed and verification_status = 'verified')::int as spots_listed,
+      (select count(*) from venues where not is_listed)::int as spots_hidden,
+      (select count(*) from venues where featured)::int as spots_featured,
+      (select count(*) from venues where source = 'admin')::int as spots_added,
+      (select count(*) from purchases where verified_at >= ${monthAgo})::int as purchases_30d,
+      (select coalesce(sum(credits), 0) from purchases where verified_at >= ${monthAgo})::int as credits_sold_30d,
+      (select count(*) from subscriptions where tier <> 'free' and status = 'active'
+        and current_period_end > ${now})::int as paid_plans`;
+  const days = await deps.sql`
+    select to_char(g.d, 'YYYY-MM-DD') as day,
+      (select count(*) from users u where u.account_type = 'member'
+        and (u.created_at at time zone ${tz})::date = g.d::date)::int as signups,
+      (select count(*) from bookings b where (b.created_at at time zone ${tz})::date = g.d::date)::int as bookings
+    from generate_series(
+      ((${now}::timestamptz at time zone ${tz})::date - 13)::timestamp,
+      (${now}::timestamptz at time zone ${tz})::date::timestamp,
+      interval '1 day') as g (d)
+    order by g.d`;
+  return { counts, days };
+}
+var adminMembersInput = external_exports.object({
+  query: searchText,
+  filter: external_exports.enum(["all", "verified", "waiting", "unverified", "banned"]).default("all"),
+  ...page
+});
+async function adminMembersLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const q = input2.query?.trim() ?? "";
+  const filter = {
+    all: sql2``,
+    verified: sql2`and u.verification_status = 'approved' and u.account_status = 'active'`,
+    waiting: sql2`and u.account_status = 'active' and u.verification_steps ->> 'id' = 'in_review'`,
+    unverified: sql2`and u.verification_status <> 'approved' and u.account_status = 'active'`,
+    banned: sql2`and u.account_status = 'banned'`
+  }[input2.filter];
+  const search = !q ? sql2`` : isUuid(q) ? sql2`and u.id = ${q}` : sql2`and (u.display_name ilike ${likePattern(q)} or p.email ilike ${likePattern(q)} or p.phone_e164 ilike ${likePattern(q)})`;
+  const rows = await sql2`
+    select u.id as uid, u.display_name, u.account_status, u.verification_status, u.verification_steps ->> 'id' as id_step,
+      u.age_years, u.created_at, p.email, p.phone_e164 as phone, coalesce(c.balance, 0)::int as credits,
+      coalesce(s.tier, 'free') as plan, count(*) over ()::int as total
+    from users u
+    left join private_profiles p on p.id = u.id
+    left join credit_accounts c on c.uid = u.id
+    left join subscriptions s on s.uid = u.id
+    where u.account_type = 'member' ${filter} ${search}
+    order by u.created_at desc
+    limit ${input2.limit} offset ${input2.offset}`;
+  return {
+    total: rows[0]?.total ?? 0,
+    items: rows.map(({ total: _total, ...row }) => row)
+  };
+}
+var adminMemberInput = external_exports.object({ uid: uidSchema });
+async function adminMemberLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const [user] = await sql2`
+    select u.id as uid, u.display_name, u.account_type, u.account_status, u.verification_status, u.verification_steps,
+      u.verification_reason, u.age_years, u.photo_paths, u.created_at, p.email, p.phone_e164 as phone, p.date_of_birth,
+      (p.trusted_contact is not null) as has_trusted_contact, cardinality(coalesce(p.fcm_tokens, '{}'))::int as phones_registered,
+      pr.gender, cp.about, cp.plan_types, coalesce(c.balance, 0)::int as credits, coalesce(s.tier, 'free') as plan,
+      s.current_period_end as plan_ends, coalesce(ms.count, 0)::int as strikes
+    from users u
+    left join private_profiles p on p.id = u.id
+    left join preferences pr on pr.uid = u.id
+    left join companion_profiles cp on cp.uid = u.id
+    left join credit_accounts c on c.uid = u.id
+    left join subscriptions s on s.uid = u.id
+    left join moderation_strikes ms on ms.uid = u.id
+    where u.id = ${input2.uid}`;
+  if (!user) throw appError(ErrorCodes.notFound, "No such member.");
+  const [bookings, reportsAgainst, reportsFiled, ledger, reels, purchases] = await Promise.all([
+    sql2`
+      select id, seeker_uid, seeker_name, companion_uid, companion_name, venue_name, start_at, status, status_reason
+      from bookings where ${input2.uid}::uuid = any (participants)
+      order by start_at desc limit 20`,
+    sql2`
+      select r.id, r.context_type, r.reason, r.details, r.source, r.status, r.resolution, r.created_at,
+        ru.display_name as reporter_name
+      from reports r left join users ru on ru.id = r.reporter_uid
+      where r.reported_uid = ${input2.uid} order by r.created_at desc limit 20`,
+    sql2`select count(*)::int as n from reports where reporter_uid = ${input2.uid}`,
+    sql2`
+      select delta, balance_after, reason, created_at from credit_ledger
+      where uid = ${input2.uid} order by created_at desc limit 15`,
+    sql2`select count(*)::int as n from reels where uid = ${input2.uid}`,
+    sql2`
+      select product_id, kind, status, credits, verified_at, refunded_at from purchases
+      where uid = ${input2.uid} order by verified_at desc limit 10`
+  ]);
+  const photoUrls = (await Promise.all((user.photo_paths ?? []).map((p) => signed(deps, p)))).filter(Boolean);
+  const { photo_paths: _paths, ...rest } = user;
+  return {
+    member: { ...rest, photoUrls },
+    bookings,
+    reportsAgainst,
+    reportsFiled: reportsFiled[0].n,
+    reels: reels[0].n,
+    ledger,
+    purchases
+  };
+}
+async function cancelInside(tx, bookingId, reason, now) {
+  const [booking] = await tx`
+    select seeker_uid, companion_uid, status, venue_id, slot_id, venue_name, start_at
+    from bookings where id = ${bookingId} for update`;
+  if (!booking) throw appError(ErrorCodes.notFound, "Booking not found.");
+  if (!ACTIVE_STATUSES.includes(booking.status)) {
+    throw appError(
+      ErrorCodes.invalidInput,
+      `This booking is already ${booking.status}.`
+    );
+  }
+  await releaseSlot(tx, booking.venue_id, booking.slot_id);
+  await tx`
+    update bookings set status = 'cancelled', status_reason = ${reason}, updated_at = ${now}
+    where id = ${bookingId}`;
+  return booking;
+}
+var cancelledMessage = (venueName) => ({
+  title: "Meetup cancelled",
+  body: `Your meetup at ${venueName} was cancelled by the VYBE team.`,
+  route: "/bookings"
+});
+var adminSetBanInput = external_exports.object({
+  uid: uidSchema,
+  banned: external_exports.boolean(),
+  reason: external_exports.string().trim().max(300).optional()
+});
+async function adminSetBanLogic(deps, input2) {
+  const now = deps.now();
+  const toTell = [];
+  const result = await deps.sql.begin(async (tx) => {
+    const [user] = await tx`
+      select account_status, account_type from users where id = ${input2.uid} for update`;
+    if (!user) throw appError(ErrorCodes.notFound, "No such member.");
+    let cancelledBookings = 0;
+    if (input2.banned) {
+      await tx`update users set account_status = 'banned', updated_at = ${now} where id = ${input2.uid}`;
+      const open2 = await tx`
+        select id from bookings where ${input2.uid}::uuid = any (participants) and status in ${tx(ACTIVE_STATUSES)}`;
+      for (const { id } of open2) {
+        const booking = await cancelInside(tx, id, "member_banned", now);
+        const other = booking.seeker_uid === input2.uid ? booking.companion_uid : booking.seeker_uid;
+        toTell.push({ uid: other, venueName: booking.venue_name });
+      }
+      cancelledBookings = open2.length;
+      await tx`
+        update chats set status = 'closed_banned', closed_at = ${now}
+        where ${input2.uid}::uuid = any (participants) and status = 'open'`;
+    } else {
+      await tx`update users set account_status = 'active', updated_at = ${now} where id = ${input2.uid}`;
+    }
+    await audit(deps, tx, input2.banned ? "member_ban" : "member_unban", {
+      uid: input2.uid,
+      reason: input2.reason ?? null,
+      cancelledBookings
+    });
+    return {
+      accountStatus: input2.banned ? "banned" : "active",
+      cancelledBookings
+    };
+  });
+  for (const { uid, venueName } of toTell)
+    await notify(deps, uid, cancelledMessage(venueName));
+  return result;
+}
+var adminAdjustCreditsInput = external_exports.object({
+  uid: uidSchema,
+  delta: external_exports.number().int().min(-1e4).max(1e4).refine((n) => n !== 0, "Enter a number other than 0."),
+  reason: external_exports.string().trim().min(3, "Say why (for the log).").max(200)
+});
+async function adminAdjustCreditsLogic(deps, input2) {
+  const now = deps.now();
+  return deps.sql.begin(async (tx) => {
+    const [user] = await tx`select 1 from users where id = ${input2.uid}`;
+    if (!user) throw appError(ErrorCodes.notFound, "No such member.");
+    await tx`insert into credit_accounts (uid, balance, updated_at) values (${input2.uid}, 0, ${now}) on conflict (uid) do nothing`;
+    const [account] = await tx`select balance from credit_accounts where uid = ${input2.uid} for update`;
+    const balance = account.balance + input2.delta;
+    if (balance < 0)
+      throw appError(
+        ErrorCodes.invalidInput,
+        `They only have ${account.balance} credits.`
+      );
+    const id = `admin_${randomUUID()}`;
+    await tx`update credit_accounts set balance = ${balance}, updated_at = ${now} where uid = ${input2.uid}`;
+    await tx`
+      insert into credit_ledger (id, uid, delta, balance_after, reason, ref_type, ref_id, idempotency_key, created_at)
+      values (${id}, ${input2.uid}, ${input2.delta}, ${balance}, 'admin_adjustment', 'admin', ${deps.actor}, ${id}, ${now})`;
+    await audit(deps, tx, "credits_adjust", {
+      uid: input2.uid,
+      delta: input2.delta,
+      balance,
+      reason: input2.reason
+    });
+    return { balance };
+  });
+}
+var adminDeleteMemberInput = external_exports.object({
+  uid: uidSchema,
+  reason: external_exports.string().trim().min(3).max(300)
+});
+async function adminDeleteMemberLogic(deps, input2) {
+  const [user] = await deps.sql`select display_name from users where id = ${input2.uid}`;
+  if (!user) throw appError(ErrorCodes.notFound, "No such member.");
+  await deleteAccountLogic(
+    { sql: deps.sql, authAdmin: deps.authAdmin, now: deps.now },
+    { uid: input2.uid, phoneNumber: void 0 }
+  );
+  await audit(deps, deps.sql, "member_delete", {
+    uid: input2.uid,
+    name: user.display_name,
+    reason: input2.reason
+  });
+  return { deleted: true };
+}
+var adminMessageMemberInput = external_exports.object({
+  uid: uidSchema,
+  title: external_exports.string().trim().min(1).max(60),
+  body: external_exports.string().trim().min(1).max(200)
+});
+async function adminMessageMemberLogic(deps, input2) {
+  const [row] = await deps.sql`
+    select cardinality(coalesce(fcm_tokens, '{}'))::int as n from private_profiles where id = ${input2.uid}`;
+  if (!row) throw appError(ErrorCodes.notFound, "No such member.");
+  if (row.n === 0)
+    throw appError(
+      ErrorCodes.invalidInput,
+      "This member has notifications turned off or has not opened the app yet."
+    );
+  await notify(deps, input2.uid, {
+    title: input2.title,
+    body: input2.body,
+    route: "/discover"
+  });
+  await audit(deps, deps.sql, "member_message", {
+    uid: input2.uid,
+    title: input2.title,
+    body: input2.body
+  });
+  return { sent: true };
+}
+var adminBookingsInput = external_exports.object({
+  view: external_exports.enum(["upcoming", "needs_answer", "past", "cancelled", "all"]).default("upcoming"),
+  query: searchText,
+  ...page
+});
+async function adminBookingsLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const now = deps.now();
+  const q = input2.query?.trim() ?? "";
+  const view = {
+    upcoming: {
+      where: sql2`and status in ${sql2(ACTIVE_STATUSES)} and end_at >= ${now}`,
+      order: sql2`start_at asc`
+    },
+    needs_answer: {
+      where: sql2`and status = 'requested' and end_at >= ${now}`,
+      order: sql2`start_at asc`
+    },
+    past: {
+      where: sql2`and start_at < ${now} and status not in ('cancelled', 'declined')`,
+      order: sql2`start_at desc`
+    },
+    cancelled: {
+      where: sql2`and status in ('cancelled', 'declined')`,
+      order: sql2`updated_at desc`
+    },
+    all: { where: sql2``, order: sql2`created_at desc` }
+  }[input2.view];
+  const search = !q ? sql2`` : isUuid(q) ? sql2`and ${q}::uuid = any (participants)` : sql2`and (id = ${q} or seeker_name ilike ${likePattern(q)} or companion_name ilike ${likePattern(q)}
+          or venue_name ilike ${likePattern(q)})`;
+  const rows = await sql2`
+    select id, seeker_uid, seeker_name, companion_uid, companion_name, venue_id, venue_name, venue_category,
+      start_at, end_at, plan_type, kind, status, status_reason, created_at, credit_cost,
+      cardinality(checked_in_uids)::int as checked_in, cardinality(feedback_uids)::int as feedback,
+      count(*) over ()::int as total
+    from bookings
+    where true ${view.where} ${search}
+    order by ${view.order}
+    limit ${input2.limit} offset ${input2.offset}`;
+  return {
+    total: rows[0]?.total ?? 0,
+    items: rows.map(({ total: _total, ...row }) => row)
+  };
+}
+var adminBookingInput = external_exports.object({
+  bookingId: external_exports.string().min(1).max(200)
+});
+async function adminBookingLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const [booking] = await sql2`
+    select b.*, v.address_line as venue_address, v.lat as venue_lat, v.lng as venue_lng
+    from bookings b left join venues v on v.id = b.venue_id where b.id = ${input2.bookingId}`;
+  if (!booking) throw appError(ErrorCodes.notFound, "Booking not found.");
+  const [feedback, reports] = await Promise.all([
+    sql2`
+      select f.uid, u.display_name as name, f.felt, f.note, f.created_at
+      from meet_feedback f left join users u on u.id = f.uid where f.booking_id = ${input2.bookingId}`,
+    sql2`
+      select id, reporter_uid, reported_uid, reason, details, status, created_at from reports
+      where context_ref_id = ${input2.bookingId} order by created_at`
+  ]);
+  return { booking, feedback, reports };
+}
+var adminCancelBookingInput = external_exports.object({
+  bookingId: external_exports.string().min(1).max(200),
+  reason: external_exports.string().trim().max(300).optional()
+});
+async function adminCancelBookingLogic(deps, input2) {
+  const now = deps.now();
+  const booking = await deps.sql.begin(async (tx) => {
+    const booking2 = await cancelInside(
+      tx,
+      input2.bookingId,
+      "admin_cancelled",
+      now
+    );
+    await audit(deps, tx, "booking_cancel", {
+      bookingId: input2.bookingId,
+      reason: input2.reason ?? null
+    });
+    return booking2;
+  });
+  for (const uid of [booking.seeker_uid, booking.companion_uid])
+    await notify(deps, uid, cancelledMessage(booking.venue_name));
+  return { status: "cancelled" };
+}
+var PLAN_TYPES = ["coffee", "movie", "event", "walk", "dinner"];
+var VENUE_CATEGORIES = [
+  "cafe",
+  "restaurant",
+  "food_court",
+  "cinema",
+  "mall",
+  "open_park",
+  "theatre"
+];
+var adminVenuesInput = external_exports.object({
+  query: searchText,
+  filter: external_exports.enum(["all", "listed", "hidden", "featured", "added"]).default("all"),
+  /** Only spots within [km] of this point, nearest first. */
+  near: external_exports.object({
+    lat: external_exports.number().min(-90).max(90),
+    lng: external_exports.number().min(-180).max(180),
+    km: external_exports.number().min(0.1).max(100)
+  }).optional(),
+  ...page
+});
+async function adminVenuesLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const now = deps.now();
+  const q = input2.query?.trim() ?? "";
+  const filter = {
+    all: sql2``,
+    listed: sql2`and v.is_listed`,
+    hidden: sql2`and not v.is_listed`,
+    featured: sql2`and v.featured`,
+    added: sql2`and v.source = 'admin'`
+  }[input2.filter];
+  const search = q ? sql2`and (v.id = ${q} or v.name ilike ${likePattern(q)} or v.address_line ilike ${likePattern(q)})` : sql2``;
+  const near = input2.near;
+  const dLat = near ? near.km / 111.32 : 0;
+  const dLng = near ? near.km / (111.32 * Math.max(Math.cos(near.lat * Math.PI / 180), 0.01)) : 0;
+  const box = near ? sql2`and v.lat between ${near.lat - dLat} and ${near.lat + dLat} and v.lng between ${near.lng - dLng} and ${near.lng + dLng}` : sql2``;
+  const order = near ? sql2`(v.lat - ${near.lat}) ^ 2 + ((v.lng - ${near.lng}) * ${Math.cos(near.lat * Math.PI / 180)}) ^ 2` : sql2`v.featured desc, v.name`;
+  const rows = await sql2`
+    with found as (
+      select v.*, count(*) over ()::int as total from venues v
+      where true ${filter} ${search} ${box}
+      order by ${order}
+      limit ${input2.limit} offset ${input2.offset}
+    )
+    select f.id, f.name, f.category, f.address_line, f.lat, f.lng, f.plan_types, f.perk ->> 'text' as perk,
+      f.is_listed, f.featured, f.source, f.verification_status, f.admin_note, f.owner_uid, f.updated_at, f.total,
+      (select count(*) from bookings b where b.venue_id = f.id and b.status in ${sql2(ACTIVE_STATUSES)}
+        and b.end_at >= ${now})::int as upcoming_bookings,
+      (select count(*) from bookings b where b.venue_id = f.id)::int as all_bookings
+    from found f`;
+  const items = rows.map(({ total: _total, ...row }) => row);
+  if (near) {
+    const k = Math.cos(near.lat * Math.PI / 180);
+    const d = (v) => (v.lat - near.lat) ** 2 + ((v.lng - near.lng) * k) ** 2;
+    items.sort((a, b) => d(a) - d(b));
+  } else {
+    items.sort(
+      (a, b) => Number(b.featured) - Number(a.featured) || String(a.name).localeCompare(String(b.name))
+    );
+  }
+  return { total: rows[0]?.total ?? 0, items };
+}
+var adminSaveVenueInput = external_exports.object({
+  /** Missing: a new spot. */
+  venueId: external_exports.string().min(1).max(200).optional(),
+  name: external_exports.string().trim().min(2).max(80),
+  category: external_exports.enum(VENUE_CATEGORIES),
+  addressLine: external_exports.string().trim().max(200),
+  lat: external_exports.number().min(-90).max(90),
+  lng: external_exports.number().min(-180).max(180),
+  planTypes: external_exports.array(external_exports.enum(PLAN_TYPES)).min(1, "Pick at least one plan."),
+  perk: external_exports.string().trim().max(140).nullable().optional(),
+  listed: external_exports.boolean(),
+  featured: external_exports.boolean(),
+  note: external_exports.string().trim().max(300).nullable().optional()
+});
+async function adminSaveVenueLogic(deps, input2) {
+  const now = deps.now();
+  const perk = input2.perk ? { text: input2.perk } : null;
+  const note = input2.note || null;
+  return deps.sql.begin(async (tx) => {
+    if (!input2.venueId) {
+      const id = `adm_${randomUUID()}`;
+      await tx`
+        insert into venues (id, owner_uid, name, category, address_line, lat, lng, plan_types, verification_status,
+          is_listed, featured, perk, admin_note, source, updated_at)
+        values (${id}, null, ${input2.name}, ${input2.category}, ${input2.addressLine}, ${input2.lat}, ${input2.lng},
+          ${input2.planTypes}, 'verified', ${input2.listed}, ${input2.featured}, ${perk ? tx.json(perk) : null}, ${note},
+          'admin', ${now})`;
+      await audit(deps, tx, "spot_add", { venueId: id, name: input2.name });
+      return { venueId: id, source: "admin" };
+    }
+    const [venue] = await tx`select source, name, category, address_line, lat, lng, plan_types from venues where id = ${input2.venueId} for update`;
+    if (!venue) throw appError(ErrorCodes.notFound, "Spot not found.");
+    const placeChanged = venue.name !== input2.name || venue.category !== input2.category || venue.address_line !== input2.addressLine || Math.abs(venue.lat - input2.lat) > 1e-7 || Math.abs(venue.lng - input2.lng) > 1e-7 || [...venue.plan_types].sort().join() !== [...input2.planTypes].sort().join();
+    const source = venue.source === "osm" && placeChanged ? "admin" : venue.source;
+    await tx`
+      update venues set name = ${input2.name}, category = ${input2.category}, address_line = ${input2.addressLine},
+        lat = ${input2.lat}, lng = ${input2.lng}, plan_types = ${input2.planTypes}, is_listed = ${input2.listed},
+        featured = ${input2.featured}, perk = ${perk ? tx.json(perk) : null}, admin_note = ${note}, source = ${source},
+        updated_at = ${now}
+      where id = ${input2.venueId}`;
+    await audit(deps, tx, "spot_edit", {
+      venueId: input2.venueId,
+      name: input2.name,
+      listed: input2.listed,
+      featured: input2.featured
+    });
+    return { venueId: input2.venueId, source };
+  });
+}
+var adminSetVenueFlagsInput = external_exports.object({
+  venueId: external_exports.string().min(1).max(200),
+  listed: external_exports.boolean().optional(),
+  featured: external_exports.boolean().optional()
+});
+async function adminSetVenueFlagsLogic(deps, input2) {
+  const now = deps.now();
+  return deps.sql.begin(async (tx) => {
+    const [venue] = await tx`
+      select is_listed, featured, name from venues where id = ${input2.venueId} for update`;
+    if (!venue) throw appError(ErrorCodes.notFound, "Spot not found.");
+    const listed = input2.listed ?? venue.is_listed;
+    const featured = input2.featured ?? venue.featured;
+    await tx`update venues set is_listed = ${listed}, featured = ${featured}, updated_at = ${now} where id = ${input2.venueId}`;
+    await audit(deps, tx, "spot_flags", {
+      venueId: input2.venueId,
+      name: venue.name,
+      listed,
+      featured
+    });
+    const [upcoming] = await tx`
+      select count(*)::int as n from bookings
+      where venue_id = ${input2.venueId} and status in ${tx(ACTIVE_STATUSES)} and end_at >= ${now}`;
+    return { listed, featured, upcomingBookings: upcoming.n };
+  });
+}
+var adminDeleteVenueInput = external_exports.object({
+  venueId: external_exports.string().min(1).max(200)
+});
+async function adminDeleteVenueLogic(deps, input2) {
+  return deps.sql.begin(async (tx) => {
+    const [venue] = await tx`
+      select source, name from venues where id = ${input2.venueId} for update`;
+    if (!venue) throw appError(ErrorCodes.notFound, "Spot not found.");
+    if (venue.source !== "admin")
+      throw appError(
+        ErrorCodes.invalidInput,
+        "Only spots the team added can be deleted. Hide this one instead."
+      );
+    const [used] = await tx`select 1 from bookings where venue_id = ${input2.venueId} limit 1`;
+    if (used)
+      throw appError(
+        ErrorCodes.invalidInput,
+        "This spot has bookings. Hide it instead."
+      );
+    await tx`delete from venues where id = ${input2.venueId}`;
+    await audit(deps, tx, "spot_delete", {
+      venueId: input2.venueId,
+      name: venue.name
+    });
+    return { deleted: true };
+  });
+}
+var adminReportsInput = external_exports.object({
+  status: external_exports.enum(["open", "closed", "all"]).default("open"),
+  ...page
+});
+async function adminReportsLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const where = {
+    open: sql2`where r.status = 'open'`,
+    closed: sql2`where r.status <> 'open'`,
+    all: sql2``
+  }[input2.status];
+  const rows = await sql2`
+    select r.id, r.reporter_uid, ru.display_name as reporter_name, r.reported_uid, u.display_name as reported_name,
+      u.account_status as reported_status, r.context_type, r.context_ref_id, r.reason, r.details, r.source, r.status,
+      r.resolution, r.resolution_note, r.created_at, r.resolved_at,
+      (select count(*) from reports x where x.reported_uid = r.reported_uid)::int as reports_about_them,
+      count(*) over ()::int as total
+    from reports r
+    left join users ru on ru.id = r.reporter_uid
+    left join users u on u.id = r.reported_uid
+    ${where}
+    order by (r.context_type = 'meetup' or r.reason = 'safety_concern') desc, r.created_at ${input2.status === "open" ? sql2`asc` : sql2`desc`}
+    limit ${input2.limit} offset ${input2.offset}`;
+  const items = await Promise.all(
+    rows.map(async ({ total: _total, ...row }) => {
+      let context = null;
+      if (row.context_type === "meetup" && row.context_ref_id && row.reporter_uid) {
+        const [answer] = await sql2`
+          select felt, note from meet_feedback where booking_id = ${row.context_ref_id} and uid = ${row.reporter_uid}`;
+        const [booking] = await sql2`select venue_name, start_at, status from bookings where id = ${row.context_ref_id}`;
+        context = {
+          kind: "meetup",
+          answer: answer ?? null,
+          booking: booking ?? null
+        };
+      } else if (row.context_type === "reel" && row.context_ref_id && isUuid(row.context_ref_id)) {
+        const [reel] = await sql2`
+          select id, caption, video_path from reels where id = ${row.context_ref_id}`;
+        context = reel ? {
+          kind: "reel",
+          reelId: reel.id,
+          caption: reel.caption,
+          videoUrl: await signed(deps, reel.video_path)
+        } : { kind: "reel", deleted: true };
+      } else if (row.context_type === "chat" && row.context_ref_id) {
+        const messages = await sql2`
+          select sender_uid, type, text, created_at from messages
+          where chat_id = ${row.context_ref_id} and type = 'text'
+          order by created_at desc limit 30`;
+        context = { kind: "chat", messages: messages.reverse() };
+      } else if (row.context_type === "booking" && row.context_ref_id) {
+        const [booking] = await sql2`select venue_name, start_at, status from bookings where id = ${row.context_ref_id}`;
+        context = { kind: "booking", booking: booking ?? null };
+      }
+      return { ...row, context };
+    })
+  );
+  return { total: rows[0]?.total ?? 0, items };
+}
+var adminResolveReportInput = external_exports.object({
+  reportId: external_exports.string().uuid(),
+  resolution: external_exports.enum(["dismissed", "actioned"]),
+  note: external_exports.string().trim().max(500).optional()
+});
+async function adminResolveReportLogic(deps, input2) {
+  const now = deps.now();
+  return deps.sql.begin(async (tx) => {
+    const [report] = await tx`select 1 from reports where id = ${input2.reportId} for update`;
+    if (!report) throw appError(ErrorCodes.notFound, "Report not found.");
+    await tx`
+      update reports set status = 'closed', resolution = ${input2.resolution}, resolution_note = ${input2.note || null},
+        resolved_at = ${now}
+      where id = ${input2.reportId}`;
+    await audit(deps, tx, `report_${input2.resolution}`, {
+      reportId: input2.reportId,
+      note: input2.note ?? null
+    });
+    return { status: "closed" };
+  });
+}
+var adminReelsInput = external_exports.object({
+  /** Only reels someone reported. */
+  reportedOnly: external_exports.boolean().default(false),
+  authorUid: uidSchema.optional(),
+  ...page
+});
+async function adminReelsLogic(deps, input2) {
+  const { sql: sql2 } = deps;
+  const rows = await sql2`
+    select r.id, r.uid, u.display_name as author, r.caption, r.video_path, r.created_at,
+      (select count(*) from reports x where x.context_type = 'reel' and x.context_ref_id = r.id::text)::int as reports,
+      count(*) over ()::int as total
+    from reels r left join users u on u.id = r.uid
+    where true
+      ${input2.authorUid ? sql2`and r.uid = ${input2.authorUid}` : sql2``}
+      ${input2.reportedOnly ? sql2`and exists (select 1 from reports x where x.context_type = 'reel' and x.context_ref_id = r.id::text)` : sql2``}
+    order by r.created_at desc
+    limit ${input2.limit} offset ${input2.offset}`;
+  const items = await Promise.all(
+    rows.map(async ({ total: _total, video_path, ...row }) => ({
+      ...row,
+      videoUrl: await signed(deps, video_path)
+    }))
+  );
+  return { total: rows[0]?.total ?? 0, items };
+}
+var adminDeleteReelInput = external_exports.object({
+  reelId: external_exports.string().uuid(),
+  reason: external_exports.string().trim().max(300).optional()
+});
+async function adminDeleteReelLogic(deps, input2) {
+  const now = deps.now();
+  const reel = await deps.sql.begin(async (tx) => {
+    const [reel2] = await tx`
+      select uid, video_path, caption from reels where id = ${input2.reelId} for update`;
+    if (!reel2)
+      throw appError(ErrorCodes.notFound, "Reel not found (already deleted?).");
+    await tx`delete from reels where id = ${input2.reelId}`;
+    await tx`
+      update reports set status = 'closed', resolution = 'actioned', resolution_note = 'Reel removed', resolved_at = ${now}
+      where context_type = 'reel' and context_ref_id = ${input2.reelId} and status = 'open'`;
+    await audit(deps, tx, "reel_delete", {
+      reelId: input2.reelId,
+      uid: reel2.uid,
+      caption: reel2.caption,
+      reason: input2.reason ?? null
+    });
+    return reel2;
+  });
+  const { bucket, name } = splitStoragePath(reel.video_path);
+  try {
+    await deps.authAdmin.deleteFiles(bucket, [name]);
+  } catch (error62) {
+    console.warn(
+      `Reel video ${reel.video_path} could not be deleted: ${String(error62)}`
+    );
+  }
+  await notify(deps, reel.uid, {
+    title: "Your reel was removed",
+    body: "It broke the VYBE community rules.",
+    route: "/reels"
+  });
+  return { deleted: true };
+}
+var adminGetConfigInput = external_exports.object({});
+async function adminGetConfigLogic(deps) {
+  const [row] = await deps.sql`
+    select overrides, updated_at from app_config where id = 1`;
+  const overrides = Object.fromEntries(
+    Object.entries(row?.overrides ?? {}).filter(
+      ([key]) => key in defaultAppConfig || MARKER_KEYS.has(key)
+    )
+  );
+  return {
+    overrides,
+    updatedAt: row?.updated_at ?? null,
+    defaults: defaultAppConfig
+  };
+}
+var adminSaveConfigInput = external_exports.object({
+  overrides: external_exports.record(external_exports.string(), external_exports.unknown())
+});
+var MARKER_KEYS = /* @__PURE__ */ new Set(["environment"]);
+async function adminSaveConfigLogic(deps, input2) {
+  const unknown2 = Object.keys(input2.overrides).filter(
+    (key) => !(key in defaultAppConfig) && !MARKER_KEYS.has(key)
+  );
+  if (unknown2.length)
+    throw appError(
+      ErrorCodes.invalidInput,
+      `Unknown setting: ${unknown2.join(", ")}.`
+    );
+  const settings = Object.fromEntries(
+    Object.entries(input2.overrides).filter(([key]) => !MARKER_KEYS.has(key))
+  );
+  const parsed = appConfigSchema.safeParse({
+    ...defaultAppConfig,
+    ...settings
+  });
+  if (!parsed.success) {
+    const issue2 = parsed.error.issues[0];
+    throw appError(
+      ErrorCodes.invalidInput,
+      `${issue2.path.join(".") || "settings"}: ${issue2.message}`
+    );
+  }
+  const now = deps.now();
+  await deps.sql.begin(async (tx) => {
+    const [before] = await tx`select overrides from app_config where id = 1 for update`;
+    await tx`update app_config set overrides = ${tx.json(asJson(input2.overrides))}, updated_at = ${now} where id = 1`;
+    const keys = /* @__PURE__ */ new Set([
+      ...Object.keys(before?.overrides ?? {}),
+      ...Object.keys(input2.overrides)
+    ]);
+    const changed = [...keys].filter(
+      (key) => JSON.stringify(before?.overrides?.[key]) !== JSON.stringify(input2.overrides[key])
+    );
+    await audit(deps, tx, "settings_save", { changed });
+  });
+  clearAppConfigCache();
+  return { saved: true };
+}
+var adminAuditInput = external_exports.object({ ...page });
+async function adminAuditLogic(deps, input2) {
+  const rows = await deps.sql`
+    select id, action, actor, details, at, count(*) over ()::int as total
+    from admin_audit order by at desc, id desc
+    limit ${input2.limit} offset ${input2.offset}`;
+  return {
+    total: num(rows[0]?.total),
+    items: rows.map(({ total: _total, ...row }) => ({
+      ...row,
+      id: num(row.id)
+    }))
+  };
 }
 
 // src/handlers/chat.ts
@@ -22266,7 +22988,7 @@ async function startChatLogic(deps, caller, input2) {
   const cost = config2.creditCostStartChat;
   const now = deps.now();
   const result = await sql2.begin(async (tx) => {
-    const people2 = await tx`
+    const people = await tx`
       select id, display_name from users where id in ${tx([caller.uid, companion.uid])} order by id for update`;
     const [account] = await tx`select balance from credit_accounts where uid = ${caller.uid} for update`;
     const balance = account?.balance ?? 0;
@@ -22278,7 +23000,7 @@ async function startChatLogic(deps, caller, input2) {
     if (balance < cost) throw appError(ErrorCodes.insufficientCredits, "Not enough credits.");
     const after = balance - cost;
     const ledgerId = `${chatId}_open`;
-    const name = (uid) => people2.find((p) => p.id === uid)?.display_name ?? "";
+    const name = (uid) => people.find((p) => p.id === uid)?.display_name ?? "";
     await tx`
       insert into credit_accounts (uid, balance, updated_at) values (${caller.uid}, ${after}, ${now})
       on conflict (uid) do update set balance = excluded.balance, updated_at = excluded.updated_at`;
@@ -22407,7 +23129,7 @@ __export(phoneLogin_exports, {
 });
 import { createHash as createHash2, randomInt } from "node:crypto";
 var HOUR_MS = 36e5;
-var DAY_MS2 = 24 * HOUR_MS;
+var DAY_MS3 = 24 * HOUR_MS;
 var phoneSchema = (config2) => external_exports.string().trim().refine(
   (p) => p.startsWith(config2.phoneCountryCode) && new RegExp(`^\\d{${config2.phoneNationalNumberLength}}$`).test(p.slice(config2.phoneCountryCode.length)),
   "Enter a valid mobile number."
@@ -22429,7 +23151,7 @@ async function requestLoginOtpLogic(deps, input2) {
     throw appError(ErrorCodes.rateLimited, "Wait a moment before asking for another code.");
   }
   await consumeRateLimit(sql2, ipKey(deps.ip), config2.otpRequestsPerIpPerHour, HOUR_MS, now);
-  await consumeRateLimit(sql2, `otp_phone_${phone}`, config2.otpRequestsPerPhonePerDay, DAY_MS2, now);
+  await consumeRateLimit(sql2, `otp_phone_${phone}`, config2.otpRequestsPerPhonePerDay, DAY_MS3, now);
   const code = String(randomInt(0, 10 ** config2.otpLength)).padStart(config2.otpLength, "0");
   const salt = sha256(`${phone}:${now.getTime()}:${randomInt(0, 2 ** 47)}`);
   const expiresAt = new Date(now.getTime() + config2.otpValiditySeconds * 1e3);
@@ -22764,10 +23486,10 @@ async function reelFeedLogic(deps, caller, input2) {
       ${cursor ? sql2`and (r.created_at, r.id) < (${cursor.created_at}, ${cursor.id})` : sql2``}
     order by r.created_at desc, r.id desc
     limit ${REELS_PAGE_SIZE + 1}`;
-  const page = rows.slice(0, REELS_PAGE_SIZE);
+  const page2 = rows.slice(0, REELS_PAGE_SIZE);
   return {
     hasMore: rows.length > REELS_PAGE_SIZE,
-    reels: page.map((r) => ({
+    reels: page2.map((r) => ({
       reelId: r.id,
       authorUid: r.uid,
       authorName: r.display_name?.trim() || "VYBE member",
@@ -22880,14 +23602,38 @@ async function blockUserLogic(deps, caller, input2) {
 }
 
 // src/api/router.ts
+var m = adminManage_exports;
 var adminActions = {
   adminReviewQueue: { schema: admin_exports.adminReviewQueueInput, run: (deps) => admin_exports.adminReviewQueueLogic(deps) },
-  adminDecideVerification: { schema: admin_exports.adminDecideVerificationInput, run: admin_exports.adminDecideVerificationLogic }
+  adminDecideVerification: { schema: admin_exports.adminDecideVerificationInput, run: admin_exports.adminDecideVerificationLogic },
+  adminOverview: { schema: m.adminOverviewInput, run: (deps) => m.adminOverviewLogic(deps) },
+  adminMembers: { schema: m.adminMembersInput, run: m.adminMembersLogic },
+  adminMember: { schema: m.adminMemberInput, run: m.adminMemberLogic },
+  adminSetBan: { schema: m.adminSetBanInput, run: m.adminSetBanLogic },
+  adminAdjustCredits: { schema: m.adminAdjustCreditsInput, run: m.adminAdjustCreditsLogic },
+  adminDeleteMember: { schema: m.adminDeleteMemberInput, run: m.adminDeleteMemberLogic },
+  adminMessageMember: { schema: m.adminMessageMemberInput, run: m.adminMessageMemberLogic },
+  adminBookings: { schema: m.adminBookingsInput, run: m.adminBookingsLogic },
+  adminBooking: { schema: m.adminBookingInput, run: m.adminBookingLogic },
+  adminCancelBooking: { schema: m.adminCancelBookingInput, run: m.adminCancelBookingLogic },
+  adminVenues: { schema: m.adminVenuesInput, run: m.adminVenuesLogic },
+  adminSaveVenue: { schema: m.adminSaveVenueInput, run: m.adminSaveVenueLogic },
+  adminSetVenueFlags: { schema: m.adminSetVenueFlagsInput, run: m.adminSetVenueFlagsLogic },
+  adminDeleteVenue: { schema: m.adminDeleteVenueInput, run: m.adminDeleteVenueLogic },
+  adminReports: { schema: m.adminReportsInput, run: m.adminReportsLogic },
+  adminResolveReport: { schema: m.adminResolveReportInput, run: m.adminResolveReportLogic },
+  adminReels: { schema: m.adminReelsInput, run: m.adminReelsLogic },
+  adminDeleteReel: { schema: m.adminDeleteReelInput, run: m.adminDeleteReelLogic },
+  adminGetConfig: { schema: m.adminGetConfigInput, run: (deps) => m.adminGetConfigLogic(deps) },
+  adminSaveConfig: { schema: m.adminSaveConfigInput, run: m.adminSaveConfigLogic },
+  adminAudit: { schema: m.adminAuditInput, run: m.adminAuditLogic }
 };
+var ADMIN_FAILURES_ALLOWED = 10;
+var ADMIN_LOCKOUT_MS = 15 * 6e4;
 var CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "content-type, x-admin-secret"
+  "Access-Control-Allow-Headers": "content-type, x-admin-session"
 };
 function withCors(response) {
   const headers = new Headers(response.headers);
@@ -22947,7 +23693,7 @@ async function readJson(req) {
 }
 async function handleApiRequest(req, ctx2) {
   const name = routeName(req.url);
-  if (name in adminActions) {
+  if (name in adminActions || name === "adminSignIn") {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
     return withCors(await handleAdmin(name, req, ctx2));
   }
@@ -22957,20 +23703,65 @@ async function handleAdmin(name, req, ctx2) {
   const now = ctx2.now ?? (() => /* @__PURE__ */ new Date());
   try {
     if (req.method !== "POST") return json2(405, { error: { status: "invalid-argument", code: null, message: "Use POST." } });
-    const given = req.headers.get("x-admin-secret") ?? "";
-    if (!ctx2.adminSecret || !given || !sameSecret(given, ctx2.adminSecret)) throw new AppError("permission-denied", "Not allowed.");
+    const key = ctx2.adminSecret;
+    const allowed = ctx2.adminEmails ?? [];
+    if (!key || allowed.length === 0) throw new AppError("permission-denied", "The admin panel is not set up.");
+    if (name === "adminSignIn") return json2(200, await adminSignIn(req, ctx2, key, allowed, now));
+    const session = readAdminSession(key, req.headers.get("x-admin-session") ?? "", allowed, now());
+    if (!session) throw new AppError("unauthenticated", "Sign in again.");
     const signStorageUrl = ctx2.signStorageUrl;
     if (!signStorageUrl) throw new AppError("failed-precondition", "Storage links are not available.");
     const action = adminActions[name];
     const config2 = await loadAppConfig(ctx2.sql);
     const input2 = parseInput(action.schema, await readJson(req));
-    const deps = { sql: ctx2.sql, config: config2, services: ctx2.services(config2), now, signUrl: signStorageUrl };
+    const deps = {
+      sql: ctx2.sql,
+      config: config2,
+      services: ctx2.services(config2),
+      now,
+      signUrl: signStorageUrl,
+      authAdmin: ctx2.authAdmin,
+      actor: session.email
+    };
     return json2(200, await action.run(deps, input2) ?? {});
   } catch (error62) {
     if (error62 instanceof AppError) return errorResponse(error62);
     console.error(`api/${name} failed`, error62 instanceof Error ? `${error62.name}: ${error62.message}` : String(error62));
     return errorResponse(new AppError("internal", "Something went wrong."));
   }
+}
+async function adminSignIn(req, ctx2, key, allowed, now) {
+  const failureKey = `admin_fail_${clientIp(req)}`;
+  const [failures] = await ctx2.sql`
+    select count, window_start from rate_limits where key = ${failureKey}`;
+  if (failures && failures.count >= ADMIN_FAILURES_ALLOWED && now().getTime() - failures.window_start.getTime() < ADMIN_LOCKOUT_MS) {
+    throw new AppError("resource-exhausted", "Too many refused sign-ins. Try again in 15 minutes.");
+  }
+  const refuse = async (message) => {
+    await consumeRateLimit(ctx2.sql, failureKey, Number.MAX_SAFE_INTEGER, ADMIN_LOCKOUT_MS, now());
+    throw new AppError("permission-denied", message);
+  };
+  const body = await readJson(req);
+  const text = (value) => typeof value === "string" ? value : "";
+  let who;
+  if (body && "password" in body) {
+    const email3 = text(body.email).trim().toLowerCase();
+    const password = text(body.password);
+    const right = ctx2.adminPassword ?? "";
+    if (!right) throw new AppError("failed-precondition", "Password sign-in is not set up.");
+    const passwordOk = sameSecret(password, right);
+    if (!passwordOk || !allowed.includes(email3)) return refuse("Wrong email or password.");
+    who = { email: email3, name: email3 };
+  } else {
+    const idToken = text(body?.idToken);
+    if (!ctx2.verifyGoogleIdToken) throw new AppError("failed-precondition", "Google sign-in is not set up.");
+    who = idToken ? await ctx2.verifyGoogleIdToken(idToken).catch(() => null) : null;
+    if (!who || !allowed.includes(who.email)) {
+      return refuse(who ? `${who.email} is not allowed into the admin panel.` : "Google sign-in failed.");
+    }
+  }
+  const { token, expiresAt } = createAdminSession(key, who.email, who.name, now());
+  return { session: token, email: who.email, name: who.name, expiresAt: expiresAt.toISOString() };
 }
 async function handleAppRequest(name, req, ctx2) {
   const now = ctx2.now ?? (() => /* @__PURE__ */ new Date());
@@ -23072,6 +23863,10 @@ var ctx = {
   },
   cronSecret: env("FINDX_CRON_SECRET"),
   adminSecret: env("FINDX_ADMIN_SECRET"),
+  adminEmails: parseAdminEmails(env("FINDX_ADMIN_EMAILS")),
+  adminPassword: env("FINDX_ADMIN_PASSWORD"),
+  // The Google OAuth web client id the admin panel signs in with (same as GOOGLE_WEB_CLIENT_ID in the app config).
+  verifyGoogleIdToken: googleIdTokenVerifier(env("FINDX_ADMIN_GOOGLE_CLIENT_ID") ?? ""),
   async signStorageUrl(path, seconds) {
     const slash = path.indexOf("/");
     const objectPath = `${path.slice(0, slash)}/${path.slice(slash + 1).split("/").map(encodeURIComponent).join("/")}`;

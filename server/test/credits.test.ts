@@ -19,7 +19,7 @@ describe('productFor', () => {
       kind: 'plan',
       productId: 'vybe_premium_monthly',
       tier: 'premium',
-      monthlyCredits: 200,
+      monthlyCredits: 300,
     });
     expect(productFor(config, 'vybe_plus_monthly')).toMatchObject({ monthlyCredits: 100 });
   });

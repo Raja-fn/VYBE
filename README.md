@@ -35,9 +35,7 @@ flutter run -t lib/main_dev.dart --dart-define-from-file=config/supabase.dev.jso
 (VS Code: Run and Debug -> **VYBE (test project)**.)
 
 Login is **Google only** for now (phone OTP is built but switched off with
-`phoneLoginEnabled`). Test builds also offer **Use a test account**: the Mumbai
-test people are `<first name>@findx.test`, for example `aarav@findx.test`; any
-other email creates a new account.
+`phoneLoginEnabled`).
 
 ## Map
 

@@ -85,13 +85,13 @@ describe('plans', () => {
     expect(sub.current_period_end).toEqual(new Date(START.getTime() + 30 * DAY));
   });
 
-  it('upgrading to Premium mid-month adds 200 right away', async () => {
+  it('upgrading to Premium mid-month adds 300 right away', async () => {
     await buy('aarav', 'vybe_plus_monthly', token('plus'));
     now = new Date(START.getTime() + 10 * DAY);
     await expect(buy('aarav', 'vybe_premium_monthly', token('premium'))).resolves.toMatchObject({
       status: 'granted',
-      creditsAdded: 200,
-      balance: 320,
+      creditsAdded: 300,
+      balance: 420,
       tier: 'premium',
     });
   });
@@ -100,14 +100,14 @@ describe('plans', () => {
     await buy('aarav', 'vybe_premium_monthly', token('premium'));
     now = new Date(START.getTime() + 10 * DAY);
     const plusToken = token('plus');
-    await expect(buy('aarav', 'vybe_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0, balance: 220, tier: 'premium' });
+    await expect(buy('aarav', 'vybe_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0, balance: 320, tier: 'premium' });
     await expect(buy('aarav', 'vybe_plus_monthly', plusToken)).resolves.toMatchObject({ status: 'at_renewal', creditsAdded: 0 });
     expect(await subscription('aarav')).toMatchObject({ tier: 'premium', pending_tier: 'plus' });
 
     now = new Date(START.getTime() + 31 * DAY);
     await expect(renewSubscriptionsLogic(deps())).resolves.toEqual({ renewed: 1, ended: 0, failed: 0 });
     expect(await subscription('aarav')).toMatchObject({ tier: 'plus', pending_tier: null, status: 'active' });
-    expect(await balance('aarav')).toBe(320);
+    expect(await balance('aarav')).toBe(420);
   });
 
   it('each renewal grants the month once; unused credits are kept', async () => {

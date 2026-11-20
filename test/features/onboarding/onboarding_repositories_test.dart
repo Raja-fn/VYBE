@@ -181,26 +181,6 @@ void main() {
       expect(server.requests, isEmpty);
     });
 
-    test('test accounts work only in test builds, and a new one is created on first use', () async {
-      final server = _AuthServer()..passwordAccounts.clear();
-      expect(
-        (await server.repository(_FakePicker()).signInWithTestGoogleAccount('aarav@findx.test')).failureOrNull?.kind,
-        FailureKind.permissionDenied,
-      );
-      final repository = server.repository(_FakePicker(), allowTestAccounts: true);
-      expect((await repository.signInWithTestGoogleAccount(' Neha@FindX.test ')).isOk, isTrue);
-      expect(server.requests.map((r) => r.url.path.split('/').last), ['token', 'signup']);
-      expect(jsonDecode(server.requests.last.body), containsPair('email', 'neha@findx.test'));
-      expect(jsonDecode(server.requests.last.body), containsPair('password', 'test-password'));
-    });
-
-    test('an existing test account signs in with the shared password', () async {
-      final server = _AuthServer();
-      final repository = server.repository(_FakePicker(), allowTestAccounts: true);
-      expect((await repository.signInWithTestGoogleAccount('aarav@findx.test')).isOk, isTrue);
-      expect(server.requests.single.url.queryParameters['grant_type'], 'password');
-    });
-
     test('asks the server for a code, then signs in with the token it returns', () async {
       final server = _AuthServer();
       final functions = FakeCallableClient()..responses['verifyLoginOtp'] = {'tokenHash': 'hashed-token'};
@@ -274,7 +254,7 @@ void main() {
 /// A stand-in for Supabase Auth's HTTP API.
 class _AuthServer {
   final List<http.Request> requests = [];
-  final Set<String> passwordAccounts = {'aarav@findx.test'};
+  final Set<String> passwordAccounts = {'aarav@example.com'};
 
   Map<String, Object?> _session(String email) => {
     'access_token': 'access-token',
@@ -319,7 +299,6 @@ class _AuthServer {
   SupabaseAuthRepository repository(
     GoogleAccountPicker picker, {
     FakeCallableClient? functions,
-    bool allowTestAccounts = false,
   }) => SupabaseAuthRepository(
     GoTrueClient(
       url: 'https://test.supabase.co/auth/v1',
@@ -329,8 +308,6 @@ class _AuthServer {
     ),
     functions: functions ?? FakeCallableClient(),
     google: picker,
-    allowTestAccounts: allowTestAccounts,
-    testAccountPassword: 'test-password',
   );
 }
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { AuthAdmin } from '../services/auth/authAdmin';
 import { ageOn, overallStatus, type VerificationSteps } from '../domain/verification';
 import { uidSchema } from '../shared/callable';
 import { asJson } from '../shared/db';
@@ -8,10 +9,14 @@ import type { Deps } from './deps';
 import { UNDERAGE_REASON } from './onboarding';
 import { notify } from './push';
 
-/** What the review page's actions need: the usual deps plus signed links to private photos. */
+/** What the admin panel's actions need: the usual deps plus signed links to private files. */
 export interface AdminDeps extends Deps {
   /** A link to a private storage file ("bucket/name") that works for [seconds]. */
   signUrl(path: string, seconds: number): Promise<string>;
+  /** Deletes accounts and stored files. */
+  authAdmin: AuthAdmin;
+  /** Who on the team is acting (the name typed into the panel), for the activity log. */
+  actor: string;
 }
 
 const LINK_SECONDS = 15 * 60;
@@ -174,8 +179,8 @@ export async function adminDecideVerificationLogic(
       update verification_sessions set status = ${steps.id === 'approved' ? 'approved' : 'rejected'}, decided_at = ${now}
       where uid = ${input.uid} and status = 'in_review'`;
     await tx`
-      insert into admin_audit (action, details, at)
-      values (${`verification_${input.decision}`},
+      insert into admin_audit (action, actor, details, at)
+      values (${`verification_${input.decision}`}, ${deps.actor},
         ${tx.json({ uid: input.uid, dateOfBirth, note: input.note ?? null, result: verificationStatus })}, ${now})`;
     return { verificationStatus, reason };
   });

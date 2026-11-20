@@ -4,8 +4,6 @@
   "distanceLabelStepKm": 1,
   "discoverCallsPerMinute": 20,
   "discoverPageSize": 20,
-  "showSampleProfiles": true,
-  "samplePhotoBaseUrl": "https://findx-dev-b5f6b.web.app/samples",
   "maxPlausibleSpeedKmh": 300,
   "launchCity": {
     "name": "Mumbai",
@@ -36,12 +34,14 @@
     {
       "tier": "plus",
       "productId": "vybe_plus_monthly",
-      "monthlyCredits": 100
+      "monthlyCredits": 100,
+      "price": "₹149"
     },
     {
       "tier": "premium",
       "productId": "vybe_premium_monthly",
-      "monthlyCredits": 200
+      "monthlyCredits": 300,
+      "price": "₹299"
     }
   ],
   "topUpPacks": [

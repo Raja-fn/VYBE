@@ -762,7 +762,8 @@ as String,
 /// @nodoc
 mixin _$PlanConfig {
 
- PlanTier get tier; String? get productId; int get monthlyCredits;
+ PlanTier get tier; String? get productId; int get monthlyCredits;/// Price shown until the store answers (the store's own price wins).
+ String? get price;
 /// Create a copy of PlanConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -775,16 +776,16 @@ $PlanConfigCopyWith<PlanConfig> get copyWith => _$PlanConfigCopyWithImpl<PlanCon
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanConfig&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.monthlyCredits, monthlyCredits) || other.monthlyCredits == monthlyCredits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlanConfig&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.monthlyCredits, monthlyCredits) || other.monthlyCredits == monthlyCredits)&&(identical(other.price, price) || other.price == price));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tier,productId,monthlyCredits);
+int get hashCode => Object.hash(runtimeType,tier,productId,monthlyCredits,price);
 
 @override
 String toString() {
-  return 'PlanConfig(tier: $tier, productId: $productId, monthlyCredits: $monthlyCredits)';
+  return 'PlanConfig(tier: $tier, productId: $productId, monthlyCredits: $monthlyCredits, price: $price)';
 }
 
 
@@ -795,7 +796,7 @@ abstract mixin class $PlanConfigCopyWith<$Res>  {
   factory $PlanConfigCopyWith(PlanConfig value, $Res Function(PlanConfig) _then) = _$PlanConfigCopyWithImpl;
 @useResult
 $Res call({
- PlanTier tier, String? productId, int monthlyCredits
+ PlanTier tier, String? productId, int monthlyCredits, String? price
 });
 
 
@@ -812,12 +813,13 @@ class _$PlanConfigCopyWithImpl<$Res>
 
 /// Create a copy of PlanConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? tier = null,Object? productId = freezed,Object? monthlyCredits = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? tier = null,Object? productId = freezed,Object? monthlyCredits = null,Object? price = freezed,}) {
   return _then(_self.copyWith(
 tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as PlanTier,productId: freezed == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String?,monthlyCredits: null == monthlyCredits ? _self.monthlyCredits : monthlyCredits // ignore: cast_nullable_to_non_nullable
-as int,
+as int,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -902,10 +904,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlanTier tier,  String? productId,  int monthlyCredits)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PlanTier tier,  String? productId,  int monthlyCredits,  String? price)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlanConfig() when $default != null:
-return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
+return $default(_that.tier,_that.productId,_that.monthlyCredits,_that.price);case _:
   return orElse();
 
 }
@@ -923,10 +925,10 @@ return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlanTier tier,  String? productId,  int monthlyCredits)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PlanTier tier,  String? productId,  int monthlyCredits,  String? price)  $default,) {final _that = this;
 switch (_that) {
 case _PlanConfig():
-return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
+return $default(_that.tier,_that.productId,_that.monthlyCredits,_that.price);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -943,10 +945,10 @@ return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlanTier tier,  String? productId,  int monthlyCredits)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PlanTier tier,  String? productId,  int monthlyCredits,  String? price)?  $default,) {final _that = this;
 switch (_that) {
 case _PlanConfig() when $default != null:
-return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
+return $default(_that.tier,_that.productId,_that.monthlyCredits,_that.price);case _:
   return null;
 
 }
@@ -958,12 +960,14 @@ return $default(_that.tier,_that.productId,_that.monthlyCredits);case _:
 @JsonSerializable()
 
 class _PlanConfig implements PlanConfig {
-  const _PlanConfig({required this.tier, required this.productId, required this.monthlyCredits});
+  const _PlanConfig({required this.tier, required this.productId, required this.monthlyCredits, this.price});
   factory _PlanConfig.fromJson(Map<String, dynamic> json) => _$PlanConfigFromJson(json);
 
 @override final  PlanTier tier;
 @override final  String? productId;
 @override final  int monthlyCredits;
+/// Price shown until the store answers (the store's own price wins).
+@override final  String? price;
 
 /// Create a copy of PlanConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -978,16 +982,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlanConfig&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.monthlyCredits, monthlyCredits) || other.monthlyCredits == monthlyCredits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlanConfig&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.monthlyCredits, monthlyCredits) || other.monthlyCredits == monthlyCredits)&&(identical(other.price, price) || other.price == price));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tier,productId,monthlyCredits);
+int get hashCode => Object.hash(runtimeType,tier,productId,monthlyCredits,price);
 
 @override
 String toString() {
-  return 'PlanConfig(tier: $tier, productId: $productId, monthlyCredits: $monthlyCredits)';
+  return 'PlanConfig(tier: $tier, productId: $productId, monthlyCredits: $monthlyCredits, price: $price)';
 }
 
 
@@ -998,7 +1002,7 @@ abstract mixin class _$PlanConfigCopyWith<$Res> implements $PlanConfigCopyWith<$
   factory _$PlanConfigCopyWith(_PlanConfig value, $Res Function(_PlanConfig) _then) = __$PlanConfigCopyWithImpl;
 @override @useResult
 $Res call({
- PlanTier tier, String? productId, int monthlyCredits
+ PlanTier tier, String? productId, int monthlyCredits, String? price
 });
 
 
@@ -1015,12 +1019,13 @@ class __$PlanConfigCopyWithImpl<$Res>
 
 /// Create a copy of PlanConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? tier = null,Object? productId = freezed,Object? monthlyCredits = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? tier = null,Object? productId = freezed,Object? monthlyCredits = null,Object? price = freezed,}) {
   return _then(_PlanConfig(
 tier: null == tier ? _self.tier : tier // ignore: cast_nullable_to_non_nullable
 as PlanTier,productId: freezed == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String?,monthlyCredits: null == monthlyCredits ? _self.monthlyCredits : monthlyCredits // ignore: cast_nullable_to_non_nullable
-as int,
+as int,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1031,7 +1036,7 @@ as int,
 /// @nodoc
 mixin _$TopUpPack {
 
- String get productId; int get credits;
+ String get productId; int get credits; String? get price;
 /// Create a copy of TopUpPack
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1044,16 +1049,16 @@ $TopUpPackCopyWith<TopUpPack> get copyWith => _$TopUpPackCopyWithImpl<TopUpPack>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopUpPack&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.credits, credits) || other.credits == credits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TopUpPack&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.price, price) || other.price == price));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,productId,credits);
+int get hashCode => Object.hash(runtimeType,productId,credits,price);
 
 @override
 String toString() {
-  return 'TopUpPack(productId: $productId, credits: $credits)';
+  return 'TopUpPack(productId: $productId, credits: $credits, price: $price)';
 }
 
 
@@ -1064,7 +1069,7 @@ abstract mixin class $TopUpPackCopyWith<$Res>  {
   factory $TopUpPackCopyWith(TopUpPack value, $Res Function(TopUpPack) _then) = _$TopUpPackCopyWithImpl;
 @useResult
 $Res call({
- String productId, int credits
+ String productId, int credits, String? price
 });
 
 
@@ -1081,11 +1086,12 @@ class _$TopUpPackCopyWithImpl<$Res>
 
 /// Create a copy of TopUpPack
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? credits = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? credits = null,Object? price = freezed,}) {
   return _then(_self.copyWith(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,credits: null == credits ? _self.credits : credits // ignore: cast_nullable_to_non_nullable
-as int,
+as int,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1170,10 +1176,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  int credits)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  int credits,  String? price)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TopUpPack() when $default != null:
-return $default(_that.productId,_that.credits);case _:
+return $default(_that.productId,_that.credits,_that.price);case _:
   return orElse();
 
 }
@@ -1191,10 +1197,10 @@ return $default(_that.productId,_that.credits);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  int credits)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  int credits,  String? price)  $default,) {final _that = this;
 switch (_that) {
 case _TopUpPack():
-return $default(_that.productId,_that.credits);case _:
+return $default(_that.productId,_that.credits,_that.price);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1211,10 +1217,10 @@ return $default(_that.productId,_that.credits);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  int credits)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  int credits,  String? price)?  $default,) {final _that = this;
 switch (_that) {
 case _TopUpPack() when $default != null:
-return $default(_that.productId,_that.credits);case _:
+return $default(_that.productId,_that.credits,_that.price);case _:
   return null;
 
 }
@@ -1226,11 +1232,12 @@ return $default(_that.productId,_that.credits);case _:
 @JsonSerializable()
 
 class _TopUpPack implements TopUpPack {
-  const _TopUpPack({required this.productId, required this.credits});
+  const _TopUpPack({required this.productId, required this.credits, this.price});
   factory _TopUpPack.fromJson(Map<String, dynamic> json) => _$TopUpPackFromJson(json);
 
 @override final  String productId;
 @override final  int credits;
+@override final  String? price;
 
 /// Create a copy of TopUpPack
 /// with the given fields replaced by the non-null parameter values.
@@ -1245,16 +1252,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopUpPack&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.credits, credits) || other.credits == credits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TopUpPack&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.credits, credits) || other.credits == credits)&&(identical(other.price, price) || other.price == price));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,productId,credits);
+int get hashCode => Object.hash(runtimeType,productId,credits,price);
 
 @override
 String toString() {
-  return 'TopUpPack(productId: $productId, credits: $credits)';
+  return 'TopUpPack(productId: $productId, credits: $credits, price: $price)';
 }
 
 
@@ -1265,7 +1272,7 @@ abstract mixin class _$TopUpPackCopyWith<$Res> implements $TopUpPackCopyWith<$Re
   factory _$TopUpPackCopyWith(_TopUpPack value, $Res Function(_TopUpPack) _then) = __$TopUpPackCopyWithImpl;
 @override @useResult
 $Res call({
- String productId, int credits
+ String productId, int credits, String? price
 });
 
 
@@ -1282,11 +1289,12 @@ class __$TopUpPackCopyWithImpl<$Res>
 
 /// Create a copy of TopUpPack
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? credits = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? credits = null,Object? price = freezed,}) {
   return _then(_TopUpPack(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,credits: null == credits ? _self.credits : credits // ignore: cast_nullable_to_non_nullable
-as int,
+as int,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

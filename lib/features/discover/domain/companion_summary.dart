@@ -69,10 +69,6 @@ abstract class CompanionSummary with _$CompanionSummary {
 
     /// City, languages, interests, lifestyle and personality, when filled in.
     @Default(ProfileDetails.empty) ProfileDetails details,
-
-    /// A made-up sample profile shown while VYBE has few members. Not a real
-    /// person: it cannot be messaged, saved or booked.
-    @Default(false) bool isSample,
   }) = _CompanionSummary;
 
   factory CompanionSummary.fromJson(Map<String, Object?> json) => _$CompanionSummaryFromJson(json);

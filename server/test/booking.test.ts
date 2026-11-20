@@ -95,6 +95,11 @@ describe('rankVenues', () => {
     expect(result[2].distanceKm).toBe(0.1);
   });
 
+  it('puts spots the team featured first', () => {
+    const featured = venues.map((v) => ({ ...v, featured: v.venueId === 'near-quiet' }));
+    expect(run({ venues: featured }).map((r) => r.venue.venueId)).toEqual(['near-quiet', 'hot', 'park']);
+  });
+
   it('filters by plan', () => {
     expect(run({ planType: 'walk' }).map((r) => r.venue.venueId)).toEqual(['park']);
   });

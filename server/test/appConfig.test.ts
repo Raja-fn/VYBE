@@ -10,7 +10,7 @@ describe('AppConfig defaults', () => {
     expect(defaultAppConfig.plans.map((p) => [p.tier, p.monthlyCredits])).toEqual([
       ['free', 0],
       ['plus', 100],
-      ['premium', 200],
+      ['premium', 300],
     ]);
     expect(defaultAppConfig.topUpPacks.map((p) => p.credits)).toEqual([10, 30, 75]);
     expect(defaultAppConfig.launchCity.name).toBe('Mumbai');

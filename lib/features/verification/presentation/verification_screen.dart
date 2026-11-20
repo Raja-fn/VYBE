@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
-import '../../../core/config/app_env.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/services/identity_verification/identity_verification_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -113,16 +112,6 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l10n.verifySignInBody, style: Theme.of(context).textTheme.bodyLarge),
-              if (ref.watch(appEnvProvider).isDev) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: TextButton(
-                    onPressed: flow.busy ? null : () => _pickTestAccount(context, controller),
-                    child: Text(l10n.verifyTestAccount),
-                  ),
-                ),
-              ],
               if (config.phoneLoginEnabled) ...[
                 const SizedBox(height: AppSpacing.lg),
                 SectionLabel(l10n.verifyOrPhone),
@@ -190,49 +179,6 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-/// Test builds: sign in as a shared test account (seeded people are
-/// first-name@findx.test).
-Future<void> _pickTestAccount(BuildContext context, VerificationController controller) async {
-  final chosen = await showDialog<String>(context: context, builder: (_) => const _TestAccountDialog());
-  if (chosen != null && chosen.contains('@')) await controller.signInWithTestAccount(chosen);
-}
-
-class _TestAccountDialog extends StatefulWidget {
-  const _TestAccountDialog();
-
-  @override
-  State<_TestAccountDialog> createState() => _TestAccountDialogState();
-}
-
-class _TestAccountDialogState extends State<_TestAccountDialog> {
-  final _email = TextEditingController();
-
-  @override
-  void dispose() {
-    _email.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AlertDialog(
-      title: Text(l10n.verifyTestAccount),
-      content: TextField(
-        controller: _email,
-        autofocus: true,
-        keyboardType: TextInputType.emailAddress,
-        decoration: InputDecoration(labelText: l10n.verifyTestAccountEmail, hintText: l10n.verifyTestAccountHint),
-        onSubmitted: (value) => Navigator.of(context).pop(value),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.commonCancel)),
-        TextButton(onPressed: () => Navigator.of(context).pop(_email.text), child: Text(l10n.verifyTestAccountSignIn)),
       ],
     );
   }

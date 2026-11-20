@@ -83,20 +83,12 @@ class FakeAuthRepository implements AuthRepository {
 
   /// Fails "Continue with Google" with this (e.g. signInCanceled).
   AppFailure? googleFailure;
-  final List<String> testAccountSignIns = [];
 
   @override
   Future<Result<void>> signInWithGoogle() async {
     final failure = googleFailure;
     if (failure != null) return Err(failure);
     user.value = AuthUser(uid: testUid, email: googleEmail);
-    return const Ok(null);
-  }
-
-  @override
-  Future<Result<void>> signInWithTestGoogleAccount(String email) async {
-    testAccountSignIns.add(email);
-    user.value = AuthUser(uid: testUid, email: email);
     return const Ok(null);
   }
 

@@ -1,15 +1,18 @@
 import type { z } from 'zod';
 
 import { loadAppConfig, type AppConfig } from '../config/appConfig';
-import { account, admin, booking, chat, discovery, onboarding, phoneLogin, purchases, push, reels, safety } from '../handlers';
+import { account, admin, adminManage, booking, chat, discovery, onboarding, phoneLogin, purchases, push, reels, safety } from '../handlers';
 import type { Deps } from '../handlers/deps';
 import type { AuthAdmin } from '../services/auth/authAdmin';
+import type { GoogleIdTokenVerifier } from '../services/auth/googleIdToken';
 import type { Services } from '../services/factory';
 import type { OtpSender } from '../services/otp/otpSender';
 import { parseInput, type Caller } from '../shared/callable';
 import type { Db } from '../shared/db';
+import { createAdminSession, readAdminSession } from '../shared/adminSession';
 import { sameSecret } from '../shared/constantTime';
 import { AppError, httpStatusFor } from '../shared/errorCodes';
+import { consumeRateLimit } from '../shared/rateLimit';
 
 /** What the router needs from the outside world. Tests pass fakes. */
 export interface ApiContext {
@@ -21,24 +24,58 @@ export interface ApiContext {
   otpSender(config: AppConfig): OtpSender;
   /** Shared secret the scheduled renewal job sends in `x-cron-secret`. */
   cronSecret: string | undefined;
-  /** Shared secret the review page sends in `x-admin-secret`. Unset: the admin actions are off. */
+  /** Signs admin panel sessions (FINDX_ADMIN_SECRET). Unset: the admin panel is off. */
   adminSecret?: string | undefined;
+  /** Google accounts allowed into the admin panel (FINDX_ADMIN_EMAILS). Empty: nobody. */
+  adminEmails?: readonly string[];
+  /** Checks the Google Sign-In token the admin panel sends to `adminSignIn`. */
+  verifyGoogleIdToken?: GoogleIdTokenVerifier;
+  /** Shared admin panel password (FINDX_ADMIN_PASSWORD), used with a listed email. Unset: password sign-in is off. */
+  adminPassword?: string | undefined;
   /** A link to a private storage file ("bucket/name") that works for [seconds]. */
   signStorageUrl?(path: string, seconds: number): Promise<string>;
   now?: () => Date;
 }
 
-/** Actions for the VYBE team's review page (not the app). */
-const adminActions: Record<string, { schema: z.ZodType; run: (deps: admin.AdminDeps, input: never) => Promise<unknown> }> = {
+type AdminAction = { schema: z.ZodType; run: (deps: admin.AdminDeps, input: never) => Promise<unknown> };
+const m = adminManage;
+
+/** Actions for the VYBE team's admin panel (site/admin/index.html), not the app. */
+const adminActions: Record<string, AdminAction> = {
   adminReviewQueue: { schema: admin.adminReviewQueueInput, run: (deps) => admin.adminReviewQueueLogic(deps) },
   adminDecideVerification: { schema: admin.adminDecideVerificationInput, run: admin.adminDecideVerificationLogic },
+  adminOverview: { schema: m.adminOverviewInput, run: (deps) => m.adminOverviewLogic(deps) },
+  adminMembers: { schema: m.adminMembersInput, run: m.adminMembersLogic },
+  adminMember: { schema: m.adminMemberInput, run: m.adminMemberLogic },
+  adminSetBan: { schema: m.adminSetBanInput, run: m.adminSetBanLogic },
+  adminAdjustCredits: { schema: m.adminAdjustCreditsInput, run: m.adminAdjustCreditsLogic },
+  adminDeleteMember: { schema: m.adminDeleteMemberInput, run: m.adminDeleteMemberLogic },
+  adminMessageMember: { schema: m.adminMessageMemberInput, run: m.adminMessageMemberLogic },
+  adminBookings: { schema: m.adminBookingsInput, run: m.adminBookingsLogic },
+  adminBooking: { schema: m.adminBookingInput, run: m.adminBookingLogic },
+  adminCancelBooking: { schema: m.adminCancelBookingInput, run: m.adminCancelBookingLogic },
+  adminVenues: { schema: m.adminVenuesInput, run: m.adminVenuesLogic },
+  adminSaveVenue: { schema: m.adminSaveVenueInput, run: m.adminSaveVenueLogic },
+  adminSetVenueFlags: { schema: m.adminSetVenueFlagsInput, run: m.adminSetVenueFlagsLogic },
+  adminDeleteVenue: { schema: m.adminDeleteVenueInput, run: m.adminDeleteVenueLogic },
+  adminReports: { schema: m.adminReportsInput, run: m.adminReportsLogic },
+  adminResolveReport: { schema: m.adminResolveReportInput, run: m.adminResolveReportLogic },
+  adminReels: { schema: m.adminReelsInput, run: m.adminReelsLogic },
+  adminDeleteReel: { schema: m.adminDeleteReelInput, run: m.adminDeleteReelLogic },
+  adminGetConfig: { schema: m.adminGetConfigInput, run: (deps) => m.adminGetConfigLogic(deps) },
+  adminSaveConfig: { schema: m.adminSaveConfigInput, run: m.adminSaveConfigLogic },
+  adminAudit: { schema: m.adminAuditInput, run: m.adminAuditLogic },
 };
 
-/** The review page is a local file in a browser, so admin answers allow any origin; the secret is the guard. */
+/** Refused admin sign-ins allowed per address before it is locked out for a while. */
+const ADMIN_FAILURES_ALLOWED = 10;
+const ADMIN_LOCKOUT_MS = 15 * 60_000;
+
+/** The panel runs from a file or another site, so admin answers allow any origin; the session is the guard. */
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'content-type, x-admin-secret',
+  'Access-Control-Allow-Headers': 'content-type, x-admin-session',
 };
 
 function withCors(response: Response): Response {
@@ -113,7 +150,7 @@ async function readJson(req: Request): Promise<unknown> {
 /** Handles one HTTP request to the `api` Edge Function. */
 export async function handleApiRequest(req: Request, ctx: ApiContext): Promise<Response> {
   const name = routeName(req.url);
-  if (name in adminActions) {
+  if (name in adminActions || name === 'adminSignIn') {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
     return withCors(await handleAdmin(name, req, ctx));
   }
@@ -124,20 +161,73 @@ async function handleAdmin(name: string, req: Request, ctx: ApiContext): Promise
   const now = ctx.now ?? (() => new Date());
   try {
     if (req.method !== 'POST') return json(405, { error: { status: 'invalid-argument', code: null, message: 'Use POST.' } });
-    const given = req.headers.get('x-admin-secret') ?? '';
-    if (!ctx.adminSecret || !given || !sameSecret(given, ctx.adminSecret)) throw new AppError('permission-denied', 'Not allowed.');
+    const key = ctx.adminSecret;
+    const allowed = ctx.adminEmails ?? [];
+    if (!key || allowed.length === 0) throw new AppError('permission-denied', 'The admin panel is not set up.');
+    if (name === 'adminSignIn') return json(200, await adminSignIn(req, ctx, key, allowed, now));
+
+    const session = readAdminSession(key, req.headers.get('x-admin-session') ?? '', allowed, now());
+    if (!session) throw new AppError('unauthenticated', 'Sign in again.');
     const signStorageUrl = ctx.signStorageUrl;
     if (!signStorageUrl) throw new AppError('failed-precondition', 'Storage links are not available.');
     const action = adminActions[name];
     const config = await loadAppConfig(ctx.sql);
     const input = parseInput(action.schema, await readJson(req));
-    const deps: admin.AdminDeps = { sql: ctx.sql, config, services: ctx.services(config), now, signUrl: signStorageUrl };
+    const deps: admin.AdminDeps = {
+      sql: ctx.sql,
+      config,
+      services: ctx.services(config),
+      now,
+      signUrl: signStorageUrl,
+      authAdmin: ctx.authAdmin,
+      actor: session.email,
+    };
     return json(200, (await action.run(deps, input as never)) ?? {});
   } catch (error) {
     if (error instanceof AppError) return errorResponse(error);
     console.error(`api/${name} failed`, error instanceof Error ? `${error.name}: ${error.message}` : String(error));
     return errorResponse(new AppError('internal', 'Something went wrong.'));
   }
+}
+
+/**
+ * Admin panel sign-in, by Google or by email + password. Either way only the
+ * emails in FINDX_ADMIN_EMAILS get a session; the password is FINDX_ADMIN_PASSWORD.
+ */
+async function adminSignIn(req: Request, ctx: ApiContext, key: string, allowed: readonly string[], now: () => Date) {
+  const failureKey = `admin_fail_${clientIp(req)}`;
+  const [failures] = await ctx.sql<{ count: number; window_start: Date }[]>`
+    select count, window_start from rate_limits where key = ${failureKey}`;
+  if (failures && failures.count >= ADMIN_FAILURES_ALLOWED && now().getTime() - failures.window_start.getTime() < ADMIN_LOCKOUT_MS) {
+    throw new AppError('resource-exhausted', 'Too many refused sign-ins. Try again in 15 minutes.');
+  }
+  const refuse = async (message: string): Promise<never> => {
+    await consumeRateLimit(ctx.sql, failureKey, Number.MAX_SAFE_INTEGER, ADMIN_LOCKOUT_MS, now());
+    throw new AppError('permission-denied', message);
+  };
+  const body = (await readJson(req)) as { idToken?: unknown; email?: unknown; password?: unknown } | null;
+  const text = (value: unknown) => (typeof value === 'string' ? value : '');
+
+  let who: { email: string; name: string } | null;
+  if (body && 'password' in body) {
+    const email = text(body.email).trim().toLowerCase();
+    const password = text(body.password);
+    const right = ctx.adminPassword ?? '';
+    if (!right) throw new AppError('failed-precondition', 'Password sign-in is not set up.');
+    // Both checks always run, so the answer time does not tell which one failed.
+    const passwordOk = sameSecret(password, right);
+    if (!passwordOk || !allowed.includes(email)) return refuse('Wrong email or password.');
+    who = { email, name: email };
+  } else {
+    const idToken = text(body?.idToken);
+    if (!ctx.verifyGoogleIdToken) throw new AppError('failed-precondition', 'Google sign-in is not set up.');
+    who = idToken ? await ctx.verifyGoogleIdToken(idToken).catch(() => null) : null;
+    if (!who || !allowed.includes(who.email)) {
+      return refuse(who ? `${who.email} is not allowed into the admin panel.` : 'Google sign-in failed.');
+    }
+  }
+  const { token, expiresAt } = createAdminSession(key, who.email, who.name, now());
+  return { session: token, email: who.email, name: who.name, expiresAt: expiresAt.toISOString() };
 }
 
 async function handleAppRequest(name: string, req: Request, ctx: ApiContext): Promise<Response> {

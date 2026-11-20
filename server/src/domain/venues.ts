@@ -4,6 +4,8 @@ import { popularityLabel, type PopularityLabel } from '../services/places/places
 export interface VenueCandidate extends LatLng {
   venueId: string;
   planTypes: string[];
+  /** Picked by the VYBE team: suggested before the others. */
+  featured?: boolean;
 }
 
 export interface RankedVenue<T extends VenueCandidate> {
@@ -17,8 +19,8 @@ export interface RankedVenue<T extends VenueCandidate> {
 
 /**
  * "Best spots to meet": venues within reach of the seeker (and of the
- * companion, when one is chosen), optionally for one plan, ranked by
- * popularity then distance.
+ * companion, when one is chosen), optionally for one plan. Featured spots
+ * come first, then by popularity, then distance.
  */
 export function rankVenues<T extends VenueCandidate>(input: {
   venues: T[];
@@ -37,7 +39,7 @@ export function rankVenues<T extends VenueCandidate>(input: {
       const score = input.scores.get(venue.venueId) ?? 0;
       return { venue, exact, score };
     })
-    .sort((a, b) => b.score - a.score || a.exact - b.exact)
+    .sort((a, b) => Number(b.venue.featured ?? false) - Number(a.venue.featured ?? false) || b.score - a.score || a.exact - b.exact)
     .map(({ venue, exact, score }, i) => ({
       venue,
       distanceKm: Math.round(exact * 10) / 10,

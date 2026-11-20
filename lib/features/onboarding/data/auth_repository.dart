@@ -28,11 +28,6 @@ abstract interface class AuthRepository {
   /// [FailureKind.signInCanceled] when the picker is closed.
   Future<Result<void>> signInWithGoogle();
 
-  /// Test builds only: signs in as a shared test account on the test
-  /// project, creating it the first time. Seeded people are
-  /// `<first name>@findx.test`.
-  Future<Result<void>> signInWithTestGoogleAccount(String email);
-
   /// Phone login (switched off for now with `phoneLoginEnabled`).
   Future<Result<OtpRequest>> requestOtp(String phoneE164, {int? resendToken});
 
@@ -106,18 +101,12 @@ class SupabaseAuthRepository implements AuthRepository {
     this._auth, {
     required CallableClient functions,
     required GoogleAccountPicker google,
-    required bool allowTestAccounts,
-    required String testAccountPassword,
   }) : _functions = functions,
-       _google = google,
-       _allowTestAccounts = allowTestAccounts,
-       _testPassword = testAccountPassword;
+       _google = google;
 
   final GoTrueClient _auth;
   final CallableClient _functions;
   final GoogleAccountPicker _google;
-  final bool _allowTestAccounts;
-  final String _testPassword;
 
   static AuthUser? toAuthUser(User? user) {
     if (user == null) return null;
@@ -142,22 +131,6 @@ class SupabaseAuthRepository implements AuthRepository {
     final idToken = await _google.pickIdToken();
     if (idToken == null) throw const AppFailure(FailureKind.signInCanceled);
     await _auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken);
-  });
-
-  @override
-  Future<Result<void>> signInWithTestGoogleAccount(String email) => runGuarded(() async {
-    if (!_allowTestAccounts) throw const AppFailure(FailureKind.permissionDenied, debugMessage: 'Test builds only');
-    final address = email.trim().toLowerCase();
-    try {
-      await _auth.signInWithPassword(email: address, password: _testPassword);
-    } on AuthException catch (error) {
-      if (error.code != 'invalid_credentials') rethrow;
-      // A new test person. The test project must not ask for email confirmation.
-      final response = await _auth.signUp(email: address, password: _testPassword);
-      if (response.session == null) {
-        throw const AppFailure(FailureKind.unknown, debugMessage: 'Turn off "Confirm email" on the test project.');
-      }
-    }
   });
 
   /// Phone login with our own SMS codes: the server creates the code, sends

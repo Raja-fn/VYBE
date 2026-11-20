@@ -70,7 +70,8 @@ export async function ensurePlacesNear(deps: Deps, point: LatLng): Promise<void>
 }
 
 /**
- * Default time slots for a public place without a venue partner: one slot
+ * Default time slots for a place without a venue partner (public places and
+ * spots the VYBE team added): one slot
  * every `slotMinutesDefault` between the opening and closing hours, created
  * the first time someone looks at that day. Partner venues keep their own.
  */
@@ -99,7 +100,7 @@ export async function ensureDefaultSlots(sql: Sql, deps: Pick<Deps, 'config' | '
     insert into venue_slots (venue_id, id, day_key, start_at, end_at, capacity, booked, status)
     select ${venueId}, s.id, ${dayKey}, s.start_at, s.end_at, ${config.defaultSlotCapacity}, 0, 'open'
     from unnest(${ids}::text[], ${starts}::timestamptz[], ${ends}::timestamptz[]) as s (id, start_at, end_at)
-    where exists (select 1 from venues v where v.id = ${venueId} and v.source = 'osm')
+    where exists (select 1 from venues v where v.id = ${venueId} and v.source in ('osm', 'admin'))
       and not exists (select 1 from venue_slots x where x.venue_id = ${venueId} and x.day_key = ${dayKey})
     on conflict do nothing`;
 }

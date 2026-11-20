@@ -75,8 +75,13 @@ class _CreditsScreenState extends ConsumerState<CreditsScreen> {
 
     final storeFailure = pricesAsync.error;
     final available = storeFailure == null && !pricesAsync.isLoading;
-    String? priceOf(String productId) => store.isTestStore ? l10n.creditsTestPrice : prices[productId];
-    bool canBuy(String productId) => available && priceOf(productId) != null;
+    String? listedPrice(String productId) =>
+        config.plans.where((p) => p.productId == productId).firstOrNull?.price ??
+        config.topUpPacks.where((p) => p.productId == productId).firstOrNull?.price;
+    // The store's price is what is charged; the listed one fills in for the test store.
+    String? storePrice(String productId) => store.isTestStore ? listedPrice(productId) : prices[productId];
+    String? priceOf(String productId) => storePrice(productId) ?? listedPrice(productId);
+    bool canBuy(String productId) => available && (store.isTestStore || storePrice(productId) != null);
 
     final selected = _selected ?? _defaultSelection(config, sub);
     final selectedPlan = config.plans.where((p) => p.productId == selected).firstOrNull;
@@ -140,9 +145,7 @@ class _CreditsScreenState extends ConsumerState<CreditsScreen> {
                             ? l10n.creditsFreePrice
                             : (priceOf(plan.productId!) == null
                                   ? l10n.creditsPriceMissing
-                                  : (store.isTestStore
-                                        ? l10n.creditsTestPrice
-                                        : l10n.creditsPerMonth(priceOf(plan.productId!)!))),
+                                  : l10n.creditsPerMonth(priceOf(plan.productId!)!)),
                         detail: [
                           if (plan.productId == null)
                             l10n.creditsFreeDetail(config.signupBonusCredits)
@@ -171,7 +174,7 @@ class _CreditsScreenState extends ConsumerState<CreditsScreen> {
                           Expanded(
                             child: _PackTile(
                               credits: pack.credits,
-                              price: priceOf(pack.productId) ?? l10n.creditsPriceMissing,
+                              price: priceOf(pack.productId) ?? (store.isTestStore ? '' : l10n.creditsPriceMissing),
                               selected: pack.productId == selected,
                               onTap: () => setState(() => _selected = pack.productId),
                             ),
@@ -179,10 +182,6 @@ class _CreditsScreenState extends ConsumerState<CreditsScreen> {
                         ],
                       ],
                     ),
-                    if (store.isTestStore) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Text(l10n.creditsTestStoreNote, style: textTheme.bodySmall?.copyWith(color: AppColors.muted)),
-                    ],
                     if (storeFailure != null) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(

@@ -37,13 +37,15 @@ void main() {
       expect(find.text('20 credits when you join'), findsOneWidget);
       expect(find.text('Popular'), findsOneWidget);
       expect(find.text('100 credits a month · unused credits stay'), findsOneWidget);
-      expect(find.text('200 credits a month · unused credits stay'), findsOneWidget);
+      expect(find.text('300 credits a month · unused credits stay'), findsOneWidget);
+      expect(find.text('₹149/mo'), findsOneWidget);
+      expect(find.text('₹299/mo'), findsOneWidget);
       expect(find.text('Or top up credits'), findsOneWidget);
       for (final n in ['10', '30', '75']) {
         expect(find.text(n), findsOneWidget);
       }
       expect(find.text('Your plan'), findsOneWidget);
-      expect(find.textContaining('Test store'), findsOneWidget);
+      expect(find.textContaining('Test'), findsNothing);
       expect(find.text('Continue with Plus'), findsOneWidget);
       for (final banned in ['swipe', 'like', 'boost']) {
         expect(find.textContaining(RegExp(banned, caseSensitive: false)), findsNothing);

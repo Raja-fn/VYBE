@@ -7,7 +7,7 @@ a new implementation and choosing it in `server/src/services/factory.ts`
 
 | Part | What production does today | To replace it |
 |---|---|---|
-| **ID and selfie checks** | A person reviews each selfie and ID in `admin/review.html` (`ManualReviewIdentityService`; the server actions `adminReviewQueue` / `adminDecideVerification` need `FINDX_ADMIN_SECRET`). Ages come from the date of birth typed at sign-up, checked by the reviewer. | A provider such as HyperVerge, IDfy or Digio, implementing `IdentityVerificationService`. |
+| **ID and selfie checks** | A person reviews each selfie and ID in the admin panel, `site/admin/index.html` (`ManualReviewIdentityService`; Google sign-in limited to `FINDX_ADMIN_EMAILS`). Ages come from the date of birth typed at sign-up, checked by the reviewer. | A provider such as HyperVerge, IDfy or Digio, implementing `IdentityVerificationService`. |
 | **Venue popularity ("Hot / Busy")** | No data: every spot is "Quiet", and spots rank by distance. | A foot-traffic source, or FindX's own meetup counts, implementing `PlacesPopularityService`. |
 | **Companion earnings and payouts** | Not offered: any payout call fails. | A payout provider, implementing `PaymentPayoutService`. |
 | **Chat moderation** | VYBE's own rules block phone numbers, emails, handles and links. Nothing checks for explicit content. | A text-moderation API, implementing `ModerationService`. |

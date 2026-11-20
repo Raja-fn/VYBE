@@ -51,7 +51,7 @@ void main() {
       expect(config.plans.map((p) => (p.tier, p.monthlyCredits)), [
         (PlanTier.free, 0),
         (PlanTier.plus, 100),
-        (PlanTier.premium, 200),
+        (PlanTier.premium, 300),
       ]);
       expect(config.topUpPacks.map((p) => p.credits), [10, 30, 75]);
       expect(config.launchCity.name, 'Mumbai');

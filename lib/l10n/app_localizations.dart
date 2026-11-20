@@ -1828,12 +1828,6 @@ abstract class AppLocalizations {
   /// **'{price}/mo'**
   String creditsPerMonth(String price);
 
-  /// No description provided for @creditsTestPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Test'**
-  String get creditsTestPrice;
-
   /// No description provided for @creditsPriceMissing.
   ///
   /// In en, this message translates to:
@@ -1857,12 +1851,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{plan} plan, {price}'**
   String creditsPlanSemantics(String plan, String price);
-
-  /// No description provided for @creditsTestStoreNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Test store: nothing is charged. These purchases only work on test servers.'**
-  String get creditsTestStoreNote;
 
   /// No description provided for @creditsContinueWith.
   ///
@@ -1977,30 +1965,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Or use your phone number'**
   String get verifyOrPhone;
-
-  /// No description provided for @verifyTestAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Use a test account'**
-  String get verifyTestAccount;
-
-  /// No description provided for @verifyTestAccountEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Test account email'**
-  String get verifyTestAccountEmail;
-
-  /// No description provided for @verifyTestAccountHint.
-  ///
-  /// In en, this message translates to:
-  /// **'aarav@findx.test'**
-  String get verifyTestAccountHint;
-
-  /// No description provided for @verifyTestAccountSignIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get verifyTestAccountSignIn;
 
   /// No description provided for @failureSignInCanceled.
   ///
@@ -2613,18 +2577,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to my location'**
   String get mapRecenter;
-
-  /// No description provided for @sampleProfileTag.
-  ///
-  /// In en, this message translates to:
-  /// **'Sample'**
-  String get sampleProfileTag;
-
-  /// No description provided for @sampleProfileNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'This is a sample profile. Real members near you will appear here as people join.'**
-  String get sampleProfileNotice;
 
   /// No description provided for @reelProfile.
   ///

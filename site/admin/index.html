@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>VYBE Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+  :root {
+    --bg: #f6f4f1; --card: #ffffff; --ink: #1c1b22; --muted: #6c6a76; --line: #e5e1dc; --soft: #f1eee9;
+    --accent: #e9532f; --accent-ink: #ffffff; --ok: #12784a; --ok-soft: #e3f4ea; --bad: #b42318; --bad-soft: #fde9e7;
+    --warn: #9a5b00; --warn-soft: #fff2d9; --info: #2f5bd3; --info-soft: #e7edfc; --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111116; --card: #1b1b22; --ink: #f2f1f5; --muted: #a3a1ad; --line: #2c2c35; --soft: #23232b;
+      --accent: #ff6b4a; --ok: #4cc38a; --ok-soft: #173326; --bad: #ff7b70; --bad-soft: #3a1c1a;
+      --warn: #f0b44c; --warn-soft: #3a2c12; --info: #8aa8ff; --info-soft: #1c2440; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111116; --card: #1b1b22; --ink: #f2f1f5; --muted: #a3a1ad; --line: #2c2c35; --soft: #23232b;
+    --accent: #ff6b4a; --ok: #4cc38a; --ok-soft: #173326; --bad: #ff7b70; --bad-soft: #3a1c1a;
+    --warn: #f0b44c; --warn-soft: #3a2c12; --info: #8aa8ff; --info-soft: #1c2440; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  h1, h2, h3 { margin: 0; line-height: 1.25; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 15px; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  input, select, textarea {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0;
+  }
+  textarea { width: 100%; resize: vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button {
+    cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 7px 12px;
+    white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: var(--soft); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button.primary:hover:not(:disabled) { filter: brightness(1.05); background: var(--accent); }
+  button.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+  button.danger { color: var(--bad); border-color: var(--bad); }
+  button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; }
+  button.small { padding: 3px 8px; font-size: 13px; }
+
+  /* Sign in */
+  #login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+  #login .card-login { width: min(420px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); display: grid; gap: 12px; }
+  #login label { display: grid; gap: 4px; font-weight: 600; }
+  #login label span { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .brand { font-weight: 800; letter-spacing: .08em; color: var(--accent); }
+
+  /* Layout */
+  #app { display: none; min-height: 100vh; }
+  #app.on { display: grid; grid-template-columns: 220px 1fr; }
+  nav#side { background: var(--card); border-right: 1px solid var(--line); padding: 16px 10px; position: sticky; top: 0; height: 100vh; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+  nav#side .brand { padding: 4px 10px 14px; font-size: 18px; }
+  nav#side button { text-align: left; border: 0; background: none; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  nav#side button.active { background: var(--soft); font-weight: 600; }
+  nav#side .spacer { flex: 1; }
+  nav#side .who { color: var(--muted); font-size: 12px; padding: 8px 10px; }
+  .count { background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-size: 11px; padding: 0 7px; font-weight: 700; }
+  main { padding: 20px 24px 48px; min-width: 0; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .tools input[type=search] { width: 260px; max-width: 100%; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+  .seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button.active { background: var(--ink); color: var(--bg); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+  .stack { display: grid; gap: 12px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  .error { color: var(--bad); }
+
+  /* Tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .tile { white-space: normal; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 2px; box-shadow: var(--shadow); }
+  .tile .num { font-size: 26px; font-weight: 750; font-variant-numeric: tabular-nums; }
+  .tile .label { color: var(--muted); }
+  .tile.alert .num { color: var(--accent); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; background: var(--soft); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: var(--soft); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; color: var(--muted); }
+
+  /* Badges */
+  .badge { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 12px; font-weight: 600; background: var(--soft); color: var(--muted); white-space: nowrap; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.bad { background: var(--bad-soft); color: var(--bad); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.info { background: var(--info-soft); color: var(--info); }
+
+  /* Drawer */
+  #drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 1000; }
+  #drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 100%); background: var(--bg); border-left: 1px solid var(--line); z-index: 1001; transform: translateX(100%); transition: transform .18s ease; display: flex; flex-direction: column; }
+  #drawer.open { transform: none; }
+  #drawer-bg.open { display: block; }
+  #drawer header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+  #drawer .body { padding: 16px; overflow: auto; display: grid; gap: 14px; align-content: start; }
+  dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; }
+  dl.facts dt { color: var(--muted); }
+  dl.facts dd { margin: 0; overflow-wrap: anywhere; }
+
+  /* Media */
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .photos figure { margin: 0; }
+  .photos img { width: 100%; height: 200px; object-fit: contain; background: #111; border-radius: 10px; display: block; }
+  .photos figcaption { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .reels { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  video { width: 100%; max-height: 380px; background: #000; border-radius: 10px; display: block; }
+  .chatlog { display: grid; gap: 4px; max-height: 260px; overflow: auto; background: var(--soft); border-radius: 10px; padding: 10px; }
+  .chatlog div { overflow-wrap: anywhere; }
+
+  /* Forms */
+  .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .form label { display: grid; gap: 4px; font-weight: 600; font-size: 13px; }
+  .form .full { grid-column: 1 / -1; }
+  .form label .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .checks { display: flex; gap: 12px; flex-wrap: wrap; font-weight: 400; }
+  .checks label { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; }
+  .map { width: 100%; height: 320px; border-radius: 12px; border: 1px solid var(--line); z-index: 0; }
+
+  /* Dialog and toast */
+  dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; background: var(--card); color: var(--ink); width: min(440px, calc(100% - 32px)); }
+  dialog::backdrop { background: rgba(0,0,0,.4); }
+  dialog form { padding: 18px; display: grid; gap: 12px; }
+  dialog label { display: grid; gap: 4px; font-weight: 600; font-size: 13px; }
+  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; display: none; z-index: 2000; max-width: calc(100% - 32px); }
+  #toast.error { background: var(--bad); color: #fff; }
+
+  @media (max-width: 820px) {
+    #app.on { grid-template-columns: 1fr; }
+    nav#side { position: sticky; top: 0; height: auto; flex-direction: row; overflow-x: auto; padding: 8px; border-right: 0; border-bottom: 1px solid var(--line); z-index: 500; }
+    nav#side .brand, nav#side .who, nav#side .spacer { display: none; }
+    main { padding: 16px 16px 40px; }
+    .form { grid-template-columns: 1fr; }
+    .tools input[type=search] { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<section id="login">
+  <div class="card-login">
+    <div><span class="brand">VYBE</span> <strong>Admin</strong></div>
+    <p class="muted" style="margin:0">For the VYBE team only. Everything you do here is saved in the activity log with your email.</p>
+    <form id="login-form" autocomplete="on" style="display:grid;gap:12px">
+      <label>Email
+        <input id="login-email" type="email" required autocomplete="username"></label>
+      <label>Password
+        <input id="login-password" type="password" required autocomplete="current-password"></label>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <div class="muted" style="text-align:center">or</div>
+    <div id="gsi-button" style="min-height:44px"></div>
+    <div id="gsi-loading" class="muted">Loading Google sign-in…</div>
+    <details>
+      <summary class="muted">Server address</summary>
+      <input id="login-api" style="width:100%;margin-top:6px" value="https://stgfjguoytqzmliurbvp.supabase.co/functions/v1/api">
+    </details>
+    <div id="login-error" class="error" role="alert"></div>
+  </div>
+</section>
+
+<div id="app">
+  <nav id="side" aria-label="Sections">
+    <div class="brand">VYBE admin</div>
+    <button data-view="overview">Overview</button>
+    <button data-view="review">ID checks <span class="count" id="badge-review" hidden></span></button>
+    <button data-view="reports">Reports <span class="count" id="badge-reports" hidden></span></button>
+    <button data-view="members">Members</button>
+    <button data-view="bookings">Meetups</button>
+    <button data-view="spots">Cafés &amp; spots</button>
+    <button data-view="reels">Reels</button>
+    <button data-view="settings">App settings</button>
+    <button data-view="log">Activity log</button>
+    <div class="spacer"></div>
+    <div class="who" id="who"></div>
+    <button id="theme">Theme</button>
+    <button id="signout">Sign out</button>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div id="drawer-bg"></div>
+<aside id="drawer" aria-hidden="true">
+  <header><h2 id="drawer-title"></h2><button id="drawer-close" aria-label="Close">Close</button></header>
+  <div class="body" id="drawer-body"></div>
+</aside>
+<dialog id="dialog"></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+
+// ---------- small helpers ----------
+
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(kind, key) { try { return window[kind].getItem(key); } catch (_) { return null; } },
+  set(kind, key, value) { try { value == null ? window[kind].removeItem(key) : window[kind].setItem(key, value); } catch (_) {} },
+};
+
+/** Builds an element. Text always goes in as text, never as HTML. */
+function el(tag, attrs, children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value == null || value === false) continue;
+    if (key === 'text') node.textContent = value;
+    else if (key === 'class') node.className = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else if (key === 'value') node.value = value;
+    else if (key === 'checked' || key === 'disabled' || key === 'selected') node[key] = !!value;
+    else node.setAttribute(key, value === true ? '' : value);
+  }
+  for (const child of [].concat(children == null ? [] : children)) {
+    if (child == null || child === false) continue;
+    node.appendChild(typeof child === 'string' || typeof child === 'number' ? document.createTextNode(String(child)) : child);
+  }
+  return node;
+}
+
+const when = (iso) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—');
+const day = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—');
+const ago = (iso) => {
+  if (!iso) return '—';
+  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (Math.abs(minutes) < 60) return minutes >= 0 ? `${minutes} min ago` : `in ${-minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 48) return hours >= 0 ? `${hours} h ago` : `in ${-hours} h`;
+  return day(iso);
+};
+const badge = (text, tone) => el('span', { class: 'badge' + (tone ? ' ' + tone : ''), text });
+const human = (s) => (s || '').replace(/_/g, ' ');
+
+let toastTimer;
+function toast(text, isError) {
+  const t = $('toast');
+  t.textContent = text;
+  t.className = isError ? 'error' : '';
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.style.display = 'none'), isError ? 6000 : 3000);
+}
+
+// ---------- server ----------
+
+/** The Google OAuth web client (a public id). The server only lets in the emails in FINDX_ADMIN_EMAILS. */
+const GOOGLE_CLIENT_ID = '433440115032-61hqqel2qi721g80mq656v5irjgncfj1.apps.googleusercontent.com';
+
+const session = { api: '', token: '', name: '', email: '', expiresAt: '' };
+
+async function call(action, body) {
+  const response = await fetch(session.api.replace(/\/$/, '') + '/' + action, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-session': session.token },
+    body: JSON.stringify(body || {}),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (response.status === 401) {
+    signOut('Your sign-in has ended. Sign in again.');
+    throw new Error('Signed out.');
+  }
+  if (!response.ok) throw new Error((json.error && json.error.message) || 'HTTP ' + response.status);
+  return json;
+}
+
+/** Runs an action from a button: disables it, shows the result, reports errors. */
+async function act(button, run, done) {
+  if (button) button.disabled = true;
+  try {
+    const result = await run();
+    if (done) toast(typeof done === 'function' ? done(result) : done);
+    return result;
+  } catch (e) {
+    toast(e.message, true);
+    return undefined;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+// ---------- dialog, drawer ----------
+
+/**
+ * Asks for confirmation and optional fields. Resolves to the values, or null when cancelled.
+ * fields: [{ name, label, type, required, value, placeholder, min, max }]
+ */
+function ask({ title, message, fields = [], confirm = 'Confirm', danger = false }) {
+  const dialog = $('dialog');
+  dialog.replaceChildren();
+  const inputs = {};
+  const form = el('form', { method: 'dialog' }, [
+    el('h3', { text: title }),
+    message ? el('p', { class: 'muted', style: 'margin:0', text: message }) : null,
+    ...fields.map((f) => {
+      const input = f.type === 'textarea'
+        ? el('textarea', { rows: 3, maxlength: f.max || 300, placeholder: f.placeholder || '', required: f.required })
+        : el('input', { type: f.type || 'text', required: f.required, placeholder: f.placeholder || '', min: f.min, max: f.max, maxlength: f.type === 'number' ? null : (f.max || 300) });
+      if (f.value != null) input.value = f.value;
+      inputs[f.name] = input;
+      return el('label', {}, [f.label, input]);
+    }),
+    el('div', { class: 'row', style: 'justify-content:flex-end' }, [
+      el('button', { type: 'button', value: 'cancel', text: 'Cancel', onclick: () => dialog.close('cancel') }),
+      el('button', { type: 'submit', value: 'ok', class: danger ? 'danger' : 'primary', text: confirm }),
+    ]),
+  ]);
+  dialog.appendChild(form);
+  return new Promise((resolve) => {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      dialog.close('ok');
+    });
+    dialog.addEventListener('close', function onClose() {
+      dialog.removeEventListener('close', onClose);
+      if (dialog.returnValue !== 'ok') return resolve(null);
+      const values = {};
+      for (const [name, input] of Object.entries(inputs)) values[name] = input.value.trim();
+      resolve(values);
+    });
+    dialog.returnValue = '';
+    dialog.showModal();
+    const first = Object.values(inputs)[0];
+    if (first) first.focus();
+  });
+}
+
+let drawerReload = null;
+function openDrawer(title, build) {
+  $('drawer-title').textContent = title;
+  $('drawer-body').replaceChildren(el('p', { class: 'muted', text: 'Loading…' }));
+  $('drawer').classList.add('open');
+  $('drawer-bg').classList.add('open');
+  $('drawer').setAttribute('aria-hidden', 'false');
+  drawerReload = async () => {
+    try {
+      const content = await build();
+      $('drawer-body').replaceChildren(...[].concat(content).filter((n) => n != null && n !== false));
+    } catch (e) {
+      $('drawer-body').replaceChildren(el('p', { class: 'error', text: 'Could not load: ' + e.message }));
+    }
+  };
+  drawerReload();
+}
+function closeDrawer() {
+  $('drawer').classList.remove('open');
+  $('drawer-bg').classList.remove('open');
+  $('drawer').setAttribute('aria-hidden', 'true');
+  drawerReload = null;
+}
+$('drawer-close').onclick = closeDrawer;
+$('drawer-bg').onclick = closeDrawer;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('dialog').open) closeDrawer(); });
+
+// ---------- shared pieces ----------
+
+function table(columns, rows, onRow) {
+  if (!rows.length) return el('div', { class: 'card empty', text: 'Nothing here.' });
+  return el('div', { class: 'table-wrap' }, el('table', {}, [
+    el('thead', {}, el('tr', {}, columns.map((c) => el('th', { text: c.label, class: c.num ? 'num' : null })))),
+    el('tbody', {}, rows.map((row) => el('tr', { class: onRow ? 'click' : null, onclick: onRow ? () => onRow(row) : null },
+      columns.map((c) => {
+        const value = c.render ? c.render(row) : row[c.key];
+        return el('td', { class: c.num ? 'num' : null }, value == null || value === '' ? '—' : value);
+      })))),
+  ]));
+}
+
+function pager(total, offset, limit, go) {
+  if (total <= limit) return el('div', { class: 'pager', text: total + (total === 1 ? ' result' : ' results') });
+  return el('div', { class: 'pager' }, [
+    `${offset + 1}–${Math.min(offset + limit, total)} of ${total}`,
+    el('button', { class: 'small', text: '‹ Newer', disabled: offset === 0, onclick: () => go(Math.max(0, offset - limit)) }),
+    el('button', { class: 'small', text: 'Older ›', disabled: offset + limit >= total, onclick: () => go(offset + limit) }),
+  ]);
+}
+
+function segmented(options, current, pick) {
+  return el('div', { class: 'seg', role: 'group' }, options.map(([value, label]) =>
+    el('button', { class: value === current ? 'active' : null, text: label, onclick: () => pick(value) })));
+}
+
+function searchBox(value, placeholder, go) {
+  let timer;
+  const input = el('input', { type: 'search', placeholder, value: value || '' });
+  input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => go(input.value), 350); });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { clearTimeout(timer); go(input.value); } });
+  return input;
+}
+
+const memberLink = (uid, name) => el('button', { class: 'link', text: name || 'Member', onclick: (e) => { e.stopPropagation(); openMember(uid); } });
+const bookingLink = (id, text) => el('button', { class: 'link', text: text || 'Meetup', onclick: (e) => { e.stopPropagation(); openBooking(id); } });
+
+const BOOKING_TONE = { requested: 'warn', accepted: 'info', checked_in: 'ok', completed: 'ok', declined: '', cancelled: 'bad', disputed: 'bad' };
+const BOOKING_LABEL = { requested: 'Waiting for answer', accepted: 'Accepted', checked_in: 'Checked in', completed: 'Done', declined: 'Declined', cancelled: 'Cancelled', disputed: 'Disputed' };
+const bookingBadge = (status) => badge(BOOKING_LABEL[status] || human(status), BOOKING_TONE[status]);
+
+function memberBadge(m) {
+  if (m.account_status === 'banned') return badge('Banned', 'bad');
+  if (m.verification_status === 'approved') return badge('Verified', 'ok');
+  if (m.id_step === 'in_review' || (m.verification_steps && m.verification_steps.id === 'in_review')) return badge('ID check waiting', 'warn');
+  if (m.verification_status === 'rejected') return badge('Rejected', 'bad');
+  return badge('Not verified');
+}
+
+// ---------- views ----------
+
+const main = $('main');
+let currentView = 'overview';
+
+async function show(view) {
+  currentView = view;
+  for (const b of document.querySelectorAll('nav#side button[data-view]')) b.classList.toggle('active', b.dataset.view === view);
+  if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
+  main.replaceChildren(el('p', { class: 'muted', text: 'Loading…' }));
+  try {
+    await views[view]();
+  } catch (e) {
+    main.replaceChildren(el('div', { class: 'card error', text: 'Could not load: ' + e.message }));
+  }
+}
+
+const views = {};
+
+// Overview
+views.overview = async () => {
+  const { counts: c, days } = await call('adminOverview');
+  setBadge('review', c.waiting_review);
+  setBadge('reports', c.open_reports);
+  const tile = (num, label, sub, view, alert) => el('button', { class: 'tile' + (alert ? ' alert' : ''), onclick: view ? () => show(view) : null }, [
+    el('span', { class: 'num', text: num }), el('span', { class: 'label', text: label }), sub ? el('span', { class: 'small muted', text: sub }) : null,
+  ]);
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Overview' }), el('button', { text: 'Refresh', onclick: () => show('overview') })]),
+    el('h3', { text: 'Needs attention', style: 'margin-bottom:8px' }),
+    el('div', { class: 'tiles' }, [
+      tile(c.waiting_review, 'ID checks waiting', 'New members can’t use VYBE until checked', 'review', c.waiting_review > 0),
+      tile(c.open_reports, 'Open reports', `${c.open_safety_reports} about safety`, 'reports', c.open_reports > 0),
+      tile(c.awaiting_answer, 'Meetups waiting for an answer', null, 'bookings'),
+    ]),
+    el('h3', { text: 'VYBE today', style: 'margin-bottom:8px' }),
+    el('div', { class: 'tiles' }, [
+      tile(c.members, 'Members', `${c.verified} verified · ${c.new_members_7d} new this week`, 'members'),
+      tile(c.upcoming, 'Upcoming meetups', `${c.bookings_7d} booked this week`, 'bookings'),
+      tile(c.meetups_30d, 'Meetups that happened', 'last 30 days (checked in)'),
+      tile(c.spots_listed, 'Spots people can pick', `${c.spots_featured} featured · ${c.spots_hidden} hidden · ${c.spots_added} added by you`, 'spots'),
+      tile(c.reels, 'Reels', `${c.reels_7d} this week`, 'reels'),
+      tile(c.paid_plans, 'Paid plans active', `${c.purchases_30d} purchases · ${c.credits_sold_30d} credits sold (30 days)`),
+      tile(c.banned, 'Banned accounts', null, null),
+    ]),
+    el('h3', { text: 'Last 14 days', style: 'margin-bottom:8px' }),
+    table([
+      { label: 'Day', render: (d) => new Date(d.day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) },
+      { label: 'New members', key: 'signups', num: true },
+      { label: 'Meetups booked', key: 'bookings', num: true },
+    ], [...days].reverse()),
+  );
+};
+
+function setBadge(name, n) {
+  const b = $('badge-' + name);
+  b.hidden = !n;
+  b.textContent = n > 99 ? '99+' : n;
+}
+
+// ID checks
+views.review = async () => {
+  const { items } = await call('adminReviewQueue');
+  setBadge('review', items.length);
+  const list = items.map((item) => {
+    const dob = el('input', { type: 'date', value: item.dateOfBirth || '', 'aria-label': 'Date of birth on the ID' });
+    const note = el('input', { placeholder: 'Note for the log (optional)', maxlength: 300 });
+    const result = el('div', { class: 'small' });
+    const buttons = [];
+    const decide = async (decision) => {
+      buttons.forEach((b) => (b.disabled = true));
+      try {
+        const body = { uid: item.uid, decision };
+        if (dob.value && dob.value !== item.dateOfBirth) body.dateOfBirth = dob.value;
+        if (note.value.trim()) body.note = note.value.trim();
+        const answer = await call('adminDecideVerification', body);
+        result.className = 'small';
+        result.textContent = decision === 'approve'
+          ? (answer.verificationStatus === 'approved' ? '✓ Approved. They have been notified.' : 'Rejected: under 18 (permanent).')
+          : 'Asked to retake the photo. They have been notified.';
+      } catch (e) {
+        result.className = 'small error';
+        result.textContent = 'Failed: ' + e.message;
+        buttons.forEach((b) => (b.disabled = false));
+      }
+    };
+    buttons.push(
+      el('button', { class: 'ok', text: 'Approve', onclick: () => decide('approve') }),
+      el('button', { class: 'danger', text: 'Reject selfie', onclick: () => decide('reject_selfie') }),
+      el('button', { class: 'danger', text: 'Reject ID', onclick: () => decide('reject_id') }),
+    );
+    const photo = (url, caption) => el('figure', {}, [url ? el('img', { src: url, alt: caption }) : el('div', { class: 'muted', text: 'No photo' }), el('figcaption', { text: caption })]);
+    return el('section', { class: 'card stack' }, [
+      el('div', { class: 'row', style: 'justify-content:space-between' }, [
+        el('h3', { text: (item.displayName || '(no name yet)') + (item.ageFromDateOfBirth != null ? ', ' + item.ageFromDateOfBirth : '') }),
+        el('span', { class: 'muted small', text: 'sent ' + ago(item.submittedAt) }),
+      ]),
+      el('div', { class: 'muted small', text: [item.email, item.phone, 'ID: ' + human(item.documentType || '?')].filter(Boolean).join(' · ') }),
+      el('div', { class: 'photos' }, [photo(item.selfieUrl, 'Selfie (taken in the app)'), photo(item.idUrl, 'ID photo'), photo(item.profilePhotoUrl, 'Main profile photo')]),
+      el('ul', { class: 'muted small', style: 'margin:0;padding-left:18px' }, [
+        el('li', { text: 'Same person in the selfie, the ID and the profile photo?' }),
+        el('li', { text: 'ID looks real and readable? Date of birth below matches the ID (change it if not)?' }),
+        el('li', { text: 'Never write down or keep ID numbers.' }),
+      ]),
+      el('div', { class: 'row' }, [el('label', { class: 'small', text: 'Date of birth on the ID ' }), dob, note]),
+      el('div', { class: 'row' }, buttons),
+      result,
+    ]);
+  });
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'ID checks' }), el('button', { text: 'Refresh', onclick: () => show('review') })]),
+    el('p', { class: 'muted', style: 'margin-top:0', text: 'Oldest first. Photo links work for 15 minutes; refresh after that.' }),
+    items.length ? el('div', { class: 'stack' }, list) : el('div', { class: 'card empty', text: 'Nobody is waiting. 🎉' }),
+  );
+};
+
+// Members
+const memberState = { query: '', filter: 'all', offset: 0 };
+views.members = async () => {
+  const s = memberState;
+  const data = await call('adminMembers', { query: s.query || undefined, filter: s.filter, limit: 50, offset: s.offset });
+  const reload = (patch) => { Object.assign(s, patch); show('members'); };
+  main.replaceChildren(
+    el('div', { class: 'head' }, el('h2', { text: 'Members' })),
+    el('div', { class: 'tools' }, [
+      searchBox(s.query, 'Name, email, phone or id', (query) => reload({ query, offset: 0 })),
+      segmented([['all', 'All'], ['verified', 'Verified'], ['waiting', 'ID check waiting'], ['unverified', 'Not verified'], ['banned', 'Banned']], s.filter, (filter) => reload({ filter, offset: 0 })),
+    ]),
+    table([
+      { label: 'Name', render: (m) => el('strong', { text: m.display_name || '(no name)' }) },
+      { label: 'Age', key: 'age_years', num: true },
+      { label: 'State', render: memberBadge },
+      { label: 'Email / phone', render: (m) => m.email || m.phone },
+      { label: 'Credits', key: 'credits', num: true },
+      { label: 'Plan', render: (m) => (m.plan === 'free' ? 'Free' : badge(m.plan, 'info')) },
+      { label: 'Joined', render: (m) => day(m.created_at) },
+    ], data.items, (m) => openMember(m.uid)),
+    pager(data.total, s.offset, 50, (offset) => reload({ offset })),
+  );
+};
+
+function openMember(uid) {
+  openDrawer('Member', async () => {
+    const d = await call('adminMember', { uid });
+    const m = d.member;
+    $('drawer-title').textContent = m.display_name || '(no name)';
+    const banned = m.account_status === 'banned';
+    const actions = el('div', { class: 'row' }, [
+      banned
+        ? el('button', { class: 'ok', text: 'Lift ban', onclick: async (e) => {
+            const v = await ask({ title: 'Lift the ban?', message: 'They can use VYBE again.', fields: [{ name: 'reason', label: 'Why (for the log)' }], confirm: 'Lift ban' });
+            if (v && await act(e.target, () => call('adminSetBan', { uid, banned: false, reason: v.reason || undefined }), 'Ban lifted.')) drawerReload();
+          } })
+        : el('button', { class: 'danger', text: 'Ban', onclick: async (e) => {
+            const v = await ask({ title: 'Ban ' + (m.display_name || 'this member') + '?', message: 'They disappear from VYBE at once. Their open meetups are cancelled (the other person is told it was cancelled, not why) and their chats close.', fields: [{ name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Ban', danger: true });
+            if (v && await act(e.target, () => call('adminSetBan', { uid, banned: true, reason: v.reason }), (r) => `Banned. ${r.cancelledBookings} meetup(s) cancelled.`)) drawerReload();
+          } }),
+      el('button', { text: 'Give / take credits', onclick: async (e) => {
+        const v = await ask({ title: 'Change credits', message: `They have ${m.credits}. Use a minus sign to take credits away.`, fields: [{ name: 'delta', label: 'Credits (+ or −)', type: 'number', required: true, placeholder: 'e.g. 5 or -5' }, { name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Save' });
+        if (v && await act(e.target, () => call('adminAdjustCredits', { uid, delta: Number(v.delta), reason: v.reason }), (r) => `New balance: ${r.balance}.`)) drawerReload();
+      } }),
+      el('button', { text: 'Send notification', onclick: async (e) => {
+        const v = await ask({ title: 'Send a notification', message: 'It appears on their phone from VYBE.', fields: [{ name: 'title', label: 'Title', required: true, max: 60 }, { name: 'body', label: 'Message', type: 'textarea', required: true, max: 200 }], confirm: 'Send' });
+        if (v) await act(e.target, () => call('adminMessageMember', { uid, title: v.title, body: v.body }), 'Sent.');
+      } }),
+      el('button', { class: 'danger', text: 'Delete account', onclick: async (e) => {
+        const v = await ask({ title: 'Delete this account for good?', message: 'Use this for deletion requests sent by email. Photos, ID images, credits and chats are deleted and open meetups cancelled. This cannot be undone. Type DELETE to confirm.', fields: [{ name: 'confirm', label: 'Type DELETE', required: true }, { name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Delete', danger: true });
+        if (!v) return;
+        if (v.confirm !== 'DELETE') return toast('Type DELETE in capitals to confirm.', true);
+        if (await act(e.target, () => call('adminDeleteMember', { uid, reason: v.reason }), 'Account deleted.')) { closeDrawer(); if (currentView === 'members') show('members'); }
+      } }),
+    ]);
+    return [
+      el('div', { class: 'row' }, [memberBadge(m), m.age_years ? badge(m.age_years + ' years') : null, m.plan !== 'free' ? badge(m.plan, 'info') : null, m.strikes ? badge(m.strikes + ' chat strike(s)', 'warn') : null]),
+      actions,
+      m.photoUrls.length ? el('div', { class: 'photos' }, m.photoUrls.map((url, i) => el('figure', {}, [el('img', { src: url, alt: 'Photo ' + (i + 1) })]))) : null,
+      el('div', { class: 'card' }, el('dl', { class: 'facts' }, [
+        ['Email', m.email], ['Phone', m.phone], ['Date of birth', m.date_of_birth], ['Gender', human(m.gender)],
+        ['Joined', when(m.created_at)], ['ID check', human(m.verification_steps && m.verification_steps.id)],
+        ['Verification note', human(m.verification_reason)], ['About', m.about], ['Plans', (m.plan_types || []).join(', ')],
+        ['Credits', m.credits], ['Plan ends', m.plan_ends ? day(m.plan_ends) : null],
+        ['Notifications', m.phones_registered ? `on (${m.phones_registered} phone${m.phones_registered > 1 ? 's' : ''})` : 'off'],
+        ['Trusted contact', m.has_trusted_contact ? 'added' : 'none'], ['Reels', d.reels], ['Reports they filed', d.reportsFiled],
+        ['Account id', el('span', { class: 'mono', text: m.uid })],
+      ].flatMap(([k, v]) => [el('dt', { text: k }), el('dd', {}, v == null || v === '' ? '—' : v)]))),
+      el('h3', { text: 'Meetups' }),
+      table([
+        { label: 'When', render: (b) => when(b.start_at) },
+        { label: 'With', render: (b) => (b.seeker_uid === uid ? memberLink(b.companion_uid, b.companion_name) : memberLink(b.seeker_uid, b.seeker_name)) },
+        { label: 'Where', key: 'venue_name' },
+        { label: 'State', render: (b) => bookingBadge(b.status) },
+      ], d.bookings, (b) => openBooking(b.id)),
+      el('h3', { text: 'Reports about them' }),
+      table([
+        { label: 'When', render: (r) => day(r.created_at) },
+        { label: 'Reason', render: (r) => human(r.reason) },
+        { label: 'Where', render: (r) => human(r.context_type) },
+        { label: 'By', key: 'reporter_name' },
+        { label: 'State', render: (r) => (r.status === 'open' ? badge('Open', 'warn') : badge(human(r.resolution || 'closed'))) },
+      ], d.reportsAgainst),
+      el('h3', { text: 'Credit history' }),
+      table([
+        { label: 'When', render: (l) => when(l.created_at) },
+        { label: 'Change', render: (l) => (l.delta > 0 ? '+' + l.delta : String(l.delta)), num: true },
+        { label: 'Balance', key: 'balance_after', num: true },
+        { label: 'Why', render: (l) => human(l.reason) },
+      ], d.ledger),
+      d.purchases.length ? el('h3', { text: 'Purchases' }) : null,
+      d.purchases.length ? table([
+        { label: 'When', render: (p) => when(p.verified_at) },
+        { label: 'Product', key: 'product_id' },
+        { label: 'Credits', key: 'credits', num: true },
+        { label: 'State', render: (p) => (p.refunded_at ? badge('Refunded', 'bad') : human(p.status)) },
+      ], d.purchases) : null,
+    ];
+  });
+}
+
+// Meetups (bookings)
+const bookingState = { view: 'upcoming', query: '', offset: 0 };
+views.bookings = async () => {
+  const s = bookingState;
+  const data = await call('adminBookings', { view: s.view, query: s.query || undefined, limit: 50, offset: s.offset });
+  const reload = (patch) => { Object.assign(s, patch); show('bookings'); };
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Meetups' }), el('button', { text: 'Refresh', onclick: () => show('bookings') })]),
+    el('div', { class: 'tools' }, [
+      searchBox(s.query, 'Name, café or booking id', (query) => reload({ query, offset: 0 })),
+      segmented([['upcoming', 'Upcoming'], ['needs_answer', 'Waiting for answer'], ['past', 'Past'], ['cancelled', 'Cancelled / declined'], ['all', 'All']], s.view, (view) => reload({ view, offset: 0 })),
+    ]),
+    table([
+      { label: 'When', render: (b) => el('div', {}, [when(b.start_at), el('div', { class: 'small muted', text: ago(b.start_at) })]) },
+      { label: 'Who asked', render: (b) => memberLink(b.seeker_uid, b.seeker_name) },
+      { label: 'Invited', render: (b) => memberLink(b.companion_uid, b.companion_name) },
+      { label: 'Where', render: (b) => el('div', {}, [b.venue_name, el('div', { class: 'small muted', text: human(b.plan_type) })]) },
+      { label: 'State', render: (b) => el('div', {}, [bookingBadge(b.status), b.status_reason ? el('div', { class: 'small muted', text: human(b.status_reason) }) : null]) },
+      { label: 'Checked in', render: (b) => `${b.checked_in}/2` },
+    ], data.items, (b) => openBooking(b.id)),
+    pager(data.total, s.offset, 50, (offset) => reload({ offset })),
+  );
+};
+
+function openBooking(id) {
+  openDrawer('Meetup', async () => {
+    const { booking: b, feedback, reports } = await call('adminBooking', { bookingId: id });
+    const active = ['requested', 'accepted', 'checked_in'].includes(b.status);
+    const checkedIn = (uid) => (b.checked_in_uids || []).includes(uid) ? badge('checked in', 'ok') : null;
+    return [
+      el('div', { class: 'row' }, [bookingBadge(b.status), b.status_reason ? badge(human(b.status_reason)) : null, badge(human(b.plan_type)), badge(b.kind)]),
+      active ? el('div', { class: 'row' }, el('button', { class: 'danger', text: 'Cancel this meetup', onclick: async (e) => {
+        const v = await ask({ title: 'Cancel this meetup?', message: 'Both people get a notification that the VYBE team cancelled it. The table is freed.', fields: [{ name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Cancel meetup', danger: true });
+        if (v && await act(e.target, () => call('adminCancelBooking', { bookingId: id, reason: v.reason }), 'Meetup cancelled.')) { drawerReload(); if (currentView === 'bookings') show('bookings'); }
+      } })) : null,
+      el('div', { class: 'card' }, el('dl', { class: 'facts' }, [
+        ['When', when(b.start_at) + ' – ' + new Date(b.end_at).toLocaleTimeString(undefined, { timeStyle: 'short' })],
+        ['Who asked', el('span', {}, [memberLink(b.seeker_uid, b.seeker_name), ' ', checkedIn(b.seeker_uid)])],
+        ['Invited', el('span', {}, [memberLink(b.companion_uid, b.companion_name), ' ', checkedIn(b.companion_uid)])],
+        ['Where', [b.venue_name, b.venue_address].filter(Boolean).join(', ')],
+        ['Map', b.venue_lat != null ? el('a', { href: `https://www.openstreetmap.org/?mlat=${b.venue_lat}&mlon=${b.venue_lng}#map=18/${b.venue_lat}/${b.venue_lng}`, target: '_blank', rel: 'noopener', text: 'Open map' }) : null],
+        ['Booked', when(b.created_at)], ['Last change', when(b.updated_at)], ['Credits charged', b.credit_cost],
+        ['Booking id', el('span', { class: 'mono', text: b.id })],
+      ].flatMap(([k, v]) => [el('dt', { text: k }), el('dd', {}, v == null || v === '' ? '—' : v)]))),
+      el('h3', { text: '“How did it go?” (private answers)' }),
+      table([
+        { label: 'From', render: (f) => memberLink(f.uid, f.name) },
+        { label: 'Felt', render: (f) => badge(f.felt, f.felt === 'unsafe' ? 'bad' : f.felt === 'good' ? 'ok' : '') },
+        { label: 'Note', key: 'note' },
+        { label: 'When', render: (f) => when(f.created_at) },
+      ], feedback),
+      el('h3', { text: 'Reports about this meetup' }),
+      table([
+        { label: 'When', render: (r) => when(r.created_at) },
+        { label: 'Reason', render: (r) => human(r.reason) },
+        { label: 'Details', key: 'details' },
+        { label: 'State', render: (r) => (r.status === 'open' ? badge('Open', 'warn') : badge('Closed')) },
+      ], reports, () => { closeDrawer(); show('reports'); }),
+    ];
+  });
+}
+
+// Cafés & spots
+const PLAN_LABELS = { coffee: 'Coffee', dinner: 'Dinner', walk: 'Walk', movie: 'Movie', event: 'Event' };
+const CATEGORY_LABELS = { cafe: 'Café', restaurant: 'Restaurant', food_court: 'Food court', cinema: 'Cinema', mall: 'Mall', open_park: 'Park', theatre: 'Theatre / arts' };
+const spotState = { query: '', filter: 'all', near: null, km: 3, offset: 0 };
+let spotsMap = null;
+
+function parseCoordinates(text) {
+  const match = String(text || '').match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+  if (!match) return null;
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  return Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : null;
+}
+
+function makeMap(node, center, zoom) {
+  if (!window.L) {
+    node.replaceChildren(el('p', { class: 'muted', style: 'padding:12px', text: 'The map could not load. Type coordinates instead.' }));
+    return null;
+  }
+  const map = L.map(node).setView([center.lat, center.lng], zoom);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
+  return map;
+}
+
+views.spots = async () => {
+  const s = spotState;
+  const body = { query: s.query || undefined, filter: s.filter, limit: 50, offset: s.offset };
+  if (s.near) body.near = { lat: s.near.lat, lng: s.near.lng, km: s.km };
+  const data = await call('adminVenues', body);
+  const reload = (patch) => { Object.assign(s, patch); show('spots'); };
+  const nearInput = el('input', { placeholder: 'Near: lat, lng (or click the map)', value: s.near ? `${s.near.lat.toFixed(5)}, ${s.near.lng.toFixed(5)}` : '', style: 'width:230px' });
+  nearInput.addEventListener('change', () => {
+    const point = parseCoordinates(nearInput.value);
+    if (nearInput.value.trim() && !point) return toast('Type it as: 19.0596, 72.8295', true);
+    reload({ near: point, offset: 0 });
+  });
+  const km = el('select', { 'aria-label': 'Distance' }, [1, 3, 5, 10, 25].map((n) => el('option', { value: n, text: `within ${n} km`, selected: n === s.km })));
+  km.onchange = () => reload({ km: Number(km.value), offset: 0 });
+  const mapNode = el('div', { class: 'map', style: 'margin-bottom:12px' });
+
+  const flag = (v, key, on, off) => el('button', { class: 'small', text: v[key] ? on : off, onclick: async (e) => {
+    e.stopPropagation();
+    const patch = { venueId: v.id };
+    patch[key === 'is_listed' ? 'listed' : 'featured'] = !v[key];
+    const r = await act(e.target, () => call('adminSetVenueFlags', patch));
+    if (!r) return;
+    toast(key === 'is_listed' && !r.listed && r.upcomingBookings ? `Hidden. ${r.upcomingBookings} meetup(s) already booked there stay booked.` : 'Saved.');
+    show('spots');
+  } });
+
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Cafés & spots' }), el('button', { class: 'primary', text: '+ Add a spot', onclick: () => openSpot(null) })]),
+    el('p', { class: 'muted', style: 'margin-top:0', text: 'These are the places VYBE suggests for meetups. Public places come from OpenStreetMap automatically. Hide the ones that aren’t right, feature good partners so they are suggested first, or add places yourself.' }),
+    el('div', { class: 'tools' }, [
+      searchBox(s.query, 'Name or address', (query) => reload({ query, offset: 0 })),
+      segmented([['all', 'All'], ['listed', 'Shown'], ['hidden', 'Hidden'], ['featured', 'Featured'], ['added', 'Added by team']], s.filter, (filter) => reload({ filter, offset: 0 })),
+      nearInput, km,
+      s.near ? el('button', { text: 'Clear place', onclick: () => reload({ near: null, offset: 0 }) }) : null,
+    ]),
+    mapNode,
+    table([
+      { label: 'Spot', render: (v) => el('div', {}, [el('strong', { text: v.name }), el('div', { class: 'small muted', text: v.address_line })]) },
+      { label: 'Type', render: (v) => el('div', {}, [CATEGORY_LABELS[v.category] || human(v.category), el('div', { class: 'small muted', text: (v.plan_types || []).map((p) => PLAN_LABELS[p] || p).join(', ') })]) },
+      { label: 'State', render: (v) => el('div', { class: 'row' }, [v.is_listed ? badge('Shown', 'ok') : badge('Hidden', 'bad'), v.featured ? badge('★ Featured', 'warn') : null, v.source === 'admin' ? badge('Team') : v.source === 'partner' ? badge('Partner', 'info') : null]) },
+      { label: 'Perk', key: 'perk' },
+      { label: 'Meetups', render: (v) => `${v.upcoming_bookings} upcoming / ${v.all_bookings}`, num: true },
+      { label: '', render: (v) => el('div', { class: 'row' }, [flag(v, 'is_listed', 'Hide', 'Show'), flag(v, 'featured', 'Unfeature', 'Feature')]) },
+    ], data.items, (v) => openSpot(v)),
+    pager(data.total, s.offset, 50, (offset) => reload({ offset })),
+  );
+
+  const first = data.items.find((v) => v.lat != null);
+  const center = s.near || (first ? { lat: first.lat, lng: first.lng } : { lat: 19.0596, lng: 72.8295 });
+  if (spotsMap) { spotsMap.remove(); spotsMap = null; }
+  spotsMap = makeMap(mapNode, center, s.near ? 14 : 12);
+  if (!spotsMap) return;
+  const bounds = [];
+  for (const v of data.items) {
+    const color = !v.is_listed ? '#8a8894' : v.featured ? '#e9a400' : '#e9532f';
+    L.circleMarker([v.lat, v.lng], { radius: v.featured ? 9 : 7, color, fillColor: color, fillOpacity: 0.8, weight: 2 })
+      .addTo(spotsMap).bindTooltip(v.name).on('click', () => openSpot(v));
+    bounds.push([v.lat, v.lng]);
+  }
+  if (s.near) L.circle([s.near.lat, s.near.lng], { radius: s.km * 1000, color: '#2f5bd3', fill: false, weight: 1 }).addTo(spotsMap);
+  else if (bounds.length > 1) spotsMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
+  spotsMap.on('click', (e) => reload({ near: { lat: e.latlng.lat, lng: e.latlng.lng }, offset: 0 }));
+};
+
+function openSpot(v) {
+  const isNew = !v;
+  openDrawer(isNew ? 'Add a spot' : v.name, async () => {
+    const start = v || { name: '', category: 'cafe', address_line: '', lat: spotState.near ? spotState.near.lat : null, lng: spotState.near ? spotState.near.lng : null, plan_types: ['coffee'], perk: '', is_listed: true, featured: false, admin_note: '' };
+    const name = el('input', { required: true, maxlength: 80, value: start.name });
+    const category = el('select', {}, Object.entries(CATEGORY_LABELS).map(([value, label]) => el('option', { value, text: label, selected: value === start.category })));
+    const address = el('input', { maxlength: 200, value: start.address_line });
+    const coords = el('input', { placeholder: '19.0596, 72.8295', value: start.lat != null ? `${Number(start.lat).toFixed(6)}, ${Number(start.lng).toFixed(6)}` : '' });
+    const plans = Object.entries(PLAN_LABELS).map(([value, label]) => {
+      const box = el('input', { type: 'checkbox', value, checked: (start.plan_types || []).includes(value) });
+      return { box, node: el('label', {}, [box, label]) };
+    });
+    const perk = el('input', { maxlength: 140, value: start.perk || '', placeholder: 'e.g. 10% off for VYBE meetups' });
+    const note = el('textarea', { rows: 2, maxlength: 300, placeholder: 'Only the team sees this' });
+    note.value = start.admin_note || '';
+    const listed = el('input', { type: 'checkbox', checked: start.is_listed });
+    const featured = el('input', { type: 'checkbox', checked: start.featured });
+    const mapNode = el('div', { class: 'map' });
+
+    const save = el('button', { class: 'primary', text: isNew ? 'Add spot' : 'Save changes', onclick: async (e) => {
+      const point = parseCoordinates(coords.value);
+      if (!name.value.trim()) return toast('Give the spot a name.', true);
+      if (!point) return toast('Set the location: click the map or type coordinates.', true);
+      const planTypes = plans.filter((p) => p.box.checked).map((p) => p.box.value);
+      if (!planTypes.length) return toast('Pick at least one plan.', true);
+      const body = {
+        name: name.value.trim(), category: category.value, addressLine: address.value.trim(), lat: point.lat, lng: point.lng,
+        planTypes, perk: perk.value.trim() || null, listed: listed.checked, featured: featured.checked, note: note.value.trim() || null,
+      };
+      if (!isNew) body.venueId = v.id;
+      const r = await act(e.target, () => call('adminSaveVenue', body));
+      if (!r) return;
+      toast(isNew ? 'Spot added. People near it can pick it now.' : 'Saved.');
+      closeDrawer();
+      show('spots');
+    } });
+    const remove = !isNew && v.source === 'admin' ? el('button', { class: 'danger', text: 'Delete', onclick: async (e) => {
+      const ok = await ask({ title: 'Delete this spot?', message: 'Only possible while nobody has booked it. Otherwise hide it.', confirm: 'Delete', danger: true });
+      if (ok && await act(e.target, () => call('adminDeleteVenue', { venueId: v.id }), 'Deleted.')) { closeDrawer(); show('spots'); }
+    } }) : null;
+
+    setTimeout(() => {
+      const point = parseCoordinates(coords.value);
+      const map = makeMap(mapNode, point || spotState.near || { lat: 19.0596, lng: 72.8295 }, point ? 16 : 12);
+      if (!map) return;
+      let marker = point ? L.marker([point.lat, point.lng], { draggable: true }).addTo(map) : null;
+      const place = (lat, lng) => {
+        coords.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        if (marker) marker.setLatLng([lat, lng]);
+        else {
+          marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+          marker.on('dragend', () => { const p = marker.getLatLng(); place(p.lat, p.lng); });
+        }
+      };
+      if (marker) marker.on('dragend', () => { const p = marker.getLatLng(); place(p.lat, p.lng); });
+      map.on('click', (e) => place(e.latlng.lat, e.latlng.lng));
+      coords.addEventListener('change', () => { const p = parseCoordinates(coords.value); if (p) { place(p.lat, p.lng); map.setView([p.lat, p.lng], 16); } });
+      setTimeout(() => map.invalidateSize(), 250);
+    }, 0);
+
+    return [
+      !isNew && v.source === 'osm' ? el('p', { class: 'muted small', style: 'margin:0', text: 'This place comes from OpenStreetMap. If you change its name, type, address, location or plans, VYBE keeps your version from now on.' }) : null,
+      el('div', { class: 'form' }, [
+        el('label', { class: 'full' }, ['Name', name]),
+        el('label', {}, ['Type', category]),
+        el('label', {}, ['Address', address]),
+        el('label', { class: 'full' }, ['Location', coords, el('span', { class: 'hint', text: 'Click the map or drag the pin. You can paste coordinates from Google Maps (right-click a place → click the numbers to copy).' })]),
+        el('div', { class: 'full' }, mapNode),
+        el('label', { class: 'full' }, ['Good for', el('div', { class: 'checks' }, plans.map((p) => p.node))]),
+        el('label', { class: 'full' }, ['Perk for VYBE members', perk, el('span', { class: 'hint', text: 'Shown in the app under the spot. Leave empty if there is none.' })]),
+        el('label', { class: 'full' }, ['Team note', note]),
+        el('div', { class: 'full checks' }, [el('label', {}, [listed, 'Shown in the app']), el('label', {}, [featured, '★ Featured (suggested first)'])]),
+      ]),
+      !isNew ? el('p', { class: 'muted small', style: 'margin:0', text: `${v.upcoming_bookings} upcoming meetup(s) here, ${v.all_bookings} in total. Id: ${v.id}` }) : null,
+      el('div', { class: 'row' }, [save, remove]),
+    ];
+  });
+}
+
+// Reports
+const reportState = { status: 'open', offset: 0 };
+const REASONS = { inappropriate_messages: 'Inappropriate messages', asked_for_contact: 'Asked for contact details', harassment: 'Harassment', fake_profile: 'Fake profile', safety_concern: 'Safety concern', other: 'Other' };
+views.reports = async () => {
+  const s = reportState;
+  const data = await call('adminReports', { status: s.status, limit: 30, offset: s.offset });
+  if (s.status === 'open') setBadge('reports', data.total);
+  const reload = (patch) => { Object.assign(s, patch); show('reports'); };
+
+  const card = (r) => {
+    const safety = r.context_type === 'meetup' || r.reason === 'safety_concern';
+    const resolve = async (button, resolution) => {
+      const v = await ask({ title: resolution === 'dismissed' ? 'Dismiss this report?' : 'Mark as handled?', fields: [{ name: 'note', label: 'Note (optional)', type: 'textarea' }], confirm: resolution === 'dismissed' ? 'Dismiss' : 'Mark handled' });
+      if (v && await act(button, () => call('adminResolveReport', { reportId: r.id, resolution, note: v.note || undefined }), 'Report closed.')) show('reports');
+    };
+    const ctx = r.context;
+    let contextNode = null;
+    if (ctx && ctx.kind === 'reel') {
+      contextNode = ctx.deleted ? el('p', { class: 'muted', text: 'The reel was already deleted.' }) : el('div', { class: 'stack' }, [
+        ctx.videoUrl ? el('video', { src: ctx.videoUrl, controls: true, preload: 'metadata', playsinline: true }) : null,
+        ctx.caption ? el('div', { text: '“' + ctx.caption + '”' }) : null,
+      ]);
+    } else if (ctx && ctx.kind === 'chat') {
+      contextNode = el('div', {}, [el('div', { class: 'small muted', text: 'Last messages in the chat:' }), el('div', { class: 'chatlog' }, ctx.messages.length
+        ? ctx.messages.map((msg) => el('div', {}, [el('strong', { text: (msg.sender_uid === r.reported_uid ? (r.reported_name || 'Reported') : (r.reporter_name || 'Reporter')) + ': ' }), msg.text || '']))
+        : el('div', { class: 'muted', text: 'No messages.' }))]);
+    } else if (ctx && (ctx.kind === 'meetup' || ctx.kind === 'booking')) {
+      contextNode = el('div', { class: 'stack' }, [
+        ctx.booking ? el('div', {}, ['Meetup at ', el('strong', { text: ctx.booking.venue_name }), ', ' + when(ctx.booking.start_at) + ' ', bookingLink(r.context_ref_id, 'open meetup')]) : null,
+        ctx.answer ? el('div', {}, ['They answered “How did it go?”: ', badge(ctx.answer.felt, ctx.answer.felt === 'unsafe' ? 'bad' : ''), ctx.answer.note ? el('div', { style: 'margin-top:4px', text: '“' + ctx.answer.note + '”' }) : null]) : null,
+      ]);
+    }
+    const isOpen = r.status === 'open';
+    return el('section', { class: 'card stack' }, [
+      el('div', { class: 'row', style: 'justify-content:space-between' }, [
+        el('div', { class: 'row' }, [safety ? badge('Safety', 'bad') : null, el('strong', { text: REASONS[r.reason] || human(r.reason) }), badge(human(r.context_type)), r.source !== 'user' ? badge('from ' + human(r.source)) : null]),
+        el('span', { class: 'small muted', text: ago(r.created_at) }),
+      ]),
+      el('div', {}, [
+        'About ', memberLink(r.reported_uid, r.reported_name || 'member'), r.reported_status === 'banned' ? badge('Banned', 'bad') : null,
+        ' · reported by ', r.reporter_uid ? memberLink(r.reporter_uid, r.reporter_name || 'member') : 'VYBE (automatic)',
+        r.reports_about_them > 1 ? el('span', { class: 'muted', text: ` · ${r.reports_about_them} reports about them in total` }) : null,
+      ]),
+      r.details ? el('div', { style: 'white-space:pre-wrap', text: r.details }) : null,
+      contextNode,
+      isOpen ? el('div', { class: 'row' }, [
+        r.reported_status !== 'banned' ? el('button', { class: 'danger', text: 'Ban ' + (r.reported_name || 'member'), onclick: async (e) => {
+          const v = await ask({ title: 'Ban ' + (r.reported_name || 'this member') + '?', message: 'Their open meetups are cancelled and chats close. This report is marked handled.', fields: [{ name: 'reason', label: 'Why (for the log)', required: true, value: REASONS[r.reason] || '' }], confirm: 'Ban', danger: true });
+          if (!v) return;
+          const ok = await act(e.target, async () => {
+            await call('adminSetBan', { uid: r.reported_uid, banned: true, reason: v.reason });
+            await call('adminResolveReport', { reportId: r.id, resolution: 'actioned', note: 'Banned: ' + v.reason });
+            return true;
+          }, 'Banned and report closed.');
+          if (ok) show('reports');
+        } }) : null,
+        ctx && ctx.kind === 'reel' && !ctx.deleted ? el('button', { class: 'danger', text: 'Remove reel', onclick: async (e) => {
+          const v = await ask({ title: 'Remove this reel?', message: 'The video is deleted and the author is told it broke the rules.', fields: [{ name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Remove', danger: true });
+          if (v && await act(e.target, () => call('adminDeleteReel', { reelId: ctx.reelId, reason: v.reason }), 'Reel removed.')) show('reports');
+        } }) : null,
+        el('button', { text: 'Mark handled', onclick: (e) => resolve(e.target, 'actioned') }),
+        el('button', { text: 'Dismiss', onclick: (e) => resolve(e.target, 'dismissed') }),
+      ]) : el('div', { class: 'small muted' }, [badge(human(r.resolution || 'closed')), ' ', r.resolved_at ? when(r.resolved_at) : '', r.resolution_note ? ' · ' + r.resolution_note : '']),
+    ]);
+  };
+
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Reports' }), el('button', { text: 'Refresh', onclick: () => show('reports') })]),
+    el('div', { class: 'tools' }, segmented([['open', 'Open'], ['closed', 'Closed'], ['all', 'All']], s.status, (status) => reload({ status, offset: 0 }))),
+    el('p', { class: 'muted', style: 'margin-top:0', text: 'Safety reports come first. Google Play requires that reports are reviewed; check daily.' }),
+    data.items.length ? el('div', { class: 'stack' }, data.items.map(card)) : el('div', { class: 'card empty', text: s.status === 'open' ? 'No open reports. 🎉' : 'Nothing here.' }),
+    pager(data.total, s.offset, 30, (offset) => reload({ offset })),
+  );
+};
+
+// Reels
+const reelState = { reportedOnly: false, offset: 0 };
+views.reels = async () => {
+  const s = reelState;
+  const data = await call('adminReels', { reportedOnly: s.reportedOnly, limit: 24, offset: s.offset });
+  const reload = (patch) => { Object.assign(s, patch); show('reels'); };
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Reels' }), el('button', { text: 'Refresh', onclick: () => show('reels') })]),
+    el('div', { class: 'tools' }, segmented([[false, 'Newest'], [true, 'Reported']], s.reportedOnly, (reportedOnly) => reload({ reportedOnly, offset: 0 }))),
+    data.items.length ? el('div', { class: 'reels' }, data.items.map((r) => el('section', { class: 'card stack' }, [
+      r.videoUrl ? el('video', { src: r.videoUrl, controls: true, preload: 'metadata', playsinline: true }) : el('div', { class: 'muted', text: 'Video missing' }),
+      el('div', { class: 'row', style: 'justify-content:space-between' }, [memberLink(r.uid, r.author), el('span', { class: 'small muted', text: ago(r.created_at) })]),
+      r.caption ? el('div', { text: r.caption }) : null,
+      el('div', { class: 'row' }, [
+        r.reports ? badge(r.reports + ' report(s)', 'bad') : null,
+        el('button', { class: 'danger small', text: 'Remove', onclick: async (e) => {
+          const v = await ask({ title: 'Remove this reel?', message: 'The video is deleted and the author is told it broke the rules.', fields: [{ name: 'reason', label: 'Why (for the log)', required: true }], confirm: 'Remove', danger: true });
+          if (v && await act(e.target, () => call('adminDeleteReel', { reelId: r.id, reason: v.reason }), 'Reel removed.')) show('reels');
+        } }),
+      ]),
+    ]))) : el('div', { class: 'card empty', text: 'No reels.' }),
+    pager(data.total, s.offset, 24, (offset) => reload({ offset })),
+  );
+};
+
+// App settings
+const SETTINGS = [
+  { group: 'Launch', key: 'phoneLoginEnabled', label: 'Phone number sign-in', type: 'bool', hint: 'Needs an SMS provider. Leave off unless set up.' },
+  { group: 'Credits', key: 'creditCostStartChat', label: 'Credits to start a chat', type: 'int' },
+  { group: 'Credits', key: 'creditCostBookSpot', label: 'Credits to book a meetup', type: 'int', hint: '0 = free' },
+  { group: 'Credits', key: 'creditCostInstantRequest', label: 'Credits for an instant request', type: 'int', hint: '0 = free' },
+  { group: 'Credits', key: 'signupBonusCredits', label: 'Free credits for new members', type: 'int' },
+  { group: 'Meetups', key: 'discoveryRadiusKm', label: 'Search distance (km)', type: 'number' },
+  { group: 'Meetups', key: 'defaultSlotOpenHour', label: 'Public places: first meetup hour', type: 'int', hint: '0–23' },
+  { group: 'Meetups', key: 'defaultSlotCloseHour', label: 'Public places: closing hour', type: 'int', hint: '1–24' },
+  { group: 'Meetups', key: 'defaultSlotCapacity', label: 'Public places: meetups per time slot', type: 'int' },
+  { group: 'Safety & legal', key: 'emergencyNumber', label: 'SOS number', type: 'text' },
+  { group: 'Safety & legal', key: 'grievanceOfficerName', label: 'Grievance Officer name', type: 'text', hint: 'Required in India. Shown in Profile → About.' },
+  { group: 'Safety & legal', key: 'grievanceOfficerEmail', label: 'Grievance Officer email', type: 'text' },
+  { group: 'Safety & legal', key: 'supportEmail', label: 'Support email', type: 'text' },
+  { group: 'Safety & legal', key: 'privacyPolicyUrl', label: 'Privacy policy link', type: 'text' },
+  { group: 'Safety & legal', key: 'termsUrl', label: 'Terms link', type: 'text' },
+];
+
+views.settings = async () => {
+  const { overrides, defaults, updatedAt } = await call('adminGetConfig');
+  let current = JSON.parse(JSON.stringify(overrides));
+  const json = el('textarea', { rows: 12, class: 'mono', spellcheck: 'false' });
+  const jsonError = el('div', { class: 'small error' });
+  const inputs = {};
+  const syncJson = () => { json.value = JSON.stringify(current, null, 2); jsonError.textContent = ''; };
+  const valueOf = (key) => (key in current ? current[key] : defaults[key]);
+  const syncFields = () => {
+    for (const f of SETTINGS) {
+      const input = inputs[f.key];
+      if (f.type === 'bool') input.checked = !!valueOf(f.key);
+      else input.value = valueOf(f.key) ?? '';
+    }
+  };
+  const setField = (f, input) => {
+    let value;
+    if (f.type === 'bool') value = input.checked;
+    else if (f.type === 'int' || f.type === 'number') {
+      if (input.value.trim() === '') { delete current[f.key]; syncJson(); return; }
+      value = Number(input.value);
+    } else value = input.value.trim();
+    if (JSON.stringify(value) === JSON.stringify(defaults[f.key])) delete current[f.key];
+    else current[f.key] = value;
+    syncJson();
+  };
+  const groups = {};
+  for (const f of SETTINGS) {
+    const input = f.type === 'bool' ? el('input', { type: 'checkbox' }) : el('input', { type: f.type === 'text' ? 'text' : 'number', step: f.type === 'number' ? 'any' : '1' });
+    input.addEventListener(f.type === 'bool' ? 'change' : 'input', () => setField(f, input));
+    inputs[f.key] = input;
+    const def = defaults[f.key];
+    const hint = [f.hint, `Default: ${typeof def === 'boolean' ? (def ? 'on' : 'off') : def === '' ? '(empty)' : def}`].filter(Boolean).join(' · ');
+    const node = f.type === 'bool'
+      ? el('label', { class: 'full' }, [el('span', { class: 'checks' }, el('label', {}, [input, f.label])), el('span', { class: 'hint', text: hint })])
+      : el('label', {}, [f.label, input, el('span', { class: 'hint', text: hint })]);
+    (groups[f.group] = groups[f.group] || []).push(node);
+  }
+  json.addEventListener('input', () => {
+    try {
+      const parsed = JSON.parse(json.value || '{}');
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Must be an object { … }');
+      current = parsed;
+      jsonError.textContent = '';
+      syncFields();
+    } catch (e) {
+      jsonError.textContent = 'Not valid JSON yet: ' + e.message;
+    }
+  });
+  syncJson();
+  syncFields();
+  const save = el('button', { class: 'primary', text: 'Save settings', onclick: async (e) => {
+    if (jsonError.textContent) return toast('Fix the JSON first.', true);
+    const ok = await ask({ title: 'Save settings?', message: 'The app and server use the new values within a few minutes.', confirm: 'Save' });
+    if (ok && await act(e.target, () => call('adminSaveConfig', { overrides: current }), 'Saved.')) show('settings');
+  } });
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'App settings' }), save]),
+    el('p', { class: 'muted', style: 'margin-top:0', text: 'Changes apply to everyone. Only values different from the default are stored. Last saved ' + when(updatedAt) + '.' }),
+    el('div', { class: 'stack' }, [
+      ...Object.entries(groups).map(([name, nodes]) => el('section', { class: 'card stack' }, [el('h3', { text: name }), el('div', { class: 'form' }, nodes)])),
+      el('details', { class: 'card' }, [
+        el('summary', { text: 'Advanced: all stored values (JSON)' }),
+        el('p', { class: 'muted small', text: 'Every other setting from config/app_config_defaults.json can be set here too. Keep "environment": "production".' }),
+        json, jsonError,
+      ]),
+    ]),
+  );
+};
+
+// Activity log
+const logState = { offset: 0 };
+const ACTIONS = {
+  verification_approve: 'Approved ID', verification_reject_selfie: 'Rejected selfie', verification_reject_id: 'Rejected ID',
+  member_ban: 'Banned member', member_unban: 'Lifted ban', credits_adjust: 'Changed credits', member_delete: 'Deleted account',
+  member_message: 'Sent notification', booking_cancel: 'Cancelled meetup', spot_add: 'Added spot', spot_edit: 'Edited spot',
+  spot_flags: 'Changed spot', spot_delete: 'Deleted spot', report_dismissed: 'Dismissed report', report_actioned: 'Handled report',
+  reel_delete: 'Removed reel', settings_save: 'Saved settings',
+};
+function describe(entry) {
+  const d = entry.details || {};
+  const parts = [];
+  if (d.name) parts.push(d.name);
+  if (d.delta != null) parts.push((d.delta > 0 ? '+' : '') + d.delta + ' credits');
+  if (d.listed != null && entry.action === 'spot_flags') parts.push(d.listed ? 'shown' : 'hidden', d.featured ? 'featured' : 'not featured');
+  if (d.changed) parts.push(d.changed.join(', ') || 'no changes');
+  if (d.reason) parts.push('“' + d.reason + '”');
+  if (d.note) parts.push('“' + d.note + '”');
+  if (d.title) parts.push('“' + d.title + '”');
+  if (d.result) parts.push(d.result);
+  return el('span', {}, [
+    d.uid && entry.action !== 'member_delete' ? memberLink(d.uid, 'member') : null, d.uid && entry.action !== 'member_delete' ? ' ' : null,
+    d.bookingId ? bookingLink(d.bookingId, 'meetup') : null, d.bookingId ? ' ' : null,
+    parts.join(' · '),
+  ]);
+}
+views.log = async () => {
+  const data = await call('adminAudit', { limit: 50, offset: logState.offset });
+  main.replaceChildren(
+    el('div', { class: 'head' }, [el('h2', { text: 'Activity log' }), el('button', { text: 'Refresh', onclick: () => show('log') })]),
+    el('p', { class: 'muted', style: 'margin-top:0', text: 'Everything done in this panel, newest first.' }),
+    table([
+      { label: 'When', render: (a) => when(a.at) },
+      { label: 'Who', key: 'actor' },
+      { label: 'What', render: (a) => ACTIONS[a.action] || human(a.action) },
+      { label: 'Details', render: describe },
+    ], data.items),
+    pager(data.total, logState.offset, 50, (offset) => { logState.offset = offset; show('log'); }),
+  );
+};
+
+// ---------- sign in / out ----------
+
+function enter() {
+  $('login').style.display = 'none';
+  $('app').classList.add('on');
+  $('who').textContent = 'Signed in as ' + (session.name && session.name !== session.email ? session.name + ' (' + session.email + ')' : session.email);
+  call('adminOverview').then(({ counts }) => { setBadge('review', counts.waiting_review); setBadge('reports', counts.open_reports); }).catch(() => {});
+  const view = location.hash.slice(1);
+  show(views[view] ? view : 'overview');
+}
+
+function signOut(message) {
+  session.token = '';
+  store.set('sessionStorage', 'vybeAdminSession', null);
+  if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+  closeDrawer();
+  $('app').classList.remove('on');
+  $('login').style.display = '';
+  $('login-error').textContent = message || '';
+}
+
+/** Google hands back an ID token; the server checks it against the allowed emails and opens a 12-hour session. */
+function onGoogleCredential(response) {
+  return signIn({ idToken: response.credential });
+}
+
+/** Signs in with Google ({ idToken }) or with an allowed email and the shared password ({ email, password }). */
+async function signIn(credentials) {
+  $('login-error').textContent = '';
+  session.api = $('login-api').value.trim();
+  try {
+    const result = await fetch(session.api.replace(/\/$/, '') + '/adminSignIn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    const json = await result.json().catch(() => ({}));
+    if (!result.ok) throw new Error((json.error && json.error.message) || 'HTTP ' + result.status);
+    Object.assign(session, { token: json.session, name: json.name, email: json.email, expiresAt: json.expiresAt });
+    store.set('localStorage', 'vybeAdminApi', session.api);
+    store.set('sessionStorage', 'vybeAdminSession', JSON.stringify(session));
+    enter();
+  } catch (e) {
+    $('login-error').textContent = 'Could not sign in: ' + e.message;
+  }
+}
+
+$('login-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = event.submitter;
+  if (button) button.disabled = true;
+  try {
+    await signIn({ email: $('login-email').value.trim(), password: $('login-password').value });
+  } finally {
+    $('login-password').value = '';
+    if (button) button.disabled = false;
+  }
+});
+
+function startGoogle(tries = 0) {
+  if (!(window.google && google.accounts && google.accounts.id)) {
+    if (tries > 50) { $('gsi-loading').textContent = 'Google sign-in did not load; use email and password.'; return; }
+    setTimeout(() => startGoogle(tries + 1), 200);
+    return;
+  }
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+  google.accounts.id.renderButton($('gsi-button'), { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill', width: 280 });
+  $('gsi-loading').remove();
+}
+
+for (const b of document.querySelectorAll('nav#side button[data-view]')) b.addEventListener('click', () => show(b.dataset.view));
+$('signout').onclick = () => signOut('Signed out.');
+$('theme').onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  store.set('localStorage', 'vybeAdminTheme', root.dataset.theme);
+};
+window.addEventListener('hashchange', () => {
+  const view = location.hash.slice(1);
+  if ($('app').classList.contains('on') && views[view] && view !== currentView) show(view);
+});
+
+(function start() {
+  const theme = store.get('localStorage', 'vybeAdminTheme');
+  if (theme) document.documentElement.dataset.theme = theme;
+  const api = store.get('localStorage', 'vybeAdminApi');
+  if (api) $('login-api').value = api;
+  startGoogle();
+  let saved = null;
+  try { saved = JSON.parse(store.get('sessionStorage', 'vybeAdminSession') || 'null'); } catch { saved = null; }
+  if (saved && saved.token && new Date(saved.expiresAt) > new Date()) {
+    Object.assign(session, saved);
+    enter();
+  }
+})();
+</script>
+</body>
+</html>

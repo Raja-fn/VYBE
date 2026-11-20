@@ -13,7 +13,7 @@ What's left needs your accounts. Do the steps in order. Never paste secrets
 
 | Topic | Launch behaviour | Later |
 |---|---|---|
-| Selfie and ID checks | **Reviewed by a person.** People type their date of birth at sign-up (under 18 is refused). A reviewer compares selfie, ID and date of birth in `admin/review.html` and approves or rejects. Ages on profiles come from the reviewed date of birth. | Connect a provider (HyperVerge, IDfy, Digio) to check automatically. |
+| Selfie and ID checks | **Reviewed by a person.** People type their date of birth at sign-up (under 18 is refused). A reviewer compares selfie, ID and date of birth in the admin panel (**ID checks**) and approves or rejects. Ages on profiles come from the reviewed date of birth. | Connect a provider (HyperVerge, IDfy, Digio) to check automatically. |
 | Payments | Real Google Play Billing: credit packs and Plus/Premium plans, verified by the server. Refunds take credits back. | — |
 | Booking a meetup | **Free**, no credits (client decision). Credits are only used to start a new chat. | Set `creditCostBookSpot` / `creditCostInstantRequest` in app_config overrides to charge again. |
 | Venue "Hot / Busy" | No data source yet: every venue shows as quiet, and spots are ranked by distance. | Connect a popularity source. |
@@ -45,8 +45,9 @@ Still to do:
    Keep the text in your password manager.
 2. **Email sign-in off:** Authentication → Sign In / Providers → Email →
    off (VYBE signs in with Google only).
-3. **Sample profiles off** at launch: Table Editor → app_config → overrides
-   `{"environment": "production", "showSampleProfiles": false}`.
+3. **Production marker:** Table Editor → app_config → overrides contains
+   `{"environment": "production"}`. (Sample profiles and test accounts were
+   removed from the app on 20 Nov; nothing to switch off.)
 4. **Reels and free booking (server update).** Apply the new database
    migration (the `reels` table and video storage), then deploy the API:
    ```sh
@@ -86,16 +87,48 @@ Still to do:
      command, then **delete the file** (it is a password).
    - The last line removes the old auto-approve switch (it does nothing any
      more).
-   - Keep the admin secret in your password manager.
-9. **Review new members every day.** Open `admin/review.html` from the
-   project folder in a browser (double-click it), paste the admin secret and
-   click **Load waiting members**. For each person: same face in selfie, ID
-   and profile photo? Date of birth matches the ID (fix it if not)? Then
-   **Approve**, **Reject selfie** or **Reject ID**. They get a notification.
-   Never copy ID numbers anywhere.
-10. **Grievance Officer.** Choose the person, then in Table Editor →
-    app_config → overrides add `"grievanceOfficerName": "<their name>"` and,
-    if different from the support email, `"grievanceOfficerEmail": "<email>"`.
+   - The admin secret now only signs the panel's sign-in sessions; nobody
+     types it any more (see item 9). Changing it signs everyone out.
+9. **Use the admin panel every day.** After publishing the website (item 11)
+   it is at `https://findx-dev-b5f6b.web.app/admin`. You can also open
+   Sign-in is **Sign in with Google**, and only the Google accounts listed in
+   the `FINDX_ADMIN_EMAILS` secret get in (you and the client). Set it once,
+   with the two addresses separated by a comma, plus the Google client id
+   (the same `GOOGLE_WEB_CLIENT_ID` as in `config/supabase.production.json`):
+   ```powershell
+   npx supabase secrets set --project-ref stgfjguoytqzmliurbvp "FINDX_ADMIN_EMAILS=first@gmail.com,second@gmail.com" --yes
+   npx supabase secrets set --project-ref stgfjguoytqzmliurbvp FINDX_ADMIN_GOOGLE_CLIENT_ID=<GOOGLE_WEB_CLIENT_ID> --yes
+   ```
+   In Google Cloud console → **APIs & Services → Credentials** → that web
+   client, make sure **Authorized JavaScript origins** includes
+   `https://findx-dev-b5f6b.web.app` (add `http://localhost` too if you open
+   the panel locally). A sign-in lasts 12 hours. Removing an email from the
+   secret locks that person out at once. Everything done there is in the
+   **Activity log** with the person's email. After 10 refused sign-ins from
+   one address, that address is locked out for 15 minutes.
+   - **ID checks:** same face in selfie, ID and profile photo? Date of birth
+     matches the ID (fix it if not)? Then **Approve**, **Reject selfie** or
+     **Reject ID**. They get a notification. Never copy ID numbers anywhere.
+   - **Reports:** safety reports come first, with the private meetup answer,
+     the reported reel or the last chat messages. **Ban**, **Remove reel**,
+     **Mark handled** or **Dismiss**.
+   - **Members:** search, see meetups, reports and credits. Ban or lift a
+     ban, give or take credits, send a notification, or delete an account
+     (for deletion requests sent by email).
+   - **Meetups:** upcoming, waiting for an answer, past and cancelled ones,
+     with check-ins and "How did it go?" answers. The team can cancel one;
+     both people are told.
+   - **Cafés & spots:** the places VYBE suggests. Hide wrong ones, **Feature**
+     good partners (suggested first), add a café yourself (click the map to
+     set its location), and set a perk.
+   - **App settings:** credit amounts, free credits, SOS number, Grievance
+     Officer. Applied within a few minutes.
+
+   The panel needs the `admin_panel` migration and the new API (item 4's
+   three commands).
+10. **Grievance Officer.** Choose the person, then in the admin panel →
+    **App settings** fill in the name (and the email, if different from the
+    support email).
     Put the same name in `site/privacy.html` and `site/terms.html` (they say
     "VYBE Grievance Officer" now).
 11. **Publish the updated website** (privacy policy and terms now cover
@@ -113,12 +146,16 @@ Still to do:
    - `vybe_credits_10`
    - `vybe_credits_30`
    - `vybe_credits_75`
-4. **Products → Subscriptions**, each with a monthly base plan:
-   - `vybe_plus_monthly`
-   - `vybe_premium_monthly`
+4. **Products → Subscriptions**, each with one auto-renewing monthly base
+   plan, available in India:
+   - `vybe_plus_monthly` — **₹149 a month**, gives 100 credits each month
+   - `vybe_premium_monthly` — **₹299 a month**, gives 300 credits each month
 
-   The IDs must match exactly. Prices are set here; the app shows Play's
-   prices.
+   Free members get 20 credits when they join. The IDs must match exactly.
+   Prices are charged as set here, and the app shows Play's price; the
+   ₹149 / ₹299 in the app settings (`plans[].price`) only fill in until
+   Play answers, so keep them the same. Credit amounts are in the app
+   settings (`plans[].monthlyCredits`, `signupBonusCredits`).
 5. **Play app signing:** keep it on, the default. Upload builds with the
    upload key below.
 
@@ -218,8 +255,8 @@ promote the build to **Production**.
     cancels open bookings. Play also asks for a **web link** where people can
     request deletion without the app:
     `https://findx-dev-b5f6b.firebaseapp.com/delete-account`. Requests sent
-    to the email there are done by deleting the user in
-    **Supabase → Authentication → Users** (within 7 days, as the page promises).
+    to the email there are done in the admin panel → **Members** → the
+    person → **Delete account** (within 7 days, as the page promises).
 - **Content rating questionnaire.** The app is for 18+ and enables meeting
   strangers in person.
 - **Target audience:** 18 and over.

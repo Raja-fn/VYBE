@@ -98,18 +98,6 @@ void main() {
       expect(find.bySemanticsLabel('Photo 1 of 3 of Neha'), findsOneWidget);
     });
 
-    testWidgets('sample profiles are marked and their buttons only explain', (tester) async {
-      final backend = readyBackend();
-      backend.discover.companions = [testCompanion('sample_ananya', name: 'Ananya').copyWith(isSample: true)];
-      await pumpFullApp(tester, backend: backend);
-      expect(find.text('Sample'), findsOneWidget);
-      await _tapReel(tester, find.bySemanticsLabel('Message'));
-      expect(find.textContaining('This is a sample profile'), findsOneWidget);
-      expect(find.byType(DiscoverScreen), findsOneWidget);
-      await _tapReel(tester, find.bySemanticsLabel('Save'));
-      expect(backend.discover.savedIds.value, isEmpty);
-    });
-
     testWidgets('Message opens the chat with that person', (tester) async {
       final backend = _withCompanions();
       await pumpFullApp(tester, backend: backend);

@@ -48,6 +48,7 @@ interface VenueRow {
   perk: { text?: string } | null;
   verification_status: string;
   is_listed: boolean;
+  featured: boolean;
 }
 
 function venueFrom(row: VenueRow): VenueRecord {
@@ -61,6 +62,7 @@ function venueFrom(row: VenueRow): VenueRecord {
     addressLine: row.address_line,
     ownerUid: row.owner_uid,
     perk: row.perk?.text ?? null,
+    featured: row.featured,
   };
 }
 

@@ -20,8 +20,6 @@ AuthRepository authRepository(Ref ref) => SupabaseAuthRepository(
     GoogleSignIn.instance,
     serverClientId: BackendConfig.forEnv(ref.watch(appEnvProvider)).googleWebClientId,
   ),
-  allowTestAccounts: ref.watch(appEnvProvider).isDev,
-  testAccountPassword: testAccountPassword,
 );
 
 @Riverpod(keepAlive: true)

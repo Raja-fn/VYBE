@@ -1062,9 +1062,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get creditsTestPrice => 'Test';
-
-  @override
   String get creditsPriceMissing => 'Not available';
 
   @override
@@ -1085,10 +1082,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String creditsPlanSemantics(String plan, String price) {
     return '$plan plan, $price';
   }
-
-  @override
-  String get creditsTestStoreNote =>
-      'Test store: nothing is charged. These purchases only work on test servers.';
 
   @override
   String creditsContinueWith(String plan) {
@@ -1180,18 +1173,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifyOrPhone => 'Or use your phone number';
-
-  @override
-  String get verifyTestAccount => 'Use a test account';
-
-  @override
-  String get verifyTestAccountEmail => 'Test account email';
-
-  @override
-  String get verifyTestAccountHint => 'aarav@findx.test';
-
-  @override
-  String get verifyTestAccountSignIn => 'Sign in';
 
   @override
   String get failureSignInCanceled => 'Sign-in was cancelled.';
@@ -1509,13 +1490,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapRecenter => 'Back to my location';
-
-  @override
-  String get sampleProfileTag => 'Sample';
-
-  @override
-  String get sampleProfileNotice =>
-      'This is a sample profile. Real members near you will appear here as people join.';
 
   @override
   String get reelProfile => 'Profile';

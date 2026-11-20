@@ -65,7 +65,6 @@ _CompanionSummary _$CompanionSummaryFromJson(Map<String, dynamic> json) =>
       details: json['details'] == null
           ? ProfileDetails.empty
           : ProfileDetails.fromJson(json['details'] as Map<String, dynamic>),
-      isSample: json['isSample'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CompanionSummaryToJson(_CompanionSummary instance) =>
@@ -89,5 +88,4 @@ Map<String, dynamic> _$CompanionSummaryToJson(_CompanionSummary instance) =>
       'freeFrom': instance.freeFrom?.toIso8601String(),
       'freeUntil': instance.freeUntil?.toIso8601String(),
       'details': instance.details,
-      'isSample': instance.isSample,
     };

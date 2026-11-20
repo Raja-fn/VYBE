@@ -19,7 +19,12 @@ function deps(): AdminDeps {
   const base = makeDeps(sql, {}, NOW);
   base.services.identity = new ManualReviewIdentityService({ sessionMinutes: 30, now: () => NOW });
   base.services.push = push;
-  return { ...base, signUrl: async (path, seconds) => `https://signed.example/${path}?s=${seconds}` };
+  return {
+    ...base,
+    signUrl: async (path, seconds) => `https://signed.example/${path}?s=${seconds}`,
+    authAdmin: {} as AdminDeps['authAdmin'],
+    actor: 'Tester',
+  };
 }
 
 async function member(name: string, dateOfBirth = '2000-01-15'): Promise<Caller> {
@@ -173,29 +178,35 @@ describe('admin actions over HTTP', () => {
     otpSender: () => ({ send: async () => {} }),
     cronSecret: undefined,
     adminSecret,
+    adminEmails: ['owner@example.com'],
+    verifyGoogleIdToken: async (token) => (token === 'good' ? { email: 'owner@example.com', name: 'Owner' } : null),
     signStorageUrl: async (path) => `https://signed.example/${path}`,
     now: () => NOW,
   });
-  const call = (headers: Record<string, string>, secret?: string, method = 'POST') =>
+  const call = (action: string, headers: Record<string, string>, body: unknown, secret?: string, method = 'POST') =>
     handleApiRequest(
-      new Request('http://localhost/api/adminReviewQueue', {
+      new Request(`http://localhost/api/${action}`, {
         method,
         headers: { 'Content-Type': 'application/json', ...headers },
-        body: method === 'POST' ? '{}' : undefined,
+        body: method === 'POST' ? JSON.stringify(body) : undefined,
       }),
       ctx(secret),
     );
 
-  it('need the admin secret, and allow the local review page (CORS)', async () => {
-    expect((await call({}, 'right-secret')).status).toBe(403);
-    expect((await call({ 'x-admin-secret': 'wrong' }, 'right-secret')).status).toBe(403);
-    expect((await call({ 'x-admin-secret': 'anything' })).status).toBe(403);
-    const ok = await call({ 'x-admin-secret': 'right-secret' }, 'right-secret');
+  it('need a Google session, and allow the panel from any site (CORS)', async () => {
+    expect((await call('adminReviewQueue', {}, {}, 'right-secret')).status).toBe(401);
+    expect((await call('adminSignIn', {}, { idToken: 'good' })).status).toBe(403);
+    const signIn = await call('adminSignIn', {}, { idToken: 'good' }, 'right-secret');
+    expect(signIn.status).toBe(200);
+    const { session } = await signIn.json();
+    const ok = await call('adminReviewQueue', { 'x-admin-session': session }, {}, 'right-secret');
     expect(ok.status).toBe(200);
     expect(ok.headers.get('access-control-allow-origin')).toBe('*');
     expect(await ok.json()).toEqual({ items: [] });
-    const preflight = await call({}, 'right-secret', 'OPTIONS');
+    // Signed with another secret: no longer valid.
+    expect((await call('adminReviewQueue', { 'x-admin-session': session }, {}, 'new-secret')).status).toBe(401);
+    const preflight = await call('adminSignIn', {}, {}, 'right-secret', 'OPTIONS');
     expect(preflight.status).toBe(204);
-    expect(preflight.headers.get('access-control-allow-headers')).toContain('x-admin-secret');
+    expect(preflight.headers.get('access-control-allow-headers')).toContain('x-admin-session');
   });
 });

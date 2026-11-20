@@ -43,7 +43,3 @@ class BackendConfig {
   static BackendConfig forEnv(AppEnv env) => fromBuild.isComplete ? fromBuild : liveProject;
 }
 
-/// Password of the shared test accounts on the **test** project only
-/// (`<first name>@findx.test`). The launch project has no such accounts and
-/// does not allow email sign-up.
-const testAccountPassword = String.fromEnvironment('FINDX_TEST_PASSWORD', defaultValue: 'findx-test-2026');

@@ -225,10 +225,7 @@ class _Details extends StatelessWidget {
                   l10n.cardNameAge(c.displayName, c.ageYears),
                   style: textTheme.headlineMedium?.copyWith(color: onPhoto, shadows: shadow),
                 ),
-                if (c.isSample)
-                  const _SampleTag()
-                else
-                  const Icon(Icons.verified, size: AppSizes.iconSmall, color: AppColors.success),
+                const Icon(Icons.verified, size: AppSizes.iconSmall, color: AppColors.success),
               ],
             ),
           ),
@@ -441,22 +438,3 @@ class _FreeNowTag extends StatelessWidget {
   );
 }
 
-/// Marks a made-up sample profile.
-class _SampleTag extends StatelessWidget {
-  const _SampleTag();
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: ShapeDecoration(
-      color: Colors.black.withValues(alpha: 0.35),
-      shape: StadiumBorder(side: BorderSide(color: AppColors.onInk.withValues(alpha: 0.6))),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 1),
-      child: Text(
-        context.l10n.sampleProfileTag,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.onInk),
-      ),
-    ),
-  );
-}

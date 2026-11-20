@@ -91,15 +91,21 @@ enum PlanTier { free, plus, premium }
 
 @freezed
 abstract class PlanConfig with _$PlanConfig {
-  const factory PlanConfig({required PlanTier tier, required String? productId, required int monthlyCredits}) =
-      _PlanConfig;
+  const factory PlanConfig({
+    required PlanTier tier,
+    required String? productId,
+    required int monthlyCredits,
+
+    /// Price shown until the store answers (the store's own price wins).
+    String? price,
+  }) = _PlanConfig;
 
   factory PlanConfig.fromJson(Map<String, Object?> json) => _$PlanConfigFromJson(json);
 }
 
 @freezed
 abstract class TopUpPack with _$TopUpPack {
-  const factory TopUpPack({required String productId, required int credits}) = _TopUpPack;
+  const factory TopUpPack({required String productId, required int credits, String? price}) = _TopUpPack;
 
   factory TopUpPack.fromJson(Map<String, Object?> json) => _$TopUpPackFromJson(json);
 }

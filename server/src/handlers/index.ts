@@ -1,5 +1,6 @@
 export * as account from './account';
 export * as admin from './admin';
+export * as adminManage from './adminManage';
 export * as booking from './booking';
 export * as chat from './chat';
 export * as discovery from './discovery';

@@ -76,7 +76,7 @@ class SupabaseStorageUrlResolver implements StorageUrlResolver {
 
   @override
   Future<String> urlFor(String path) async {
-    // Public pictures (sample profiles) are already full links.
+    // Public pictures are already full links.
     if (path.startsWith('https://')) return path;
     final cached = _cache[path];
     // Reuse a link until it is close to expiring.

@@ -703,7 +703,6 @@
       }
     }
   },
-  "creditsTestPrice": "Test",
   "creditsPriceMissing": "Not available",
   "creditsTopUpTitle": "Or top up credits",
   "creditsPackSemantics": "{count, plural, =1{1 credit} other{{count} credits}}, {price}",
@@ -728,7 +727,6 @@
       }
     }
   },
-  "creditsTestStoreNote": "Test store: nothing is charged. These purchases only work on test servers.",
   "creditsContinueWith": "Continue with {plan}",
   "@creditsContinueWith": {
     "placeholders": {
@@ -793,10 +791,6 @@
   "verifySignInBody": "Sign in with your Google account to create your VYBE account. We never post anything to it.",
   "verifyContinueWithGoogle": "Continue with Google",
   "verifyOrPhone": "Or use your phone number",
-  "verifyTestAccount": "Use a test account",
-  "verifyTestAccountEmail": "Test account email",
-  "verifyTestAccountHint": "aarav@findx.test",
-  "verifyTestAccountSignIn": "Sign in",
   "failureSignInCanceled": "Sign-in was cancelled.",
   "failureGoogleSignInUnavailable": "Google sign-in is not set up on this build yet. Use a test account or try again later.",
   "myProfileEmail": "Signed in as",
@@ -936,8 +930,6 @@
   },
   "feedEndBody": "New people join every day. Try another plan or check back soon.",
   "mapRecenter": "Back to my location",
-  "sampleProfileTag": "Sample",
-  "sampleProfileNotice": "This is a sample profile. Real members near you will appear here as people join.",
   "reelProfile": "Profile",
   "reelSaved": "Saved",
   "reelStartAgain": "Start again",

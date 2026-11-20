@@ -169,6 +169,7 @@ _PlanConfig _$PlanConfigFromJson(Map<String, dynamic> json) => _PlanConfig(
   tier: $enumDecode(_$PlanTierEnumMap, json['tier']),
   productId: json['productId'] as String?,
   monthlyCredits: (json['monthlyCredits'] as num).toInt(),
+  price: json['price'] as String?,
 );
 
 Map<String, dynamic> _$PlanConfigToJson(_PlanConfig instance) =>
@@ -176,6 +177,7 @@ Map<String, dynamic> _$PlanConfigToJson(_PlanConfig instance) =>
       'tier': _$PlanTierEnumMap[instance.tier]!,
       'productId': instance.productId,
       'monthlyCredits': instance.monthlyCredits,
+      'price': instance.price,
     };
 
 const _$PlanTierEnumMap = {
@@ -187,12 +189,14 @@ const _$PlanTierEnumMap = {
 _TopUpPack _$TopUpPackFromJson(Map<String, dynamic> json) => _TopUpPack(
   productId: json['productId'] as String,
   credits: (json['credits'] as num).toInt(),
+  price: json['price'] as String?,
 );
 
 Map<String, dynamic> _$TopUpPackToJson(_TopUpPack instance) =>
     <String, dynamic>{
       'productId': instance.productId,
       'credits': instance.credits,
+      'price': instance.price,
     };
 
 // **************************************************************************

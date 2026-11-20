@@ -124,11 +124,8 @@ This creates 15 people, 7 venues and two weeks of slots. You can run it
 again: it resets the people and venues, and keeps what testers spent or
 booked.
 
-**Test sign-in:**
-- **In the app:** tap **Use a test account** and type the email, for example
-  `aarav@findx.test`, `diya@findx.test` or `neha@findx.test`. The password is
-  `findx-test-2026` and the app fills it in for you.
-- **Brand-new account:** type any email that isn't seeded.
+The app no longer has test-account sign-in (removed 20 Nov); sign in with
+Google.
 
 ## 7. Run the app or share it
 
